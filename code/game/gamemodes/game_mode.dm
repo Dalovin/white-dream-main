@@ -99,15 +99,20 @@
 		addtimer(CALLBACK(GLOBAL_PROC, .proc/reopen_roundstart_suicide_roles), delay)
 
 	if(SSdbcore.Connect())
-		var/sql
+		var/list/to_set = list()
+		var/arguments = list()
 		if(SSticker.mode)
-			sql += "game_mode = '[SSticker.mode]'"
+			to_set += "game_mode = :game_mode"
+			arguments["game_mode"] = SSticker.mode
 		if(GLOB.revdata.originmastercommit)
-			if(sql)
-				sql += ", "
-			sql += "commit_hash = '[GLOB.revdata.originmastercommit]'"
-		if(sql)
-			var/datum/DBQuery/query_round_game_mode = SSdbcore.NewQuery("UPDATE [format_table_name("round")] SET [sql] WHERE id = [GLOB.round_id]")
+			to_set += "commit_hash = :commit_hash"
+			arguments["commit_hash"] = GLOB.revdata.originmastercommit
+		if(to_set.len)
+			arguments["round_id"] = GLOB.round_id
+			var/datum/db_query/query_round_game_mode = SSdbcore.NewQuery(
+				"UPDATE [format_table_name("round")] SET [to_set.Join(", ")] WHERE id = :round_id",
+				arguments
+			)
 			query_round_game_mode.Execute()
 			qdel(query_round_game_mode)
 	if(report)
@@ -266,9 +271,6 @@
 	return 0
 
 
-/datum/game_mode/proc/check_win() //universal trigger to be called at mob death, nuke explosion, etc. To be called from everywhere.
-	return 0
-
 /datum/game_mode/proc/send_intercept()
 	var/intercepttext = "<b><i>Central Command Status Summary</i></b><hr>"
 	intercepttext += "<b>Central Command has intercepted and partially decoded a Syndicate transmission with vital information regarding their movements. The following report outlines the most \
@@ -378,8 +380,9 @@
 		if(player.client && player.ready == PLAYER_READY_TO_PLAY)
 			if(role in player.client.prefs.be_special)
 				if(!is_banned_from(player.ckey, list(role, ROLE_SYNDICATE)) && !QDELETED(player))
-					if(age_check(player.client)) //Must be older than the minimum age
-						candidates += player.mind				// Get a list of all the people who want to be the antagonist for this round
+					if(player.client.get_metabalance() > 50)
+						if(age_check(player.client)) //Must be older than the minimum age
+							candidates += player.mind				// Get a list of all the people who want to be the antagonist for this round
 
 	if(restricted_jobs)
 		for(var/datum/mind/player in candidates)

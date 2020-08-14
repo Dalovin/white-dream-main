@@ -66,7 +66,7 @@ Behavior that's still missing from this component that original food items had t
 				owner.reagents.add_reagent(rid, amount)
 
 /datum/component/edible/proc/examine(datum/source, mob/user, list/examine_list)
-	if(!food_flags & FOOD_IN_CONTAINER)
+	if(!(food_flags & FOOD_IN_CONTAINER))
 		switch (bitecount)
 			if (0)
 				return
@@ -116,13 +116,13 @@ Behavior that's still missing from this component that original food items had t
 			to_chat(eater, "<span class='warning'>Не хочу я жрать эти отбросы!</span>")
 			return
 		else if(fullness <= 50)
-			eater.visible_message("<span class='notice'>[eater] жадно [eatverb] [parent], проглатывая кусками!</span>", "<span class='notice'>Мой рот жадно [eatverb] [parent], проглатывая кусками!</span>")
+			eater.visible_message("<span class='notice'>[eater] жадно [eatverb] [parent], проглатывая кусками!</span>", "<span class='notice'>Жадно кусаю [parent], проглатывая кусками!</span>")
 		else if(fullness > 50 && fullness < 150)
-			eater.visible_message("<span class='notice'>[eater] жадно [eatverb] [parent].</span>", "<span class='notice'>Мой рот жадно [eatverb] [parent].</span>")
+			eater.visible_message("<span class='notice'>[eater] жадно [eatverb] [parent].</span>", "<span class='notice'>Жадно пожираю [parent].</span>")
 		else if(fullness > 150 && fullness < 500)
-			eater.visible_message("<span class='notice'>[eater] [eatverb] [parent].</span>", "<span class='notice'>Мой рот [eatverb] [parent].</span>")
+			eater.visible_message("<span class='notice'>[eater] [eatverb] [parent].</span>", "<span class='notice'>Кушаю [parent].</span>")
 		else if(fullness > 500 && fullness < 600)
-			eater.visible_message("<span class='notice'>[eater] нехотя [eatverb] кусочек [parent].</span>", "<span class='notice'>Моё чрево нехотя [eatverb] кусочек [parent].</span>")
+			eater.visible_message("<span class='notice'>[eater] нехотя [eatverb] кусочек [parent].</span>", "<span class='notice'>Нямкаю кусочек [parent].</span>")
 		else if(fullness > (600 * (1 + eater.overeatduration / 2000)))	// The more you eat - the more you can eat
 			eater.visible_message("<span class='warning'>[eater] не может запихнуть [parent] в свою глотку!</span>", "<span class='warning'>В меня больше не лезет [parent]!</span>")
 			return
@@ -187,7 +187,7 @@ Behavior that's still missing from this component that original food items had t
 	return TRUE
 
 ///Check foodtypes to see if we should send a moodlet
-/datum/component/edible/proc/checkLiked(var/fraction, mob/M)
+/datum/component/edible/proc/checkLiked(fraction, mob/M)
 	if(last_check_time + 50 > world.time)
 		return FALSE
 	if(!ishuman(M))
@@ -236,12 +236,12 @@ Behavior that's still missing from this component that original food items had t
 		return
 	var/mob/living/L = user
 	if(bitecount == 0 || prob(50))
-		L.emote("me", 1, "откусывает кусочек [parent]")
+		L.manual_emote("откусывает кусочек [parent]")
 	bitecount++
 	. = COMPONENT_ITEM_NO_ATTACK
 	L.taste(owner.reagents) // why should carbons get all the fun?
 	if(bitecount >= 5)
 		var/sattisfaction_text = pick("отрыгивает от удовольствия", "просит ещё", "гавкает дважды", "не может найти куда пропал [parent]")
 		if(sattisfaction_text)
-			L.emote("me", 1, "[sattisfaction_text]")
+			L.manual_emote(sattisfaction_text)
 		qdel(parent)

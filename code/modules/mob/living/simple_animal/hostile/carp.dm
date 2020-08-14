@@ -31,8 +31,8 @@
 	obj_damage = 100
 	melee_damage_lower = 15
 	melee_damage_upper = 15
-	attack_verb_continuous = "bites"
-	attack_verb_simple = "bite"
+	attack_verb_continuous = "кусает"
+	attack_verb_simple = "кусает"
 	attack_sound = 'sound/weapons/bite.ogg'
 	speak_emote = list("gnashes")
 
@@ -107,14 +107,14 @@
 	add_overlay(base_dead_overlay)
 
 /mob/living/simple_animal/hostile/carp/proc/chomp_plastic()
-	var/obj/item/storage/cans/tasty_plastic = locate(/obj/item/storage/cans) in oview(src, 9)
-	if(tasty_plastic)
-		snack_distance = get_dist(src.loc,tasty_plastic.loc)
-		if(snack_distance <= 1)
-			src.visible_message("<span class='notice'>[src] gets its head stuck in [tasty_plastic], and gets cut breaking free from it!</span>", "<span class='notice'>You try to avoid [tasty_plastic], but it looks so... delicious... Ow! It cuts the inside of your mouth!</span>")
-			new /obj/effect/decal/cleanable/plastic(src.loc)
-			adjustBruteLoss(5)
-			qdel(tasty_plastic)
+	var/obj/item/storage/cans/tasty_plastic = locate(/obj/item/storage/cans) in view(1, src)
+	if(tasty_plastic && Adjacent(tasty_plastic))
+		visible_message("<span class='notice'>[src] gets its head stuck in [tasty_plastic], and gets cut breaking free from it!</span>", "<span class='notice'>You try to avoid [tasty_plastic], but it looks so... delicious... Ow! It cuts the inside of your mouth!</span>")
+
+		new /obj/effect/decal/cleanable/plastic(loc)
+
+		adjustBruteLoss(5)
+		qdel(tasty_plastic)
 
 /mob/living/simple_animal/hostile/carp/Life()
 	. = ..()
@@ -226,15 +226,30 @@
 
 /mob/living/simple_animal/hostile/carp/cayenne
 	name = "Cayenne"
+	real_name = "Cayenne"
 	desc = "A failed Syndicate experiment in weaponized space carp technology, it now serves as a lovable mascot."
 	gender = FEMALE
 	speak_emote = list("squeaks")
 	gold_core_spawnable = NO_SPAWN
 	faction = list(ROLE_SYNDICATE)
-	AIStatus = AI_OFF
 	rarechance = 10
 	food_type = list()
 	tame_chance = 0
 	bonus_tame_chance = 0
+	pet_bonus = TRUE
+	pet_bonus_emote = "bloops happily!"
+
+/mob/living/simple_animal/hostile/carp/cayenne/lia
+	name = "Lia"
+	real_name = "Lia"
+	desc = "A failed experiment of Nanotrasen to create weaponised carp technology. This less than intimidating carp now serves as the Head of Security's pet."
+	faction = list("neutral")
+	health = 200
+	icon_dead = "magicarp_dead"
+	icon_gib = "magicarp_gib"
+	icon_living = "magicarp"
+	icon_state = "magicarp"
+	maxHealth = 200
+	random_color = FALSE
 
 #undef REGENERATION_DELAY

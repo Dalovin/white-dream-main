@@ -37,14 +37,15 @@
 			for(var/i = 0; i < maxStepsTick; ++i)
 				if(!IsDeadOrIncap())
 					if(myPath.len >= 1)
-						walk_to(src,myPath[1],0,5)
-						myPath -= myPath[1]
+						walk_to(src,myPath[1],0)
+						qdel(myPath[1])
+						myPath.Cut(1, 2)
+			walk_to(src, target) // we pathed to the waypoint now head straight for the target
 			return 1
 
 	// failed to path correctly so just try to head straight for a bit
-	walk_to(src,get_turf(target),0,5)
-	sleep(1)
-	walk_to(src,0)
+	QDEL_LIST(myPath)
+	walk_for(src, get_dir(loc, get_turf(target)), until=0.5 SECONDS)
 
 	return 0
 
@@ -53,8 +54,6 @@
 	if(!(mobility_flags & MOBILITY_FLAGS_INTERACTION))
 		return 1
 	if(health <= 0 && checkDead)
-		return 1
-	if(IsUnconscious())
 		return 1
 	if(IsStun() || IsParalyzed())
 		return 1
@@ -100,7 +99,7 @@
 	blacklistItems[I] ++
 	return FALSE
 
-/mob/living/carbon/monkey/proc/pickup_and_wear(var/obj/item/clothing/C)
+/mob/living/carbon/monkey/proc/pickup_and_wear(obj/item/clothing/C)
 	if(!equip_to_appropriate_slot(C))
 		monkeyDrop(get_item_by_slot(C)) // remove the existing item if worn
 		addtimer(CALLBACK(src, .proc/equip_to_appropriate_slot, C), 5)
@@ -116,7 +115,7 @@
 		last_special = world.time + CLICK_CD_BREAKOUT
 		cuff_resist(I)
 
-/mob/living/carbon/monkey/proc/should_target(var/mob/living/L)
+/mob/living/carbon/monkey/proc/should_target(mob/living/L)
 	if(HAS_TRAIT(src, TRAIT_PACIFISM))
 		return FALSE
 
@@ -240,8 +239,8 @@
 					return TRUE
 
 				else								// not next to perp
-					var/turf/olddist = get_dist(src, target)
-					if((get_dist(src, target)) >= (olddist))
+					var/turf/olddist = bounds_dist(src, target)
+					if((bounds_dist(src, target)) >= (olddist))
 						frustration++
 					else
 						frustration = 0
@@ -258,7 +257,7 @@
 					target = L
 
 			if(target != null)
-				walk_away(src, target, MONKEY_ENEMY_VISION, 5)
+				walk_away(src, target, MONKEY_ENEMY_VISION)
 			else
 				back_to_idle()
 
@@ -303,7 +302,7 @@
 
 	return IsStandingStill()
 
-/mob/living/carbon/monkey/proc/pickpocket(var/mob/M)
+/mob/living/carbon/monkey/proc/pickpocket(mob/M)
 	if(do_mob(src, M, MONKEY_ITEM_SNATCH_DELAY) && pickupTarget)
 		for(var/obj/item/I in M.held_items)
 			if(I == pickupTarget)
@@ -417,7 +416,7 @@
 		return
 	..()
 
-/mob/living/carbon/monkey/proc/monkeyDrop(var/obj/item/A)
+/mob/living/carbon/monkey/proc/monkeyDrop(obj/item/A)
 	if(A)
 		dropItemToGround(A, TRUE)
 		update_icons()

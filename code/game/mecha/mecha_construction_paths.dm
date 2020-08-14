@@ -28,7 +28,7 @@
 	if(!result)
 		return
 	// Remove default mech power cell, as we replace it with a new one.
-	var/obj/mecha/M = new result(drop_location())
+	var/obj/mecha/M = new result(drop_location()[1])
 	QDEL_NULL(M.cell)
 	QDEL_NULL(M.scanmod)
 	QDEL_NULL(M.capacitor)
@@ -41,7 +41,7 @@
 
 // Default proc to generate mech steps.
 // Override if the mech needs an entirely custom process (See HONK mech)
-// Otherwise override specific steps as needed (Ripley, firefighter, Phazon)
+// Otherwise override specific steps as needed (Ripley, Clarke, Phazon)
 /datum/component/construction/mecha/proc/get_steps()
 	return get_frame_steps() + get_circuit_steps() + (circuit_weapon ? get_circuit_weapon_steps() : list()) + get_stockpart_steps() + get_inner_plating_steps() + get_outer_plating_steps()
 

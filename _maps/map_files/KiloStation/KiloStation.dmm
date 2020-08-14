@@ -1253,6 +1253,7 @@
 	pixel_y = 5
 	},
 /obj/item/restraints/handcuffs/cable/zipties,
+/obj/item/flashlight/seclite,
 /turf/open/floor/plasteel/dark,
 /area/security/detectives_office)
 "acj" = (
@@ -2617,6 +2618,14 @@
 	},
 /turf/open/floor/plasteel,
 /area/bridge)
+"aen" = (
+/obj/structure/table/glass,
+/obj/effect/turf_decal/tile/neutral,
+/obj/effect/turf_decal/tile/neutral{
+	dir = 8
+	},
+/turf/open/floor/plasteel/dark,
+/area/hydroponics)
 "aeo" = (
 /obj/structure/lattice,
 /obj/structure/grille,
@@ -2864,7 +2873,7 @@
 /obj/item/melee/baseball_bat{
 	desc = "Don't tell anyone you put any points into dex, though.";
 	icon_state = "swordon";
-	item_state = "swordon";
+	inhand_icon_state = "swordon";
 	lefthand_file = 'icons/mob/inhands/weapons/swords_lefthand.dmi';
 	name = "moonlight greatsword";
 	righthand_file = 'icons/mob/inhands/weapons/swords_righthand.dmi'
@@ -6284,7 +6293,7 @@
 	dir = 1
 	},
 /obj/effect/turf_decal/delivery,
-/obj/item/storage/secure/safe/HoS{
+/obj/item/storage/secure/safe/hos{
 	pixel_x = 36;
 	pixel_y = 28
 	},
@@ -6760,18 +6769,12 @@
 	dir = 4
 	},
 /obj/effect/turf_decal/tile/neutral,
-/obj/structure/table,
-/obj/item/book/manual/wiki/detective{
-	pixel_x = -5;
-	pixel_y = 5
-	},
-/obj/item/taperecorder,
-/obj/item/flashlight/seclite,
 /obj/effect/decal/cleanable/cobweb,
 /obj/machinery/airalarm{
 	dir = 4;
 	pixel_x = -22
 	},
+/obj/machinery/vending/wardrobe/det_wardrobe,
 /turf/open/floor/plasteel/dark,
 /area/security/detectives_office)
 "ale" = (
@@ -9527,7 +9530,7 @@
 /area/hallway/secondary/command)
 "apq" = (
 /obj/structure/table,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/hand_labeler,
 /obj/effect/turf_decal/tile/neutral{
 	dir = 4
@@ -9785,7 +9788,7 @@
 /obj/structure/rack,
 /obj/item/storage/toolbox/emergency,
 /obj/item/wrench,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/hand_labeler,
 /turf/open/floor/plasteel/dark,
 /area/teleporter)
@@ -11454,7 +11457,7 @@
 	dir = 1
 	},
 /obj/structure/table,
-/obj/item/storage/box/PDAs{
+/obj/item/storage/box/pdas{
 	pixel_x = 4;
 	pixel_y = 6
 	},
@@ -12021,7 +12024,7 @@
 /obj/effect/decal/cleanable/dirt,
 /obj/structure/rack,
 /obj/item/tank/internals/oxygen/red,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/clothing/mask/gas,
 /turf/open/floor/plating,
 /area/maintenance/fore)
@@ -12592,6 +12595,20 @@
 	},
 /turf/open/floor/plasteel/showroomfloor,
 /area/science/genetics)
+"auc" = (
+/obj/structure/table/glass,
+/obj/effect/turf_decal/tile/neutral,
+/obj/effect/turf_decal/tile/neutral{
+	dir = 8
+	},
+/obj/effect/turf_decal/tile/neutral{
+	dir = 4
+	},
+/obj/effect/turf_decal/stripes/corner{
+	dir = 4
+	},
+/turf/open/floor/plasteel/dark,
+/area/hydroponics)
 "aud" = (
 /obj/effect/decal/cleanable/dirt,
 /obj/machinery/atmospherics/pipe/simple/scrubbers/hidden/layer1{
@@ -13965,7 +13982,7 @@
 /obj/effect/decal/cleanable/dirt,
 /obj/effect/turf_decal/bot,
 /obj/structure/closet/crate,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/storage/box/lights/mixed,
 /turf/open/floor/plating,
 /area/maintenance/port/fore)
@@ -14251,7 +14268,6 @@
 /turf/open/floor/plasteel,
 /area/crew_quarters/heads/chief)
 "awA" = (
-/obj/structure/table/wood/fancy,
 /obj/effect/turf_decal/tile/neutral,
 /obj/effect/turf_decal/tile/neutral{
 	dir = 8
@@ -14272,6 +14288,7 @@
 /obj/structure/disposalpipe/segment{
 	dir = 10
 	},
+/obj/structure/altar_of_gods,
 /turf/open/floor/plasteel/dark,
 /area/chapel/main)
 "awB" = (
@@ -16365,7 +16382,7 @@
 /obj/effect/turf_decal/tile/neutral{
 	dir = 8
 	},
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/storage/secure/briefcase,
 /obj/item/hand_labeler,
 /obj/item/reagent_containers/spray/cleaner,
@@ -19179,7 +19196,7 @@
 "aEz" = (
 /obj/structure/table,
 /obj/item/storage/box/deputy,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/hand_labeler,
 /obj/machinery/camera{
 	c_tag = "Warden's Office";
@@ -20396,7 +20413,7 @@
 	pixel_x = 4;
 	pixel_y = 6
 	},
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/hand_labeler,
 /turf/open/floor/plasteel/dark,
 /area/engine/atmos)
@@ -22704,7 +22721,7 @@
 /obj/item/storage/box/lights/mixed{
 	pixel_y = 5
 	},
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/hand_labeler,
 /obj/item/storage/box/shipping{
 	pixel_x = -4;
@@ -31818,7 +31835,7 @@
 	empty = 1;
 	name = "First-Aid (empty)"
 	},
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/healthanalyzer,
 /obj/item/healthanalyzer,
 /obj/item/healthanalyzer,
@@ -33349,7 +33366,7 @@
 /obj/effect/turf_decal/tile/neutral{
 	dir = 8
 	},
-/obj/item/stack/packageWrap{
+/obj/item/stack/package_wrap{
 	pixel_x = -4;
 	pixel_y = 4
 	},
@@ -35698,8 +35715,8 @@
 /obj/effect/decal/cleanable/cobweb,
 /obj/effect/turf_decal/tile/neutral,
 /obj/structure/table/wood,
-/obj/item/stack/packageWrap,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
+/obj/item/stack/package_wrap,
 /obj/item/vending_refill/cigarette,
 /obj/item/hand_labeler,
 /obj/structure/extinguisher_cabinet{
@@ -39325,7 +39342,7 @@
 /obj/structure/table,
 /obj/effect/turf_decal/tile/neutral,
 /obj/item/folder/yellow,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/gps{
 	gpstag = "QM0";
 	pixel_x = -4;
@@ -42280,12 +42297,12 @@
 	dir = 1
 	},
 /obj/structure/table,
-/obj/item/stack/packageWrap,
-/obj/item/stack/packageWrap,
-/obj/item/stack/packageWrap,
-/obj/item/stack/packageWrap,
-/obj/item/stack/packageWrap,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
+/obj/item/stack/package_wrap,
+/obj/item/stack/package_wrap,
+/obj/item/stack/package_wrap,
+/obj/item/stack/package_wrap,
+/obj/item/stack/package_wrap,
 /obj/item/stack/wrapping_paper{
 	pixel_x = -4;
 	pixel_y = 4
@@ -42834,17 +42851,6 @@
 "bmF" = (
 /obj/machinery/status_display/evac,
 /turf/closed/wall,
-/area/hydroponics)
-"bmG" = (
-/obj/structure/table/glass,
-/obj/effect/turf_decal/tile/neutral,
-/obj/effect/turf_decal/tile/neutral{
-	dir = 8
-	},
-/obj/machinery/plantgenes{
-	pixel_y = 5
-	},
-/turf/open/floor/plasteel/dark,
 /area/hydroponics)
 "bmH" = (
 /obj/effect/turf_decal/delivery,
@@ -43891,12 +43897,12 @@
 	name = "Core Modules";
 	req_access_txt = "20"
 	},
-/obj/item/aiModule/core/freeformcore{
+/obj/item/ai_module/core/freeformcore{
 	pixel_x = 3;
 	pixel_y = 3
 	},
-/obj/item/aiModule/core/full/custom,
-/obj/item/aiModule/core/full/asimov{
+/obj/item/ai_module/core/full/custom,
+/obj/item/ai_module/core/full/asimov{
 	pixel_x = -3;
 	pixel_y = -3
 	},
@@ -45040,7 +45046,7 @@
 /obj/effect/turf_decal/stripes/corner{
 	dir = 4
 	},
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/storage/box/lights/mixed{
 	pixel_y = 4
 	},
@@ -45587,23 +45593,6 @@
 /mob/living/simple_animal/hostile/asteroid/hivelord,
 /turf/open/floor/plating,
 /area/quartermaster/warehouse)
-"bqG" = (
-/obj/structure/table/glass,
-/obj/effect/turf_decal/tile/neutral,
-/obj/effect/turf_decal/tile/neutral{
-	dir = 8
-	},
-/obj/machinery/plantgenes{
-	pixel_y = 5
-	},
-/obj/effect/turf_decal/tile/neutral{
-	dir = 4
-	},
-/obj/effect/turf_decal/stripes/corner{
-	dir = 4
-	},
-/turf/open/floor/plasteel/dark,
-/area/hydroponics)
 "bqH" = (
 /obj/effect/turf_decal/tile/neutral,
 /obj/effect/turf_decal/tile/neutral{
@@ -46382,7 +46371,7 @@
 /obj/effect/turf_decal/tile/neutral{
 	dir = 4
 	},
-/obj/item/storage/box/PDAs{
+/obj/item/storage/box/pdas{
 	pixel_x = 4;
 	pixel_y = 4
 	},
@@ -47049,12 +47038,12 @@
 	name = "Core Modules";
 	req_access_txt = "20"
 	},
-/obj/item/aiModule/supplied/protectStation{
+/obj/item/ai_module/supplied/protect_station{
 	pixel_x = 3;
 	pixel_y = 3
 	},
-/obj/item/aiModule/zeroth/oneHuman,
-/obj/item/aiModule/reset/purge{
+/obj/item/ai_module/zeroth/onehuman,
+/obj/item/ai_module/reset/purge{
 	pixel_x = -3;
 	pixel_y = -3
 	},
@@ -50871,7 +50860,7 @@
 /area/ai_monitored/turret_protected/ai_upload)
 "byM" = (
 /obj/structure/table,
-/obj/item/aiModule/reset,
+/obj/item/ai_module/reset,
 /obj/effect/decal/cleanable/cobweb/cobweb2,
 /obj/machinery/flasher{
 	id = "AI";
@@ -50918,7 +50907,7 @@
 	lootcount = 2;
 	lootdoubles = 0
 	},
-/obj/item/aiModule/supplied/oxygen{
+/obj/item/ai_module/supplied/oxygen{
 	pixel_x = -3;
 	pixel_y = -3
 	},
@@ -51094,7 +51083,7 @@
 /area/ai_monitored/turret_protected/ai_upload)
 "bzb" = (
 /obj/structure/table,
-/obj/item/aiModule/supplied/freeform,
+/obj/item/ai_module/supplied/freeform,
 /turf/open/floor/circuit/green{
 	luminosity = 2
 	},
@@ -51312,7 +51301,7 @@
 /area/bridge)
 "bzr" = (
 /obj/structure/table,
-/obj/item/aiModule/supplied/quarantine,
+/obj/item/ai_module/supplied/quarantine,
 /obj/machinery/flasher{
 	id = "AI";
 	name = "Meatbag Pacifier";
@@ -51968,7 +51957,7 @@
 /obj/effect/decal/cleanable/dirt,
 /obj/effect/turf_decal/bot,
 /obj/structure/rack,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/storage/box,
 /turf/open/floor/plating,
 /area/maintenance/port)
@@ -54376,7 +54365,7 @@
 	dir = 1
 	},
 /obj/item/aicard,
-/obj/item/aiModule/reset,
+/obj/item/ai_module/reset,
 /obj/item/assembly/flash/handheld,
 /obj/item/assembly/flash/handheld,
 /obj/machinery/airalarm{
@@ -54540,7 +54529,7 @@
 	pixel_x = 6;
 	pixel_y = -24
 	},
-/mob/living/simple_animal/pet/fox/Renault,
+/mob/living/simple_animal/pet/fox/renault,
 /turf/open/floor/wood,
 /area/crew_quarters/heads/captain)
 "bEf" = (
@@ -60449,7 +60438,7 @@
 	pixel_y = 24
 	},
 /obj/structure/cable,
-/mob/living/simple_animal/pet/dog/corgi/Ian{
+/mob/living/simple_animal/pet/dog/corgi/ian{
 	dir = 8
 	},
 /turf/open/floor/wood,
@@ -61170,7 +61159,7 @@
 /obj/machinery/light_switch{
 	pixel_y = -24
 	},
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/storage/secure/briefcase{
 	pixel_y = 4
 	},
@@ -67553,7 +67542,7 @@
 	},
 /obj/effect/turf_decal/tile/neutral,
 /obj/effect/turf_decal/stripes/corner,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/hand_labeler,
 /obj/item/radio/intercom{
 	pixel_x = -28
@@ -67680,7 +67669,7 @@
 /obj/effect/turf_decal/tile/neutral{
 	dir = 1
 	},
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/crowbar,
 /obj/machinery/firealarm{
 	dir = 1;
@@ -68649,9 +68638,7 @@
 /obj/machinery/atmospherics/pipe/simple/orange/visible{
 	dir = 4
 	},
-/obj/machinery/airalarm{
-	pixel_z = 24
-	},
+/obj/machinery/airalarm,
 /obj/machinery/light/small,
 /obj/effect/decal/cleanable/dirt,
 /turf/open/floor/plating{
@@ -73143,6 +73130,7 @@
 	dir = 4
 	},
 /obj/structure/cable,
+/obj/item/book/manual/wiki/detective,
 /turf/open/floor/wood,
 /area/security/detectives_office)
 "cgk" = (
@@ -74275,9 +74263,9 @@
 /obj/effect/turf_decal/stripes/line{
 	dir = 5
 	},
-/obj/structure/cable,
-/obj/structure/cable_bridge,
-/obj/structure/cable/layer3,
+/obj/structure/cable/multilayer{
+	cable_layer = 6
+	},
 /turf/open/floor/engine,
 /area/ai_monitored/storage/satellite)
 "cic" = (
@@ -82854,7 +82842,7 @@
 /obj/item/storage/box/lights/mixed{
 	pixel_y = 5
 	},
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/hand_labeler,
 /obj/effect/decal/cleanable/cobweb/cobweb2,
 /obj/effect/decal/cleanable/dirt,
@@ -91154,7 +91142,7 @@
 	dir = 1
 	},
 /obj/item/stack/sheet/glass/fifty,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/wallframe/camera,
 /obj/item/wallframe/camera,
 /obj/item/wallframe/camera,
@@ -92127,7 +92115,7 @@
 /obj/effect/decal/cleanable/dirt,
 /obj/effect/turf_decal/bot,
 /obj/structure/closet,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/storage/bag/trash,
 /obj/effect/turf_decal/stripes/corner,
 /obj/effect/turf_decal/stripes/corner{
@@ -92918,7 +92906,7 @@
 /area/maintenance/starboard)
 "cNj" = (
 /obj/structure/table/wood,
-/obj/item/stack/packageWrap,
+/obj/item/stack/package_wrap,
 /obj/item/storage/lockbox/loyalty,
 /obj/item/hand_labeler,
 /obj/machinery/keycard_auth{
@@ -93078,6 +93066,7 @@
 /obj/structure/table/wood,
 /obj/item/paper_bin,
 /obj/item/hand_labeler,
+/obj/item/taperecorder,
 /turf/open/floor/carpet/green,
 /area/security/detectives_office)
 "cNz" = (
@@ -128131,7 +128120,7 @@ boA
 aGr
 bkF
 bjn
-bmG
+aen
 bsu
 bny
 bnJ
@@ -128645,7 +128634,7 @@ boD
 aGM
 boV
 bjn
-bqG
+auc
 bsu
 bny
 bnJ

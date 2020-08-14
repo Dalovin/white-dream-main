@@ -26,10 +26,10 @@
 	melee_damage_upper = 20
 	see_in_dark = 8
 	lighting_alpha = LIGHTING_PLANE_ALPHA_MOSTLY_INVISIBLE
-	vision_range = 1 // Only attack when target is close
+	vision_range = 32 // Only attack when target is close
 	wander = FALSE
-	attack_verb_continuous = "glomps"
-	attack_verb_simple = "glomp"
+	attack_verb_continuous = "кушает"
+	attack_verb_simple = "кушает"
 	attack_sound = 'sound/effects/blobattack.ogg'
 	butcher_results = list(/obj/item/reagent_containers/food/snacks/meat/slab = 2)
 
@@ -176,7 +176,7 @@
 /mob/living/simple_animal/hostile/morph/LoseAggro()
 	vision_range = initial(vision_range)
 
-/mob/living/simple_animal/hostile/morph/AIShouldSleep(var/list/possible_targets)
+/mob/living/simple_animal/hostile/morph/AIShouldSleep(list/possible_targets)
 	. = ..()
 	if(.)
 		var/list/things = list()

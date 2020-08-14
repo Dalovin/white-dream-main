@@ -22,10 +22,30 @@
 #define MEDAL_RULE8				"Rule 8"
 #define MEDAL_LONGSHIFT			"longshift"
 #define MEDAL_SNAIL				"KKKiiilll mmmeee"
+#define MEDAL_LOOKOUTSIR		"Look Out, Sir!"
+#define MEDAL_GOTTEM			"GOTTEM"
 
 //Skill medal hub IDs
 #define MEDAL_LEGENDARY_MINER		"Legendary Miner"
 
+//Mafia medal hub IDs (wins)
+#define MAFIA_MEDAL_ASSISTANT		"Assistant"
+#define MAFIA_MEDAL_DETECTIVE		"Detective"
+#define MAFIA_MEDAL_PSYCHOLOGIST	"Psychologist"
+#define MAFIA_MEDAL_CHAPLAIN		"Chaplain"
+#define MAFIA_MEDAL_MD				"Medical Doctor"
+#define MAFIA_MEDAL_LAWYER			"Lawyer"
+#define MAFIA_MEDAL_HOP				"Head of Personnel"
+#define MAFIA_MEDAL_CHANGELING		"CHANGELING"
+#define MAFIA_MEDAL_THOUGHTFEEDER	"Thoughtfeeder"
+#define MAFIA_MEDAL_TRAITOR			"Traitor"
+#define MAFIA_MEDAL_NIGHTMARE		"Nightmare"
+#define MAFIA_MEDAL_FUGITIVE		"Fugitive"
+#define MAFIA_MEDAL_OBSESSED		"Obsessed"
+#define MAFIA_MEDAL_CLOWN			"Clown"
+
+//Mafia medal hub IDs (misc stuff)
+#define MAFIA_MEDAL_HATED		"Universally Hated"
 
 //Boss medals
 
@@ -41,6 +61,7 @@
 #define BOSS_MEDAL_TENDRIL	  "Tendril Exterminator"
 #define BOSS_MEDAL_SWARMERS   "Swarmer Beacon Killer"
 #define BOSS_MEDAL_REIMU      "Reimu Killer"
+#define BOSS_MEDAL_WENDIGO    "Wendigo Killer"
 #define BOSS_MEDAL_KINGGOAT   "King Goat Killer"
 
 #define BOSS_MEDAL_MINER_CRUSHER	  	"Blood-drunk Miner Crusher"
@@ -52,6 +73,7 @@
 #define BOSS_MEDAL_LEGION_CRUSHER	 	"Legion Crusher"
 #define BOSS_MEDAL_SWARMERS_CRUSHER		"Swarmer Beacon Crusher"
 #define BOSS_MEDAL_REIMU_CRUSHER        "Reimu Killer Crusher"
+#define BOSS_MEDAL_WENDIGO_CRUSHER		"Wendigo Crusher"
 #define BOSS_MEDAL_KINGGOAT_CRUSHER		"King Goat Crusher"
 
 // Medal hub IDs for boss-kill scores
@@ -64,6 +86,10 @@
 #define HIEROPHANT_SCORE 	 "Hierophants Killed"
 #define LEGION_SCORE 	     "Legion Killed"
 #define SWARMER_BEACON_SCORE "Swarmer Beacs Killed"
+#define WENDIGO_SCORE	 	 "Wendigos Killed"
 #define KINGGOAT_SCORE 	     "King Goat Killed"
 #define TENDRIL_CLEAR_SCORE	 "Tendrils Killed"
 #define REIMU_SCORE 	     "Reimu's Killed"
+
+// DB IDs for hardcore random mode
+#define HARDCORE_RANDOM_SCORE "Hardcore Random Score"

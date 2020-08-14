@@ -18,7 +18,8 @@ GLOBAL_LIST_INIT(channel_tokens, list(
 	name = "гарнитура"
 	desc = "Обновленный, модульный интерком, который располагается над головой. Принимает ключи шифрования."
 	icon_state = "headset"
-	item_state = "headset"
+	inhand_icon_state = "headset"
+	worn_icon_state = null
 	custom_materials = list(/datum/material/iron=75)
 	subspace_transmission = TRUE
 	canhear_range = 0 // can't hear headsets from very far away
@@ -60,7 +61,7 @@ GLOBAL_LIST_INIT(channel_tokens, list(
 	QDEL_NULL(keyslot2)
 	return ..()
 
-/obj/item/radio/headset/talk_into(mob/living/M, message, channel, list/spans,datum/language/language)
+/obj/item/radio/headset/talk_into(mob/living/M, message, channel, list/spans, datum/language/language, list/message_mods)
 	if (!listening)
 		return ITALICS | REDUCE_RANGE
 	return ..()
@@ -84,7 +85,7 @@ GLOBAL_LIST_INIT(channel_tokens, list(
 	name = "гарнитура синдиката"
 	desc = "Гарнитура, которая может использоваться для прослушивания всех радиочастот. Защищает уши от светошумовых гранат."
 	icon_state = "syndie_headset"
-	item_state = "syndie_headset"
+	inhand_icon_state = "syndie_headset"
 
 /obj/item/radio/headset/syndicate/alt/ComponentInitialize()
 	. = ..()
@@ -106,16 +107,16 @@ GLOBAL_LIST_INIT(channel_tokens, list(
 	recalculateChannels()
 
 /obj/item/radio/headset/headset_sec
-	name = "гарнитура секьюрити"
+	name = "гарнитура офицера"
 	desc = "Это используется вашими элитными силами безопасности."
 	icon_state = "sec_headset"
 	keyslot = new /obj/item/encryptionkey/headset_sec
 
 /obj/item/radio/headset/headset_sec/alt
-	name = "гарнитура-бабочка секьюрити"
+	name = "гарнитура-бабочка офицера"
 	desc = "Это используется вашими элитными силами безопасности. Защищает уши от светошумовых гранат."
 	icon_state = "sec_headset_alt"
-	item_state = "sec_headset_alt"
+	inhand_icon_state = "sec_headset_alt"
 
 /obj/item/radio/headset/headset_sec/alt/ComponentInitialize()
 	. = ..()
@@ -153,7 +154,7 @@ GLOBAL_LIST_INIT(channel_tokens, list(
 
 /obj/item/radio/headset/headset_srvsec
 	name = "гарнитура закона и порядка"
-	desc = "В гарнитуре системы уголовного правосудия ключ шифрования представляет собой две отдельные, но не менее важные группы. Секьюрити, которые расследуют преступления, и секьюрити, которые предоставляют услуги. Это их связь."
+	desc = "В гарнитуре системы уголовного правосудия ключ шифрования представляет собой две отдельные, но не менее важные группы. Служба безопасности, которая расследует преступления, и секьюрити, которые предоставляют услуги. Это их связь."
 	icon_state = "srvsec_headset"
 	keyslot = new /obj/item/encryptionkey/headset_srvsec
 
@@ -182,7 +183,7 @@ GLOBAL_LIST_INIT(channel_tokens, list(
 	name = "капитанская гарнитура-бабочка"
 	desc = "Гарнитура босса. Защищает уши от светошумовых гранат."
 	icon_state = "com_headset_alt"
-	item_state = "com_headset_alt"
+	inhand_icon_state = "com_headset_alt"
 
 /obj/item/radio/headset/heads/captain/alt/ComponentInitialize()
 	. = ..()
@@ -195,16 +196,16 @@ GLOBAL_LIST_INIT(channel_tokens, list(
 	keyslot = new /obj/item/encryptionkey/heads/rd
 
 /obj/item/radio/headset/heads/hos
-	name = "гарнитура главы секьюрити"
+	name = "гарнитура главы безопасности"
 	desc = "Гарнитура человека, отвечающего за поддержание порядка и охрану станции."
 	icon_state = "com_headset"
 	keyslot = new /obj/item/encryptionkey/heads/hos
 
 /obj/item/radio/headset/heads/hos/alt
-	name = "гарнитура-бабочка главы секьюрити"
+	name = "гарнитура-бабочка главы безопасности"
 	desc = "Гарнитура человека, отвечающего за поддержание порядка и охрану станции. Защищает уши от светошумовых гранат."
 	icon_state = "com_headset_alt"
-	item_state = "com_headset_alt"
+	inhand_icon_state = "com_headset_alt"
 
 /obj/item/radio/headset/heads/hos/ComponentInitialize()
 	. = ..()
@@ -264,7 +265,7 @@ GLOBAL_LIST_INIT(channel_tokens, list(
 	name = "гарнитура-бабочка ЦентКома"
 	desc = "Гарнитура, специально предназначенная для персонала аварийно-спасательных служб. Защищает уши от светошумовых гранат."
 	icon_state = "cent_headset_alt"
-	item_state = "cent_headset_alt"
+	inhand_icon_state = "cent_headset_alt"
 	keyslot = null
 
 /obj/item/radio/headset/headset_cent/alt/ComponentInitialize()

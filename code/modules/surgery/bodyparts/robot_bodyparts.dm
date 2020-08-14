@@ -14,7 +14,7 @@
 	name = "cyborg left arm"
 	desc = "A skeletal limb wrapped in pseudomuscles, with a low-conductivity case."
 	attack_verb = list("шлёпает", "бьёт")
-	item_state = "buildpipe"
+	inhand_icon_state = "buildpipe"
 	icon = 'icons/mob/augmentation/augments.dmi'
 	flags_1 = CONDUCT_1
 	icon_state = "borg_l_arm"
@@ -35,7 +35,7 @@
 	name = "cyborg right arm"
 	desc = "A skeletal limb wrapped in pseudomuscles, with a low-conductivity case."
 	attack_verb = list("шлёпает", "бьёт")
-	item_state = "buildpipe"
+	inhand_icon_state = "buildpipe"
 	icon = 'icons/mob/augmentation/augments.dmi'
 	flags_1 = CONDUCT_1
 	icon_state = "borg_r_arm"
@@ -56,7 +56,7 @@
 	name = "cyborg left leg"
 	desc = "A skeletal limb wrapped in pseudomuscles, with a low-conductivity case."
 	attack_verb = list("пинает", "давит")
-	item_state = "buildpipe"
+	inhand_icon_state = "buildpipe"
 	icon = 'icons/mob/augmentation/augments.dmi'
 	flags_1 = CONDUCT_1
 	icon_state = "borg_l_leg"
@@ -77,7 +77,7 @@
 	name = "cyborg right leg"
 	desc = "A skeletal limb wrapped in pseudomuscles, with a low-conductivity case."
 	attack_verb = list("пинает", "давит")
-	item_state = "buildpipe"
+	inhand_icon_state = "buildpipe"
 	icon = 'icons/mob/augmentation/augments.dmi'
 	flags_1 = CONDUCT_1
 	icon_state = "borg_r_leg"
@@ -97,7 +97,7 @@
 /obj/item/bodypart/chest/robot
 	name = "cyborg torso"
 	desc = "A heavily reinforced case containing cyborg logic boards, with space for a standard power cell."
-	item_state = "buildpipe"
+	inhand_icon_state = "buildpipe"
 	icon = 'icons/mob/augmentation/augments.dmi'
 	flags_1 = CONDUCT_1
 	icon_state = "borg_chest"
@@ -117,6 +117,8 @@
 	var/wired = FALSE
 	var/obj/item/stock_parts/cell/cell = null
 
+/obj/item/bodypart/chest/robot/get_cell()
+	return cell
 
 /obj/item/bodypart/chest/robot/handle_atom_del(atom/A)
 	if(A == cell)
@@ -157,7 +159,7 @@
 	. = TRUE
 	I.play_tool_sound(src)
 	to_chat(user, "<span class='notice'>You cut the wires out of [src].</span>")
-	new /obj/item/stack/cable_coil(drop_location(), 1)
+	new /obj/item/stack/cable_coil(drop_location()[1], 1)
 	wired = FALSE
 
 /obj/item/bodypart/chest/robot/screwdriver_act(mob/living/user, obj/item/I)
@@ -187,7 +189,7 @@
 
 /obj/item/bodypart/chest/robot/drop_organs(mob/user, violent_removal)
 	if(wired)
-		new /obj/item/stack/cable_coil(drop_location(), 1)
+		new /obj/item/stack/cable_coil(drop_location()[1], 1)
 		wired = FALSE
 	if(cell)
 		cell.forceMove(drop_location())
@@ -198,7 +200,7 @@
 /obj/item/bodypart/head/robot
 	name = "cyborg head"
 	desc = "A standard reinforced braincase, with spine-plugged neural socket and sensor gimbals."
-	item_state = "buildpipe"
+	inhand_icon_state = "buildpipe"
 	icon = 'icons/mob/augmentation/augments.dmi'
 	flags_1 = CONDUCT_1
 	icon_state = "borg_head"

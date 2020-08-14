@@ -11,13 +11,12 @@
 	var/dodging = FALSE
 	var/approaching_target = FALSE //We should dodge now
 	var/in_melee = FALSE	//We should sidestep now
-	var/dodge_prob = 30
 	var/sidestep_per_cycle = 1 //How many sidesteps per npcpool cycle when in melee
 
 	var/projectiletype	//set ONLY it and NULLIFY casingtype var, if we have ONLY projectile
 	var/projectilesound
 	var/casingtype		//set ONLY it and NULLIFY projectiletype, if we have projectile IN CASING
-	var/move_to_delay = 3 //delay for the automated movement.
+	var/move_to_delay = 0.3 //delay for the automated movement.
 	var/list/friends = list()
 	var/list/emote_taunt = list()
 	var/taunt_chance = 0
@@ -36,8 +35,8 @@
 
 //These vars are related to how mobs locate and target
 	var/robust_searching = 0 //By default, mobs have a simple searching method, set this to 1 for the more scrutinous searching (stat_attack, stat_exclusive, etc), should be disabled on most mobs
-	var/vision_range = 9 //How big of an area to search for targets in, a vision of 9 attempts to find targets as soon as they walk into screen view
-	var/aggro_vision_range = 9 //If a mob is aggro, we search in this radius. Defaults to 9 to keep in line with original simple mob aggro radius
+	var/vision_range = 288 //How big of an area to search for targets in, a vision of 9 attempts to find targets as soon as they walk into screen view
+	var/aggro_vision_range = 288 //If a mob is aggro, we search in this radius. Defaults to 9 to keep in line with original simple mob aggro radius
 	var/search_objects = 0 //If we want to consider objects when searching around, set this to 1. If you want to search for objects while also ignoring mobs until hurt, set it to 2. To completely ignore mobs, even when attacked, set it to 3
 	var/search_objects_timer_id //Timer for regaining our old search_objects value after being attacked
 	var/search_objects_regain_time = 30 //the delay between being attacked and gaining our old search_objects value back
@@ -110,7 +109,7 @@
 		chosen_dir = pick(cardinal_sidestep_directions)
 	if(chosen_dir)
 		chosen_dir = turn(target_dir,chosen_dir)
-		Move(get_step(src,chosen_dir))
+		step(src, chosen_dir)
 		face_atom(target) //Looks better if they keep looking at you when dodging
 
 /mob/living/simple_animal/hostile/attacked_by(obj/item/I, mob/living/user)
@@ -120,7 +119,7 @@
 
 /mob/living/simple_animal/hostile/bullet_act(obj/projectile/P)
 	if(stat == CONSCIOUS && !target && AIStatus != AI_OFF && !client)
-		if(P.firer && get_dist(src, P.firer) <= aggro_vision_range)
+		if(P.firer && bounds_dist(src, P.firer) <= aggro_vision_range)
 			FindTarget(list(P.firer), 1)
 		Goto(P.starting, move_to_delay, 3)
 	return ..()
@@ -129,15 +128,15 @@
 
 /mob/living/simple_animal/hostile/proc/ListTargets() //Step 1, find out what we can see
 	if(!search_objects)
-		. = hearers(vision_range, targets_from) - src //Remove self, so we don't suicide
+		. = hearers((vision_range / PIXEL_TILE_SIZE), targets_from) - src //Remove self, so we don't suicide
 
 		var/static/hostile_machines = typecacheof(list(/obj/machinery/porta_turret, /obj/mecha))
 
-		for(var/HM in typecache_filter_list(range(vision_range, targets_from), hostile_machines))
-			if(can_see(targets_from, HM, vision_range))
+		for(var/HM in typecache_filter_list(range((vision_range / PIXEL_TILE_SIZE), targets_from), hostile_machines))
+			if(can_see(targets_from, HM, (vision_range / PIXEL_TILE_SIZE)))
 				. += HM
 	else
-		. = oview(vision_range, targets_from)
+		. = oview((vision_range / PIXEL_TILE_SIZE), targets_from)
 
 /mob/living/simple_animal/hostile/proc/FindTarget(list/possible_targets, HasTargetsList = 0)//Step 2, filter down possible targets to things we actually care about
 	. = list()
@@ -177,8 +176,8 @@
 	if(target != null)//If we already have a target, but are told to pick again, calculate the lowest distance between all possible, and pick from the lowest distance targets
 		for(var/pos_targ in Targets)
 			var/atom/A = pos_targ
-			var/target_dist = get_dist(targets_from, target)
-			var/possible_target_distance = get_dist(targets_from, A)
+			var/target_dist = bounds_dist(targets_from, target)
+			var/possible_target_distance = bounds_dist(targets_from, A)
 			if(target_dist < possible_target_distance)
 				Targets -= A
 	if(!Targets.len)//We didnt find nothin!
@@ -270,7 +269,7 @@
 		if(target.z != T.z)
 			LoseTarget()
 			return 0
-		var/target_distance = get_dist(targets_from,target)
+		var/target_distance = bounds_dist(targets_from,target)
 		if(ranged) //We ranged? Shoot at em
 			if(!target.Adjacent(targets_from) && ranged_cooldown <= world.time) //But make sure they're not in range for a melee attack and our range attack is off cooldown
 				OpenFire(target)
@@ -294,7 +293,7 @@
 			return 1
 		return 0
 	if(environment_smash)
-		if(target.loc != null && get_dist(targets_from, target.loc) <= vision_range) //We can't see our target, but he's in our vision range still
+		if(target.loc != null && bounds_dist(targets_from, target.loc) <= vision_range) //We can't see our target, but he's in our vision range still
 			if(ranged_ignores_vision && ranged_cooldown <= world.time) //we can't see our target... but we can fire at them!
 				OpenFire(target)
 			if((environment_smash & ENVIRONMENT_SMASH_WALLS) || (environment_smash & ENVIRONMENT_SMASH_RWALLS)) //If we're capable of smashing through walls, forget about vision completely after finding our target
@@ -335,7 +334,7 @@
 /mob/living/simple_animal/hostile/proc/Aggro()
 	vision_range = aggro_vision_range
 	if(target && emote_taunt.len && prob(taunt_chance))
-		emote("me", 1, "[pick(emote_taunt)] at [target].")
+		manual_emote("[pick(emote_taunt)] at [target].")
 		taunt_chance = max(taunt_chance-7,2)
 
 
@@ -379,7 +378,8 @@
 /mob/living/simple_animal/hostile/proc/OpenFire(atom/A)
 	if(CheckFriendlyFire(A))
 		return
-	visible_message("<span class='danger'><b>[src]</b> [ranged_message] at [A]!</span>")
+	if(!(simple_mob_flags & SILENCE_RANGED_MESSAGE))
+		visible_message("<span class='danger'><b>[src]</b> [ranged_message] at [A]!</span>")
 
 
 	if(rapid > 1)
@@ -403,7 +403,6 @@
 		var/obj/projectile/P = new projectiletype(startloc)
 		playsound(src, projectilesound, 100, TRUE)
 		P.starting = startloc
-		P.firer = src
 		P.fired_from = src
 		P.yo = targeted_atom.y - startloc.y
 		P.xo = targeted_atom.x - startloc.x
@@ -417,23 +416,6 @@
 
 /mob/living/simple_animal/hostile/proc/CanSmashTurfs(turf/T)
 	return iswallturf(T) || ismineralturf(T)
-
-
-/mob/living/simple_animal/hostile/Move(atom/newloc, dir , step_x , step_y)
-	if(dodging && approaching_target && prob(dodge_prob) && moving_diagonally == 0 && isturf(loc) && isturf(newloc))
-		return dodge(newloc,dir)
-	else
-		return ..()
-
-/mob/living/simple_animal/hostile/proc/dodge(moving_to,move_direction)
-	//Assuming we move towards the target we want to swerve toward them to get closer
-	var/cdir = turn(move_direction,45)
-	var/ccdir = turn(move_direction,-45)
-	dodging = FALSE
-	. = Move(get_step(loc,pick(cdir,ccdir)))
-	if(!.)//Can't dodge there so we just carry on
-		. =  Move(moving_to,move_direction)
-	dodging = TRUE
 
 /mob/living/simple_animal/hostile/proc/DestroyObjectsInDirection(direction)
 	var/turf/T = get_step(targets_from, direction)
@@ -465,7 +447,7 @@
 			DestroyObjectsInDirection(direction)
 
 
-mob/living/simple_animal/hostile/proc/DestroySurroundings() // for use with megafauna destroying everything around them
+/mob/living/simple_animal/hostile/proc/DestroySurroundings() // for use with megafauna destroying everything around them
 	if(environment_smash)
 		EscapeConfinement()
 		for(var/dir in GLOB.cardinals)
@@ -497,7 +479,7 @@ mob/living/simple_animal/hostile/proc/DestroySurroundings() // for use with mega
 
 
 ////// AI Status ///////
-/mob/living/simple_animal/hostile/proc/AICanContinue(var/list/possible_targets)
+/mob/living/simple_animal/hostile/proc/AICanContinue(list/possible_targets)
 	switch(AIStatus)
 		if(AI_ON)
 			. = 1
@@ -508,7 +490,7 @@ mob/living/simple_animal/hostile/proc/DestroySurroundings() // for use with mega
 			else
 				. = 0
 
-/mob/living/simple_animal/hostile/proc/AIShouldSleep(var/list/possible_targets)
+/mob/living/simple_animal/hostile/proc/AIShouldSleep(list/possible_targets)
 	return !FindTarget(possible_targets, 1)
 
 
@@ -559,12 +541,12 @@ mob/living/simple_animal/hostile/proc/DestroySurroundings() // for use with mega
 			FindTarget()
 		toggle_ai(AI_ON)
 
-/mob/living/simple_animal/hostile/proc/ListTargetsLazy(var/_Z)//Step 1, find out what we can see
+/mob/living/simple_animal/hostile/proc/ListTargetsLazy(_Z)//Step 1, find out what we can see
 	var/static/hostile_machines = typecacheof(list(/obj/machinery/porta_turret, /obj/mecha))
 	. = list()
 	for (var/I in SSmobs.clients_by_zlevel[_Z])
 		var/mob/M = I
-		if (get_dist(M, src) < vision_range)
+		if (bounds_dist(M, src) < vision_range)
 			if (isturf(M.loc))
 				. += M
 			else if (M.loc.type in hostile_machines)

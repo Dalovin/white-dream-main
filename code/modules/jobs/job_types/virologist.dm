@@ -1,8 +1,6 @@
 /datum/job/virologist
 	title = "Virologist"
-	flag = VIROLOGIST
 	department_head = list("Chief Medical Officer")
-	department_flag = MEDSCI
 	faction = "Station"
 	total_positions = 1
 	spawn_positions = 1
@@ -19,6 +17,7 @@
 	paycheck_department = ACCOUNT_MED
 
 	display_order = JOB_DISPLAY_ORDER_VIROLOGIST
+	bounty_types = CIV_JOB_VIRO
 
 /datum/outfit/job/virologist
 	name = "Virologist"
@@ -31,6 +30,7 @@
 	shoes = /obj/item/clothing/shoes/sneakers/white
 	suit =  /obj/item/clothing/suit/toggle/labcoat/virologist
 	suit_store =  /obj/item/flashlight/pen
+	backpack_contents = list(/obj/item/modular_computer/tablet/preset/cheap=1)
 
 	backpack = /obj/item/storage/backpack/virology
 	satchel = /obj/item/storage/backpack/satchel/vir

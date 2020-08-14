@@ -19,6 +19,7 @@
 	slot_flags = ITEM_SLOT_HEAD
 	customfoodfilling = 0 //to avoid infinite bread-ception
 	foodtype = GRAIN
+	value = FOOD_JUNK
 
 /obj/item/reagent_containers/food/snacks/breadslice/Initialize()
 	. = ..()
@@ -34,6 +35,7 @@
 	slice_path = /obj/item/reagent_containers/food/snacks/breadslice/plain
 	tastes = list("хлеб" = 10)
 	foodtype = GRAIN
+	value = FOOD_FAST
 
 /obj/item/reagent_containers/food/snacks/breadslice/plain
 	name = "bread slice"
@@ -60,6 +62,7 @@
 	list_reagents = list(/datum/reagent/consumable/nutriment = 30, /datum/reagent/consumable/nutriment/vitamin = 5)
 	tastes = list("хлеб" = 10, "мясо" = 10)
 	foodtype = GRAIN | MEAT
+	value = FOOD_FAST
 
 /obj/item/reagent_containers/food/snacks/breadslice/meat
 	name = "meatbread slice"
@@ -76,6 +79,7 @@
 	list_reagents = list(/datum/reagent/consumable/nutriment = 30, /datum/reagent/consumable/nutriment/vitamin = 5)
 	tastes = list("хлеб" = 10, "кислота" = 10)
 	foodtype = GRAIN | MEAT
+	value = FOOD_EXOTIC
 
 /obj/item/reagent_containers/food/snacks/breadslice/xenomeat
 	name = "xenomeatbread slice"
@@ -94,6 +98,7 @@
 	list_reagents = list(/datum/reagent/consumable/nutriment = 30, /datum/reagent/toxin = 15, /datum/reagent/consumable/nutriment/vitamin = 5)
 	tastes = list("хлеб" = 10, "паутина" = 5)
 	foodtype = GRAIN | MEAT | TOXIC
+	value = FOOD_RARE
 
 /obj/item/reagent_containers/food/snacks/breadslice/spidermeat
 	name = "spider meat bread slice"
@@ -102,6 +107,7 @@
 	filling_color = "#7CFC00"
 	list_reagents = list(/datum/reagent/consumable/nutriment = 6, /datum/reagent/toxin = 3, /datum/reagent/consumable/nutriment/vitamin = 1)
 	foodtype = GRAIN | MEAT | TOXIC
+	value = FOOD_RARE
 
 /obj/item/reagent_containers/food/snacks/store/bread/banana
 	name = "banana-nut bread"
@@ -112,6 +118,7 @@
 	list_reagents = list(/datum/reagent/consumable/nutriment = 20, /datum/reagent/consumable/banana = 20)
 	tastes = list("хлеб" = 10) // bananjuice will also flavour
 	foodtype = GRAIN | FRUIT
+	value = FOOD_RARE
 
 
 /obj/item/reagent_containers/food/snacks/breadslice/banana
@@ -131,6 +138,7 @@
 	list_reagents = list(/datum/reagent/consumable/nutriment = 20, /datum/reagent/consumable/nutriment/vitamin = 5)
 	tastes = list("хлеб" = 10, "тофу" = 10)
 	foodtype = GRAIN | VEGETABLES
+	value = FOOD_FAST
 
 /obj/item/reagent_containers/food/snacks/breadslice/tofu
 	name = "tofubread slice"
@@ -149,6 +157,7 @@
 	list_reagents = list(/datum/reagent/consumable/nutriment = 20, /datum/reagent/consumable/nutriment/vitamin = 5)
 	tastes = list("хлеб" = 10, "сыр" = 10)
 	foodtype = GRAIN | DAIRY
+	value = FOOD_RARE
 
 /obj/item/reagent_containers/food/snacks/breadslice/creamcheese
 	name = "cream cheese bread slice"
@@ -167,6 +176,7 @@
 	list_reagents = list(/datum/reagent/consumable/nutriment = 20, /datum/reagent/toxin/mutetoxin = 5, /datum/reagent/consumable/nothing = 5, /datum/reagent/consumable/nutriment/vitamin = 5)
 	tastes = list("хлеб" = 10, "молчание" = 10)
 	foodtype = GRAIN | FRUIT
+	value = FOOD_EXOTIC
 
 /obj/item/reagent_containers/food/snacks/breadslice/mimana
 	name = "mimana bread slice"
@@ -187,7 +197,8 @@
 	desc = "Bon appetit!"
 	icon = 'icons/obj/food/burgerbread.dmi'
 	icon_state = "baguette"
-	item_state = "baguette"
+	inhand_icon_state = "baguette"
+	worn_icon_state = "baguette"
 	bonus_reagents = list(/datum/reagent/consumable/nutriment = 2, /datum/reagent/consumable/nutriment/vitamin = 2)
 	list_reagents = list(/datum/reagent/consumable/nutriment = 6, /datum/reagent/consumable/nutriment/vitamin = 1)
 	bitesize = 3
@@ -196,18 +207,20 @@
 	attack_verb = list("touche'd")
 	tastes = list("хлеб" = 1)
 	foodtype = GRAIN
+	value = FOOD_FAST
 
 /obj/item/reagent_containers/food/snacks/garlicbread
 	name = "garlic bread"
 	desc = "Alas, it is limited."
 	icon = 'icons/obj/food/burgerbread.dmi'
 	icon_state = "garlicbread"
-	item_state = "garlicbread"
+	inhand_icon_state = "garlicbread"
 	bonus_reagents = list(/datum/reagent/consumable/nutriment = 5, /datum/reagent/consumable/nutriment/vitamin = 2)
 	list_reagents = list(/datum/reagent/consumable/nutriment = 5, /datum/reagent/consumable/nutriment/vitamin = 4, /datum/reagent/consumable/garlic = 2)
 	bitesize = 3
 	tastes = list("хлеб" = 1, "чеснок" = 1, "масло" = 1)
 	foodtype = GRAIN
+	value = FOOD_RARE
 
 /obj/item/reagent_containers/food/snacks/deepfryholder
 	name = "Deep Fried Foods Holder Obj"
@@ -215,6 +228,7 @@
 	icon = 'icons/obj/food/food.dmi'
 	icon_state = ""
 	bitesize = 2
+	value = FOOD_JUNK
 
 /obj/item/reagent_containers/food/snacks/deepfryholder/Initialize(mapload, obj/item/fried)
 	. = ..()
@@ -224,7 +238,7 @@
 	plane = initial(plane)
 	lefthand_file = fried.lefthand_file
 	righthand_file = fried.righthand_file
-	item_state = fried.item_state
+	inhand_icon_state = fried.inhand_icon_state
 	desc = fried.desc
 	w_class = fried.w_class
 	slowdown = fried.slowdown
@@ -257,20 +271,20 @@
 	switch(cook_time)
 		if(0 to 15)
 			add_atom_colour(rgb(166,103,54), FIXED_COLOUR_PRIORITY)
-			name = "lightly-fried [name]"
-			desc = "[desc] It's been lightly fried in a deep fryer."
+			name = "слегка обжаренный [name]"
+			desc = "[desc] Это слегка обжарили во фритюрнице."
 		if(16 to 49)
 			add_atom_colour(rgb(103,63,24), FIXED_COLOUR_PRIORITY)
-			name = "fried [name]"
-			desc = "[desc] It's been fried, increasing its tastiness value by [rand(1, 75)]%."
+			name = "жареный [name]"
+			desc = "[desc] Прожарено так, что увеличило его ценность вкуса на [rand(1, 75)]%."
 		if(50 to 59)
 			add_atom_colour(rgb(63,23,4), FIXED_COLOUR_PRIORITY)
-			name = "deep-fried [name]"
-			desc = "[desc] Deep-fried to perfection."
+			name = "сильно прожаренный [name]"
+			desc = "[desc] Прожарено до совершенства."
 		if(60 to INFINITY)
 			add_atom_colour(rgb(33,19,9), FIXED_COLOUR_PRIORITY)
-			name = "the physical manifestation of the very concept of fried foods"
-			desc = "A heavily-fried...something.  Who can tell anymore?"
+			name = "физическое проявление самой концепции жареной пищи"
+			desc = "Жареное... что-то. Кто может сказать больше?"
 	filling_color = color
 	foodtype |= FRIED
 
@@ -284,6 +298,7 @@
 	bonus_reagents = list(/datum/reagent/consumable/nutriment = 1, /datum/reagent/consumable/nutriment/vitamin = 1)
 	tastes = list("масло" = 1, "бисквит" = 1)
 	foodtype = GRAIN | BREAKFAST
+	value = FOOD_FAST
 
 /obj/item/reagent_containers/food/snacks/butterdog
 	name = "butterdog"
@@ -296,6 +311,7 @@
 	bonus_reagents = list(/datum/reagent/consumable/nutriment = 1, /datum/reagent/consumable/nutriment/vitamin = 1)
 	tastes = list("масло", "экзотическое масло")
 	foodtype = GRAIN | DAIRY
+	value = FOOD_RARE
 
 /obj/item/reagent_containers/food/snacks/butterdog/ComponentInitialize()
 	. = ..()

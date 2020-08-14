@@ -18,10 +18,9 @@
 /obj/item/reagent_containers/food/Initialize(mapload)
 	. = ..()
 	if(!mapload)
-		pixel_x = rand(-5, 5)
-		pixel_y = rand(-5, 5)
+		forceMove(loc, rand(-5, 5), rand(-5, 5))
 
-/obj/item/reagent_containers/food/proc/checkLiked(var/fraction, mob/M)
+/obj/item/reagent_containers/food/proc/checkLiked(fraction, mob/M)
 	if(last_check_time + 50 < world.time)
 		if(ishuman(M))
 			var/mob/living/carbon/human/H = M

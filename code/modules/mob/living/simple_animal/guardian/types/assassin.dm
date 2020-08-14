@@ -2,8 +2,8 @@
 /mob/living/simple_animal/hostile/guardian/assassin
 	melee_damage_lower = 15
 	melee_damage_upper = 15
-	attack_verb_continuous = "slashes"
-	attack_verb_simple = "slash"
+	attack_verb_continuous = "режет"
+	attack_verb_simple = "режет"
 	attack_sound = 'sound/weapons/bladeslice.ogg'
 	damage_coeff = list(BRUTE = 1, BURN = 1, TOX = 1, CLONE = 1, STAMINA = 0, OXY = 1)
 	playstyle_string = "<span class='holoparasite'>As an <b>assassin</b> type you do medium damage and have no damage resistance, but can enter stealth, massively increasing the damage of your next attack and causing it to ignore armor. Stealth is broken when you attack or take damage.</span>"
@@ -11,7 +11,7 @@
 	tech_fluff_string = "<span class='holoparasite'>Boot sequence complete. Assassin modules loaded. Holoparasite swarm online.</span>"
 	carp_fluff_string = "<span class='holoparasite'>CARP CARP CARP! Caught one! It's an assassin carp! Just when you thought it was safe to go back to the water... which is unhelpful, because we're in space.</span>"
 	miner_fluff_string = "<span class='holoparasite'>You encounter... Glass, a sharp, fragile attacker.</span>"
-	toggle_button_type = /obj/screen/guardian/ToggleMode/Assassin
+	toggle_button_type = /obj/screen/guardian/toggle_mode/assassin
 	var/toggle = FALSE
 	var/stealthcooldown = 160
 	var/obj/screen/alert/canstealthalert
@@ -29,7 +29,7 @@
 
 /mob/living/simple_animal/hostile/guardian/assassin/Stat()
 	..()
-	if(statpanel("ИГРА"))
+	if(statpanel("Игра"))
 		if(stealthcooldown >= world.time)
 			stat(null, "Stealth Cooldown Remaining: [DisplayTimeText(stealthcooldown - world.time)]")
 

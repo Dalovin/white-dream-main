@@ -2,8 +2,8 @@
 #define OCCLUSION_DISTANCE 20
 
 /obj/machinery/power/solar
-	name = "solar panel"
-	desc = "A solar panel. Generates electricity when in contact with sunlight."
+	name = "Солнечная панель"
+	desc = "Солнечная панель. Генерирует энергию при контакте со светом"
 	icon = 'goon/icons/obj/power.dmi'
 	icon_state = "sp_base"
 	density = TRUE
@@ -59,7 +59,7 @@
 	if(!S)
 		S = new /obj/item/solar_assembly(src)
 		S.glass_type = /obj/item/stack/sheet/glass
-		S.anchored = TRUE
+		S.set_anchored(TRUE)
 	else
 		S.forceMove(src)
 	if(S.glass_type == /obj/item/stack/sheet/rglass) //if the panel is in reinforced glass
@@ -68,10 +68,10 @@
 
 /obj/machinery/power/solar/crowbar_act(mob/user, obj/item/I)
 	playsound(src.loc, 'sound/machines/click.ogg', 50, TRUE)
-	user.visible_message("<span class='notice'>[user] begins to take the glass off [src].</span>", "<span class='notice'>You begin to take the glass off [src]...</span>")
+	user.visible_message("<span class='notice'>[user] начинает снимать стекло с [src].</span>", "<span class='notice'>Вы начинаете снимать стекло с [src]...</span>")
 	if(I.use_tool(src, user, 50))
 		playsound(src.loc, 'sound/items/deconstruct.ogg', 50, TRUE)
-		user.visible_message("<span class='notice'>[user] takes the glass off [src].</span>", "<span class='notice'>You take the glass off [src].</span>")
+		user.visible_message("<span class='notice'>[user] снимает стекло с [src].</span>", "<span class='notice'>Вы снимаете стекло с [src].</span>")
 		deconstruct(TRUE)
 	return TRUE
 
@@ -197,11 +197,11 @@
 //
 
 /obj/item/solar_assembly
-	name = "solar panel assembly"
-	desc = "A solar panel assembly kit, allows constructions of a solar panel, or with a tracking circuit board, a solar tracker."
+	name = "Основание солнечной панели"
+	desc = "Основание солнечной панели, даёт возможность создания солнечной панели, или с помощью платы отслеживания a солнечный отслеживатель." // отслеживатель? Как по мне круче трекер, но кого это интересует...
 	icon = 'goon/icons/obj/power.dmi'
 	icon_state = "sp_base"
-	item_state = "electropack"
+	inhand_icon_state = "electropack"
 	lefthand_file = 'icons/mob/inhands/misc/devices_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/misc/devices_righthand.dmi'
 	w_class = WEIGHT_CLASS_BULKY // Pretty big!
@@ -221,7 +221,7 @@
 
 // Give back the glass type we were supplied with
 /obj/item/solar_assembly/proc/give_glass(device_broken)
-	var/atom/Tsec = drop_location()
+	var/atom/Tsec = drop_location()[1]
 	if(device_broken)
 		new /obj/item/shard(Tsec)
 		new /obj/item/shard(Tsec)
@@ -229,56 +229,57 @@
 		new glass_type(Tsec, 2)
 	glass_type = null
 
+/obj/item/solar_assembly/set_anchored(anchorvalue)
+	. = ..()
+	if(isnull(.))
+		return
+	randomise_offset(anchored ? 0 : random_offset)
 
 /obj/item/solar_assembly/attackby(obj/item/W, mob/user, params)
 	if(W.tool_behaviour == TOOL_WRENCH && isturf(loc))
 		if(isinspace())
-			to_chat(user, "<span class='warning'>You can't secure [src] here.</span>")
+			to_chat(user, "<span class='warning'>Вы не можете прикрутить [src] тут.</span>")
 			return
-		anchored = !anchored
+		set_anchored(!anchored)
 		if(anchored)
-			user.visible_message("<span class='notice'>[user] wrenches the solar assembly into place.</span>", "<span class='notice'>You wrench the solar assembly into place.</span>")
-			W.play_tool_sound(src, 75)
-			pixel_x = 0
-			pixel_y = 0
-		else
-			user.visible_message("<span class='notice'>[user] unwrenches the solar assembly from its place.</span>", "<span class='notice'>You unwrench the solar assembly from its place.</span>")
-			W.play_tool_sound(src, 75)
-			randomise_offset(random_offset)
-		return 1
+			forceMove(nearest_turf(src))
+			forceStep(null, 0, 0)
+		user.visible_message("<span class='notice'>[user] [anchored ? "при" : "от"]кручивает основание солнечной панели.</span>", "<span class='notice'>[anchored ? "При" : "от"]кручиваю основание солнечной панели.</span>")
+		W.play_tool_sound(src, 75)
+		return TRUE
 
 	if(istype(W, /obj/item/stack/sheet/glass) || istype(W, /obj/item/stack/sheet/rglass))
 		if(!anchored)
-			to_chat(user, "<span class='warning'>You need to secure the assembly before you can add glass.</span>")
+			to_chat(user, "<span class='warning'>Вы должны прикрутить основание прежде чем добавлять туда стекло.</span>")
 			return
 		var/obj/item/stack/sheet/S = W
 		if(S.use(2))
 			glass_type = W.type
 			playsound(src.loc, 'sound/machines/click.ogg', 50, TRUE)
-			user.visible_message("<span class='notice'>[user] places the glass on the solar assembly.</span>", "<span class='notice'>You place the glass on the solar assembly.</span>")
+			user.visible_message("<span class='notice'>[user] вставляет стекло в основание солнечной панели.</span>", "<span class='notice'>Вы вставляете стекло в основание солнейчной панели.</span>")
 			if(tracker)
 				new /obj/machinery/power/tracker(get_turf(src), src)
 			else
 				new /obj/machinery/power/solar(get_turf(src), src)
 		else
-			to_chat(user, "<span class='warning'>You need two sheets of glass to put them into a solar panel!</span>")
+			to_chat(user, "<span class='warning'>Вы должны иметь два листа стекла прежде чем вставлять их в основание!</span>")
 			return
-		return 1
+		return TRUE
 
 	if(!tracker)
 		if(istype(W, /obj/item/electronics/tracker))
 			if(!user.temporarilyRemoveItemFromInventory(W))
 				return
-			tracker = 1
+			tracker = TRUE
 			qdel(W)
-			user.visible_message("<span class='notice'>[user] inserts the electronics into the solar assembly.</span>", "<span class='notice'>You insert the electronics into the solar assembly.</span>")
-			return 1
+			user.visible_message("<span class='notice'>[user] вставляет электронику в основание солнечной панели.</span>", "<span class='notice'>Вставляю электронику в основание солнечной панели.</span>")
+			return TRUE
 	else
 		if(W.tool_behaviour == TOOL_CROWBAR)
 			new /obj/item/electronics/tracker(src.loc)
-			tracker = 0
-			user.visible_message("<span class='notice'>[user] takes out the electronics from the solar assembly.</span>", "<span class='notice'>You take out the electronics from the solar assembly.</span>")
-			return 1
+			tracker = FALSE
+			user.visible_message("<span class='notice'>[user] вынимает электронику из основания солнечной панели.</span>", "<span class='notice'>Вынимаю электронику из основания солнечной панели.</span>")
+			return TRUE
 	return ..()
 
 //
@@ -286,8 +287,8 @@
 //
 
 /obj/machinery/power/solar_control
-	name = "solar panel control"
-	desc = "A controller for solar panel arrays."
+	name = "Консоль управления солнечными панелями"
+	desc = "Консоль управления солнечными панелями."
 	icon = 'icons/obj/computer.dmi'
 	icon_state = "computer"
 	density = TRUE
@@ -348,11 +349,10 @@
 	else
 		. += mutable_appearance(icon, icon_screen)
 
-/obj/machinery/power/solar_control/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, \
-												datum/tgui/master_ui = null, datum/ui_state/state = GLOB.default_state)
-	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+/obj/machinery/power/solar_control/ui_interact(mob/user, datum/tgui/ui)
+	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
-		ui = new(user, src, ui_key, "solar_control", name, 380, 230, master_ui, state)
+		ui = new(user, src, "SolarControl", name)
 		ui.open()
 
 /obj/machinery/power/solar_control/ui_data()
@@ -406,7 +406,7 @@
 	if(I.tool_behaviour == TOOL_SCREWDRIVER)
 		if(I.use_tool(src, user, 20, volume=50))
 			if (src.machine_stat & BROKEN)
-				to_chat(user, "<span class='notice'>The broken glass falls out.</span>")
+				to_chat(user, "<span class='notice'>Сломанное стекло выпадает.</span>")
 				var/obj/structure/frame/computer/A = new /obj/structure/frame/computer( src.loc )
 				new /obj/item/shard( src.loc )
 				var/obj/item/circuitboard/computer/solar_control/M = new /obj/item/circuitboard/computer/solar_control( A )
@@ -415,10 +415,10 @@
 				A.circuit = M
 				A.state = 3
 				A.icon_state = "3"
-				A.anchored = TRUE
+				A.set_anchored(TRUE)
 				qdel(src)
 			else
-				to_chat(user, "<span class='notice'>You disconnect the monitor.</span>")
+				to_chat(user, "<span class='notice'>Вы отсоединяете монитор.</span>")
 				var/obj/structure/frame/computer/A = new /obj/structure/frame/computer( src.loc )
 				var/obj/item/circuitboard/computer/solar_control/M = new /obj/item/circuitboard/computer/solar_control( A )
 				for (var/obj/C in src)
@@ -426,7 +426,7 @@
 				A.circuit = M
 				A.state = 4
 				A.icon_state = "4"
-				A.anchored = TRUE
+				A.set_anchored(TRUE)
 				qdel(src)
 	else if(user.a_intent != INTENT_HARM && !(I.item_flags & NOBLUDGEON))
 		attack_hand(user)
@@ -478,8 +478,8 @@
 //
 
 /obj/item/paper/guides/jobs/engi/solars
-	name = "paper- 'Going green! Setup your own solar array instructions.'"
-	info = "<h1>Welcome</h1><p>At greencorps we love the environment, and space. With this package you are able to help mother nature and produce energy without any usage of fossil fuel or plasma! Singularity energy is dangerous while solar energy is safe, which is why it's better. Now here is how you setup your own solar array.</p><p>You can make a solar panel by wrenching the solar assembly onto a cable node. Adding a glass panel, reinforced or regular glass will do, will finish the construction of your solar panel. It is that easy!</p><p>Now after setting up 19 more of these solar panels you will want to create a solar tracker to keep track of our mother nature's gift, the sun. These are the same steps as before except you insert the tracker equipment circuit into the assembly before performing the final step of adding the glass. You now have a tracker! Now the last step is to add a computer to calculate the sun's movements and to send commands to the solar panels to change direction with the sun. Setting up the solar computer is the same as setting up any computer, so you should have no trouble in doing that. You do need to put a wire node under the computer, and the wire needs to be connected to the tracker.</p><p>Congratulations, you should have a working solar array. If you are having trouble, here are some tips. Make sure all solar equipment are on a cable node, even the computer. You can always deconstruct your creations if you make a mistake.</p><p>That's all to it, be safe, be green!</p>"
+	name = "paper- 'Создания солнечных панелей'"
+	info = "<h1> Добро пожаловать </ h1> <p> В Зелёных Корпорациях мы любим окружающую среду и пространство. С помощью этого ящика вы можете помочь матери-природе и производить энергию без использования ископаемого топлива или плазмы! Энергия сингулярности опасна, а солнечная энергия безопасна, поэтому она лучше. Теперь вот как вы настраиваете свою собственную солнечную батарею. </ P> <p> Вы можете сделать солнечную панель, прикрутив солнечную батарею к кабельному узлу. Добавление стеклянной панели, армированного или обычного стекла завершит строительство вашей солнечной панели. Это так просто! </ P> <p> Теперь, после установки еще 19 таких солнечных панелей, вы захотите создать солнечный остлеживатель для отслеживания дара нашей матери-природы - солнца. Это те же шаги, что и ранее, за исключением того, что вы вставляете схему оборудования трекера в сборку перед выполнением последнего шага добавления стекла. Теперь у вас есть Остлеживатель! Теперь последний шаг - добавить компьютер для расчета движений солнца и посылать команды на солнечные панели для изменения направления движения с солнцем. Настройка солнечного компьютера аналогична настройке любого компьютера, поэтому у вас не должно возникнуть никаких проблем. Вам необходимо поместить проводной узел под компьютер, а провод должен быть подключен к трекеру. </ P> <p> Поздравляем, у вас должна быть работающая солнечная батарея. Если у вас возникли проблемы, вот несколько советов. Убедитесь, что все солнечное оборудование находится на кабельном узле, даже компьютер. Вы всегда можете деконструировать свои творения, если допустите ошибку. </ P> <p> Вот и все, будьте в безопасности, будьте зелеными! </ P> "
 
 #undef SOLAR_GEN_RATE
 #undef OCCLUSION_DISTANCE

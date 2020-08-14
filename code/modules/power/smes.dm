@@ -15,14 +15,13 @@
 #define SMES_INPUT_ATTEMPT	9
 
 /obj/machinery/power/smes
-	name = "power storage unit"
-	desc = "A high-capacity superconducting magnetic energy storage (SMES) unit."
+	name = "Сверхпроводящий накопитель магнитной энергии"
+	desc = "Сверхпроводящий накопитель магнитной энергии (СНМЭ)" //крутой перевод мммм
+	icon = 'white/valtos/icons/power.dmi'
 	icon_state = "smes"
 	density = TRUE
 	use_power = NO_POWER_USE
 	circuit = /obj/item/circuitboard/machine/smes
-	ui_x = 340
-	ui_y = 440
 
 	var/capacity = 5e6 // maximum charge
 	var/charge = 0 // actual charge
@@ -44,7 +43,7 @@
 /obj/machinery/power/smes/examine(user)
 	. = ..()
 	if(!terminal)
-		. += "<span class='warning'>This SMES has no power terminal!</span>"
+		. += "<span class='warning'> Этот СНМЭ без терминала питания!</span>"
 
 /obj/machinery/power/smes/Initialize()
 	. = ..()
@@ -94,10 +93,10 @@
 			if(term && term.dir == turn(dir, 180))
 				terminal = term
 				terminal.master = src
-				to_chat(user, "<span class='notice'>Terminal found.</span>")
+				to_chat(user, "<span class='notice'>Терминал питания найден.</span>")
 				break
 		if(!terminal)
-			to_chat(user, "<span class='alert'>No power terminal found.</span>")
+			to_chat(user, "<span class='alert'>Не найдено терминала питания.</span>")
 			return
 		machine_stat &= ~BROKEN
 		update_icon()
@@ -110,25 +109,25 @@
 			return
 
 		if(terminal) //is there already a terminal ?
-			to_chat(user, "<span class='warning'>This SMES already has a power terminal!</span>")
+			to_chat(user, "<span class='warning'>Этот СНМЭ имеет терминал питания!</span>")
 			return
 
 		if(!panel_open) //is the panel open ?
-			to_chat(user, "<span class='warning'>You must open the maintenance panel first!</span>")
+			to_chat(user, "<span class='warning'>Вы должны открыть техническую панель сначала!</span>")
 			return
 
 		var/turf/T = get_turf(user)
 		if (T.intact) //is the floor plating removed ?
-			to_chat(user, "<span class='warning'>You must first remove the floor plating!</span>")
+			to_chat(user, "<span class='warning'>Вы должны убрать плитку прежде чем делать это!</span>")
 			return
 
 
 		var/obj/item/stack/cable_coil/C = I
 		if(C.get_amount() < 10)
-			to_chat(user, "<span class='warning'>You need more wires!</span>")
+			to_chat(user, "<span class='warning'>Нужно больше проводов!</span>")
 			return
 
-		to_chat(user, "<span class='notice'>You start building the power terminal...</span>")
+		to_chat(user, "<span class='notice'>Вы начинаете делать терминал питания...</span>")
 		playsound(src.loc, 'sound/items/deconstruct.ogg', 50, TRUE)
 
 		if(do_after(user, 20, target = src))
@@ -140,8 +139,8 @@
 				return
 			if(!terminal)
 				C.use(10)
-				user.visible_message("<span class='notice'>[user.name] builds a power terminal.</span>",\
-					"<span class='notice'>You build the power terminal.</span>")
+				user.visible_message("<span class='notice'>[user.name] сделал терминал питания.</span>",\
+					"<span class='notice'>Вы сделали терминал питания.</span>")
 
 				//build the terminal and link it to the network
 				make_terminal(T)
@@ -171,7 +170,7 @@
 
 /obj/machinery/power/smes/default_deconstruction_crowbar(obj/item/crowbar/C)
 	if(istype(C) && terminal)
-		to_chat(usr, "<span class='warning'>You must first remove the power terminal!</span>")
+		to_chat(usr, "<span class='warning'>Вы должны сначала убрать терминал питания!</span>")
 		return FALSE
 
 	return ..()
@@ -239,6 +238,11 @@
 	var/last_disp = chargedisplay()
 	var/last_chrg = inputting
 	var/last_onln = outputting
+
+	//check for self-recharging cells in stock parts and use them to self-charge
+	for(var/obj/item/stock_parts/cell/C in component_parts)
+		if(C.self_recharge)
+			charge += min(capacity-charge, C.chargerate) // If capacity-charge is smaller than the attempted charge rate, this avoids overcharging
 
 	//inputting
 	if(terminal && input_attempt)
@@ -318,32 +322,29 @@
 	return
 
 
-/obj/machinery/power/smes/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, \
-										datum/tgui/master_ui = null, datum/ui_state/state = GLOB.default_state)
-	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+/obj/machinery/power/smes/ui_interact(mob/user, datum/tgui/ui)
+	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
-		ui = new(user, src, ui_key, "smes", name, ui_x, ui_y, master_ui, state)
+		ui = new(user, src, "Smes", name)
 		ui.open()
 
 /obj/machinery/power/smes/ui_data()
 	var/list/data = list(
-		"capacityPercent" = round(100*charge/capacity, 0.1),
 		"capacity" = capacity,
+		"capacityPercent" = round(100*charge/capacity, 0.1),
 		"charge" = charge,
-
 		"inputAttempt" = input_attempt,
 		"inputting" = inputting,
 		"inputLevel" = input_level,
 		"inputLevel_text" = DisplayPower(input_level),
 		"inputLevelMax" = input_level_max,
-		"inputAvailable" = DisplayPower(input_available),
-
+		"inputAvailable" = input_available,
 		"outputAttempt" = output_attempt,
 		"outputting" = outputting,
 		"outputLevel" = output_level,
 		"outputLevel_text" = DisplayPower(output_level),
 		"outputLevelMax" = output_level_max,
-		"outputUsed" = DisplayPower(output_used)
+		"outputUsed" = output_used,
 	)
 	return data
 
@@ -422,8 +423,8 @@
 	charge = 1.5e6 // Engineering starts with some charge for singulo
 
 /obj/machinery/power/smes/magical
-	name = "magical power storage unit"
-	desc = "A high-capacity superconducting magnetic energy storage (SMES) unit. Magically produces power."
+	name = "Магический СНМЭ"
+	desc = "Сверхпроводящий накопитель магнитной энергии (СНМЭ). Производит энергию магическим способом."
 
 /obj/machinery/power/smes/magical/process()
 	capacity = INFINITY

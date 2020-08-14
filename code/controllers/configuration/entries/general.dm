@@ -8,6 +8,10 @@
 /datum/config_entry/flag/auto_deadmin_players
 	protection = CONFIG_ENTRY_LOCKED
 
+/datum/config_entry/number/auto_deadmin_timegate
+	config_entry_value = null
+	protection = CONFIG_ENTRY_LOCKED
+
 /datum/config_entry/flag/auto_deadmin_antagonists
 	protection = CONFIG_ENTRY_LOCKED
 
@@ -22,6 +26,8 @@
 
 
 /datum/config_entry/string/servername	// server name (the name of the game window)
+
+/datum/config_entry/string/servertype	// server type
 
 /datum/config_entry/string/serversqlname	// short form server name used for the DB
 
@@ -39,7 +45,14 @@
 
 /datum/config_entry/flag/hub	// if the game appears on the hub or not
 
+/datum/config_entry/number/max_hub_pop //At what pop to take hub off the server
+	config_entry_value = 0 //0 means disabled
+	integer = TRUE
+	min_val = 0
+
 /datum/config_entry/flag/log_ooc	// log OOC channel
+
+/datum/config_entry/flag/log_lobby
 
 /datum/config_entry/flag/log_looc
 
@@ -71,6 +84,8 @@
 /datum/config_entry/flag/log_attack	// log attack messages
 
 /datum/config_entry/flag/log_emote	// log emotes
+
+/datum/config_entry/flag/log_econ	// log economy actions
 
 /datum/config_entry/flag/log_adminchat	// log admin chat messages
 	protection = CONFIG_ENTRY_LOCKED
@@ -112,8 +127,6 @@
 /datum/config_entry/flag/default_no_vote	// vote does not default to nochange/norestart
 
 /datum/config_entry/flag/no_dead_vote	// dead people can't vote
-
-/datum/config_entry/flag/allow_metadata	// Metadata is supported.
 
 /datum/config_entry/flag/popup_admin_pm	// adminPMs to non-admins show in a pop-up 'reply' window when set
 
@@ -179,8 +192,6 @@
 
 /datum/config_entry/flag/norespawn
 
-/datum/config_entry/flag/guest_jobban
-
 /datum/config_entry/flag/usewhitelist
 
 /datum/config_entry/flag/use_age_restriction_for_jobs	//Do jobs use account age restrictions? --requires database
@@ -221,12 +232,6 @@
 /datum/config_entry/string/roundstatsurl
 
 /datum/config_entry/string/gamelogurl
-
-/datum/config_entry/string/demopage
-
-/datum/config_entry/number/githubrepoid
-	config_entry_value = null
-	min_val = 0
 
 /datum/config_entry/flag/guest_ban
 
@@ -440,6 +445,9 @@
 /datum/config_entry/string/chat_announce_new_game
 	config_entry_value = null
 
+/datum/config_entry/string/chat_new_game_notifications
+	config_entry_value = null
+
 /datum/config_entry/flag/debug_admin_hrefs
 
 /datum/config_entry/number/mc_tick_rate/base_mc_tick_rate
@@ -500,8 +508,10 @@
 /datum/config_entry/string/metacurrency_name
 	config_entry_value = "MetaCoin"
 
-/datum/config_entry/flag/enable_demo
-	protection = CONFIG_ENTRY_LOCKED
+/datum/config_entry/string/centcom_ban_db	// URL for the CentCom Galactic Ban DB API
+
+/datum/config_entry/string/centcom_source_whitelist
+
 // DISCORD ROLE STUFFS
 // Using strings for everything because BYOND does not like numbers this big
 // (exception to the above is required living hours haha)

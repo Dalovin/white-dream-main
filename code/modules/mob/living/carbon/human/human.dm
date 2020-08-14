@@ -11,7 +11,7 @@
 
 	if(dna.species)
 		set_species(dna.species.type)
-		StatsInit()
+		//StatsInit()
 
 	//initialise organs
 	create_internal_organs() //most of it is done in set_species now, this is only for parent call
@@ -19,11 +19,12 @@
 
 	. = ..()
 
-	RegisterSignal(src, COMSIG_COMPONENT_CLEAN_ACT, .proc/clean_blood)
+	RegisterSignal(src, COMSIG_COMPONENT_CLEAN_FACE_ACT, .proc/clean_face)
 	AddComponent(/datum/component/personal_crafting)
 	AddComponent(/datum/component/footstep, FOOTSTEP_MOB_HUMAN, 1, 2)
-	if(ckey in GLOB.pacifist_list)
-		ADD_TRAIT(src, TRAIT_PACIFISM, "sosi")
+	spawn(50)
+		if(ckey && (ckey in GLOB.pacifist_list))
+			ADD_TRAIT(src, TRAIT_PACIFISM, "sosi")
 	GLOB.human_list += src
 
 /mob/living/carbon/human/proc/setup_human_dna()
@@ -50,13 +51,15 @@
 	sec_hud_set_ID()
 	sec_hud_set_implants()
 	sec_hud_set_security_status()
+	//...fan gear
+	fan_hud_set_fandom()
 	//...and display them.
 	add_to_all_human_data_huds()
 
 /mob/living/carbon/human/Stat()
 	..()
 
-	if(statpanel("ИГРА"))
+	if(statpanel("Игра"))
 		//stat(null, "Взаимодействие: [a_intent]")
 		//stat(null, "Режим перемещения: [m_intent]")
 		if (internal)
@@ -66,6 +69,10 @@
 				stat("Источник:", "[internal.name]")
 				stat("Давление:", "[internal.air_contents.return_pressure()]")
 				stat("Подача:", "[internal.distribute_pressure]")
+		if(istype(wear_suit, /obj/item/clothing/suit/space))
+			var/obj/item/clothing/suit/space/S = wear_suit
+			stat("Терморегулятор:", "[S.thermal_on ? "ВКЛ" : "ВЫКЛ"]")
+			stat("Заряд батареи:", "[S.cell ? "[round(S.cell.percent(), 0.1)]%" : "!ОШИБКА!"]")
 
 		if(mind)
 			var/datum/antagonist/changeling/changeling = mind.has_antag_datum(/datum/antagonist/changeling)
@@ -225,7 +232,7 @@
 		var/obj/item/I = locate(href_list["embedded_object"]) in L.embedded_objects
 		if(!I || I.loc != src) //no item, no limb, or item is not in limb or in the person anymore
 			return
-		SEND_SIGNAL(src, COMSIG_HUMAN_EMBED_RIP, I, L)
+		SEND_SIGNAL(src, COMSIG_CARBON_EMBED_RIP, I, L)
 		return
 
 	if(href_list["item"]) //canUseTopic check for this is handled by mob/Topic()
@@ -276,7 +283,7 @@
 			update_body()
 
 	var/mob/living/user = usr
-	if(istype(user) && href_list["shoes"] && (user.mobility_flags & MOBILITY_USE)) // we need to be on the ground, so we'll be a bit looser
+	if(istype(user) && href_list["shoes"] && shoes && (user.mobility_flags & MOBILITY_USE)) // we need to be on the ground, so we'll be a bit looser
 		shoes.handle_tying(usr)
 
 ///////HUDs///////
@@ -393,7 +400,7 @@
 			else //Implant and standard glasses check access
 				if(H.wear_id)
 					var/list/access = H.wear_id.GetAccess()
-					if(ACCESS_SEC_DOORS in access)
+					if(ACCESS_SECURITY in access)
 						allowed_access = H.get_authentification_name()
 
 			if(!allowed_access)
@@ -647,46 +654,69 @@
 				to_chat(src, "<span class='warning'>Невероятно, но [S] вытягивает [hand] из моей руки!</span>")
 	rad_act(current_size * 3)
 
-/mob/living/carbon/human/proc/do_cpr(mob/living/carbon/C)
-	CHECK_DNA_AND_SPECIES(C)
+#define CPR_PANIC_SPEED (0.8 SECONDS)
 
-	if(C.stat == DEAD || (HAS_TRAIT(C, TRAIT_FAKEDEATH)))
-		to_chat(src, "<span class='warning'>[C.name] мертво!</span>")
-		return
-	if(is_mouth_covered())
-		to_chat(src, "<span class='warning'>Надо бы маску снять!</span>")
-		return 0
-	if(C.is_mouth_covered())
-		to_chat(src, "<span class='warning'>Сними с н[C.ru_ego()] маску сначала!</span>")
-		return 0
+/// Performs CPR on the target after a delay.
+/mob/living/carbon/human/proc/do_cpr(mob/living/carbon/target)
+	var/panicking = FALSE
 
-	if(C.cpr_time < world.time + 30)
-		visible_message("<span class='notice'>[src] делает сердечно-легочную реанимацию [C.name]!</span>", \
-						"<span class='notice'>Делаю сердечно-легочную реанимацию [C.name]... Надо потерпеть!</span>")
-		if(!do_mob(src, C))
-			to_chat(src, "<span class='warning'>У меня не вышло сделать сердечно-легочную реанимацию [C]!</span>")
-			return 0
+	do
+		CHECK_DNA_AND_SPECIES(target)
 
-		var/they_breathe = !HAS_TRAIT(C, TRAIT_NOBREATH)
-		var/they_lung = C.getorganslot(ORGAN_SLOT_LUNGS)
+		if (INTERACTING_WITH(src, target))
+			return FALSE
 
-		if(C.health > C.crit_threshold)
-			return
+		if (target.stat == DEAD || HAS_TRAIT(target, TRAIT_FAKEDEATH))
+			to_chat(src, "<span class='warning'>[target.name] мертво!</span>")
+			return FALSE
 
-		src.visible_message("<span class='notice'>[src] производит сердечно-легочную реанимацию [C.name]!</span>", "<span class='notice'>Произвожу сердечно-легочную реанимацию [C.name].</span>")
-		SEND_SIGNAL(src, COMSIG_ADD_MOOD_EVENT, "perform_cpr", /datum/mood_event/perform_cpr)
-		C.cpr_time = world.time
-		log_combat(src, C, "CPRed")
+		if (is_mouth_covered())
+			to_chat(src, "<span class='warning'>Надо бы маску снять!</span>")
+			return FALSE
 
-		if(they_breathe && they_lung)
-			var/suff = min(C.getOxyLoss(), 7)
-			C.adjustOxyLoss(-suff)
-			C.updatehealth()
-			to_chat(C, "<span class='unconscious'>Я чувствую, как глоток свежего воздуха входит в мои легкие...</span>")
-		else if(they_breathe && !they_lung)
-			to_chat(C, "<span class='unconscious'>Я чувствую глоток свежего воздуха... но мне не лучше...</span>")
+		if (target.is_mouth_covered())
+			to_chat(src, "<span class='warning'>Снять бы с н[ru_ego()] маску сначала!</span>")
+			return FALSE
+
+		if (!getorganslot(ORGAN_SLOT_LUNGS))
+			to_chat(src, "<span class='warning'>У меня нет лёгких для проведения данной процедуры!</span>")
+			return FALSE
+
+		if (HAS_TRAIT(src, TRAIT_NOBREATH))
+			to_chat(src, "<span class='warning'>А я дышать то не умею. Как?</span>")
+			return FALSE
+
+		visible_message("<span class='notice'>[src] делает сердечно-легочную реанимацию [target.name]!</span>", \
+						"<span class='notice'>Делаю сердечно-легочную реанимацию [target.name]... Надо потерпеть!</span>")
+
+		if (!do_mob(src, target, time = panicking ? CPR_PANIC_SPEED : (3 SECONDS)))
+			to_chat(src, "<span class='warning'>У меня не вышло сделать сердечно-легочную реанимацию [target]!</span>")
+			return FALSE
+
+		if (target.health > target.crit_threshold)
+			return FALSE
+
+		visible_message("<span class='notice'>[src] производит сердечно-легочную реанимацию [target.name]!</span>", "<span class='notice'>Произвожу сердечно-легочную реанимацию [target.name].</span>")
+		SEND_SIGNAL(src, COMSIG_ADD_MOOD_EVENT, "saved_life", /datum/mood_event/saved_life)
+		log_combat(src, target, "CPRed")
+
+		if (HAS_TRAIT(target, TRAIT_NOBREATH))
+			to_chat(target, "<span class='unconscious'>Чувствую, как глоток свежего воздуха входит в мои легкие...</span>")
+		else if (!target.getorganslot(ORGAN_SLOT_LUNGS))
+			to_chat(target, "<span class='unconscious'>Чувствую глоток свежего воздуха... но мне не лучше...</span>")
 		else
-			to_chat(C, "<span class='unconscious'>Я чувствую глоток свежего воздуха... но это ощущение, которое я не узнаю...</span>")
+			target.adjustOxyLoss(-min(target.getOxyLoss(), 7))
+			to_chat(target, "<span class='unconscious'>Чувствую глоток свежего воздуха... мне лучше...</span>")
+
+		if (target.health <= target.crit_threshold)
+			if (!panicking)
+				to_chat(src, "<span class='warning'>[target] всё ещё лежит! Нужно попробовать ещё!</span>")
+			panicking = TRUE
+		else
+			panicking = FALSE
+	while (panicking)
+
+#undef CPR_PANIC_SPEED
 
 /mob/living/carbon/human/cuff_resist(obj/item/I)
 	if(dna && dna.check_mutation(HULK) || istype(mind.martial_art, /datum/martial_art/nanosuit))
@@ -697,16 +727,82 @@
 		if(..())
 			dropItemToGround(I)
 
-/mob/living/carbon/human/proc/clean_blood(datum/source, strength)
-	if(strength < CLEAN_STRENGTH_BLOOD)
-		return
+/**
+  * Wash the hands, cleaning either the gloves if equipped and not obscured, otherwise the hands themselves if they're not obscured.
+  *
+  * Returns false if we couldn't wash our hands due to them being obscured, otherwise true
+  */
+/mob/living/carbon/human/proc/wash_hands(clean_types)
+	var/list/obscured = check_obscured_slots()
+	if(ITEM_SLOT_GLOVES in obscured)
+		return FALSE
+
 	if(gloves)
-		if(SEND_SIGNAL(gloves, COMSIG_COMPONENT_CLEAN_ACT, CLEAN_STRENGTH_BLOOD))
+		if(gloves.wash(clean_types))
 			update_inv_gloves()
-	else
-		if(bloody_hands)
-			bloody_hands = 0
-			update_inv_gloves()
+	else if((clean_types & CLEAN_TYPE_BLOOD) && blood_in_hands > 0)
+		blood_in_hands = 0
+		update_inv_gloves()
+
+	return TRUE
+
+/**
+  * Cleans the lips of any lipstick. Returns TRUE if the lips had any lipstick and was thus cleaned
+  */
+/mob/living/carbon/human/proc/clean_lips()
+	if(isnull(lip_style) && lip_color == initial(lip_color))
+		return FALSE
+	lip_style = null
+	lip_color = initial(lip_color)
+	update_body()
+	return TRUE
+
+/**
+  * Called on the COMSIG_COMPONENT_CLEAN_FACE_ACT signal
+  */
+/mob/living/carbon/human/proc/clean_face(datum/source, clean_types)
+	if(!is_mouth_covered() && clean_lips())
+		. = TRUE
+
+	if(glasses && is_eyes_covered(FALSE, TRUE, TRUE) && glasses.wash(clean_types))
+		update_inv_glasses()
+		. = TRUE
+
+	var/list/obscured = check_obscured_slots()
+	if(wear_mask && !(ITEM_SLOT_MASK in obscured) && wear_mask.wash(clean_types))
+		update_inv_wear_mask()
+		. = TRUE
+
+/**
+  * Called when this human should be washed
+  */
+/mob/living/carbon/human/wash(clean_types)
+	. = ..()
+
+	// Wash equipped stuff that cannot be covered
+	if(wear_suit?.wash(clean_types))
+		update_inv_wear_suit()
+		. = TRUE
+
+	if(belt?.wash(clean_types))
+		update_inv_belt()
+		. = TRUE
+
+	// Check and wash stuff that can be covered
+	var/list/obscured = check_obscured_slots()
+
+	if(w_uniform && !(ITEM_SLOT_ICLOTHING in obscured) && w_uniform.wash(clean_types))
+		update_inv_w_uniform()
+		. = TRUE
+
+	if(!is_mouth_covered() && clean_lips())
+		. = TRUE
+
+	// Wash hands if exposed
+	if(!gloves && (clean_types & CLEAN_TYPE_BLOOD) && blood_in_hands > 0 && !(ITEM_SLOT_GLOVES in obscured))
+		blood_in_hands = 0
+		update_inv_gloves()
+		. = TRUE
 
 //Turns a mob black, flashes a skeleton overlay
 //Just like a cartoon!
@@ -826,7 +922,7 @@
 	for(var/datum/mutation/human/HM in dna.mutations)
 		if(HM.quality != POSITIVE)
 			dna.remove_mutation(HM.name)
-	..()
+	return ..()
 
 /mob/living/carbon/human/check_weakness(obj/item/weapon, mob/living/attacker)
 	. = ..()
@@ -872,8 +968,8 @@
 	if(href_list[VV_HK_COPY_OUTFIT])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		copy_outfit()
 	if(href_list[VV_HK_MOD_MUTATIONS])
 		if(!check_rights(R_SPAWN))
@@ -898,8 +994,8 @@
 	if(href_list[VV_HK_MOD_QUIRKS])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		var/list/options = list("Clear"="Clear")
 		for(var/x in subtypesof(/datum/quirk))
 			var/datum/quirk/T = x
@@ -920,40 +1016,40 @@
 	if(href_list[VV_HK_MAKE_MONKEY])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		if(alert("Confirm mob type change?",,"Transform","Cancel") != "Transform")
 			return
 		usr.client.holder.Topic("vv_override", list("monkeyone"=href_list[VV_HK_TARGET]))
 	if(href_list[VV_HK_MAKE_CYBORG])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		if(alert("Confirm mob type change?",,"Transform","Cancel") != "Transform")
 			return
 		usr.client.holder.Topic("vv_override", list("makerobot"=href_list[VV_HK_TARGET]))
 	if(href_list[VV_HK_MAKE_ALIEN])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		if(alert("Confirm mob type change?",,"Transform","Cancel") != "Transform")
 			return
 		usr.client.holder.Topic("vv_override", list("makealien"=href_list[VV_HK_TARGET]))
 	if(href_list[VV_HK_MAKE_SLIME])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		if(alert("Confirm mob type change?",,"Transform","Cancel") != "Transform")
 			return
 		usr.client.holder.Topic("vv_override", list("makeslime"=href_list[VV_HK_TARGET]))
 	if(href_list[VV_HK_SET_SPECIES])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		var/result = input(usr, "Please choose a new species","Species") as null|anything in GLOB.species_list
 		if(result)
 			var/newtype = GLOB.species_list[result]
@@ -962,8 +1058,8 @@
 	if(href_list[VV_HK_PURRBATION])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		if(!ishumanbasic(src))
 			to_chat(usr, "This can only be done to the basic human species at the moment.")
 			return
@@ -984,7 +1080,7 @@
 
 
 /mob/living/carbon/human/MouseDrop_T(mob/living/target, mob/living/user)
-	if(pulling != target || grab_state < GRAB_AGGRESSIVE || stat != CONSCIOUS || a_intent != INTENT_GRAB)
+	if(pulling != target || grab_state != GRAB_AGGRESSIVE || stat != CONSCIOUS || a_intent != INTENT_GRAB)
 		return ..()
 
 	//If they dragged themselves and we're currently aggressively grabbing them try to piggyback
@@ -1013,39 +1109,49 @@
 		carrydelay = 40
 		skills_space = "быстро"
 	if(can_be_firemanned(target) && !incapacitated(FALSE, TRUE))
-		visible_message("<span class='notice'>[src] начинает [skills_space] поднимать [target] на свою спину..</span>",
+		visible_message("<span class='notice'><b>[src]</b> начинает [skills_space] поднимать <b>[target]</b> на свою спину..</span>",
 		//Joe Medic starts quickly/expertly lifting Grey Tider onto their back..
-		"<span class='notice'>[carrydelay < 35 ? "Используя свои перчатки, я" : "Я"] [skills_space] начинаю поднимать [target] на свою спину[carrydelay == 40 ? ", пока мне помогают мои наночипы в них..." : "..."]</span>")
+		"<span class='notice'>[carrydelay < 35 ? "Используя свои перчатки, я" : "Я"] [skills_space] начинаю поднимать <b>[target]</b> на свою спину[carrydelay == 40 ? ", пока мне помогают мои наночипы в них..." : "..."]</span>")
 		//(Using your gloves' nanochips, you/You) ( /quickly/expertly) start to lift Grey Tider onto your back(, while assisted by the nanochips in your gloves../...)
 		if(do_after(src, carrydelay, TRUE, target))
 			//Second check to make sure they're still valid to be carried
-			if(can_be_firemanned(target) && !incapacitated(FALSE, TRUE))
-				buckle_mob(target, TRUE, TRUE, 90, 1, 0)
-				return
-		visible_message("<span class='warning'>[src] не может поднять [target]!</span>")
+			if(can_be_firemanned(target) && !incapacitated(FALSE, TRUE) && !target.buckled)
+				if(!(target in obounds()))
+					var/old_density = density
+					density = FALSE
+					step_towards(target, loc, bounds_dist(target, src))
+					density = old_density
+					buckle_mob(target, TRUE, TRUE, 90, 1, 0)
+					return
+				else
+					buckle_mob(target, TRUE, TRUE, 90, 1, 0)
+					return
+		visible_message("<span class='warning'><b>[src]</b> не может поднять <b>[target]</b>!</span>")
 	else
-		to_chat(src, "<span class='warning'>Не могу поднять [target] пока [target.ru_who()] стоит!</span>")
+		to_chat(src, "<span class='warning'>Не могу поднять <b>[target]</b> пока [target.ru_who()] стоит!</span>")
 
 /mob/living/carbon/human/proc/piggyback(mob/living/carbon/target)
 	if(can_piggyback(target))
-		visible_message("<span class='notice'>[target] начинает взбираться на [src]...</span>")
+		visible_message("<span class='notice'><b>[target]</b> начинает взбираться на <b>[src]</b>...</span>")
 		if(do_after(target, 15, target = src))
 			if(can_piggyback(target))
 				if(target.incapacitated(FALSE, TRUE) || incapacitated(FALSE, TRUE))
-					target.visible_message("<span class='warning'>[target] не может взобраться на [src]!</span>")
+					target.visible_message("<span class='warning'><b>[target]</b> не может взобраться на <b>[src]</b>!</span>")
 					return
 				buckle_mob(target, TRUE, TRUE, FALSE, 0, 2)
 		else
-			visible_message("<span class='warning'>[target] проваливает попытку взобраться на [src]!</span>")
+			visible_message("<span class='warning'><b>[target]</b> проваливает попытку взобраться на <b>[src]</b>!</span>")
 	else
-		to_chat(target, "<span class='warning'>Не хочу взбираться на [src]!</span>")
+		to_chat(target, "<span class='warning'>Не хочу взбираться на <b>[src]</b>!</span>")
 
 /mob/living/carbon/human/buckle_mob(mob/living/target, force = FALSE, check_loc = TRUE, lying_buckle = FALSE, hands_needed = 0, target_hands_needed = 0)
 	if(!force)//humans are only meant to be ridden through piggybacking and special cases
 		return
 	if(!is_type_in_typecache(target, can_ride_typecache))
-		target.visible_message("<span class='warning'>[target] не понимает как взобраться на [src]...</span>")
+		target.visible_message("<span class='warning'><b>[target] не понимает как взобраться на <b>[src]</b>...</span>")
 		return
+	if(target.loc != loc)
+		target.forceMove(loc, step_x, step_y)
 	buckle_lying = lying_buckle
 	var/datum/component/riding/human/riding_datum = LoadComponent(/datum/component/riding/human)
 	if(target_hands_needed)
@@ -1061,12 +1167,12 @@
 
 	if(hands_needed || target_hands_needed)
 		if(hands_needed && !equipped_hands_self)
-			src.visible_message("<span class='warning'>[src] не может схватиться за [target], потому что [src.ru_ego()] руки заняты!</span>",
-				"<span class='warning'>Не могу схватиться за [target], потому что мои руки заняты!</span>")
+			src.visible_message("<span class='warning'><b>[src]</b> не может схватиться за <b>[target]</b>, потому что [src.ru_ego()] руки заняты!</span>",
+				"<span class='warning'>Не могу схватиться за <b>[target]</b>, потому что мои руки заняты!</span>")
 			return
 		else if(target_hands_needed && !equipped_hands_target)
-			target.visible_message("<span class='warning'>[target] не может схватиться за [src], потому что [target.ru_ego()] руки заняты!</span>",
-				"<span class='warning'>Не могу схватиться за [src], потому что мои руки заняты!</span>")
+			target.visible_message("<span class='warning'><b>[target]</b> не может схватиться за <b>[src]</b>, потому что [target.ru_ego()] руки заняты!</span>",
+				"<span class='warning'>Не могу схватиться за <b>[src]</b>, потому что мои руки заняты!</span>")
 			return
 
 	stop_pulling()
@@ -1082,11 +1188,49 @@
 				return TRUE
 	return FALSE
 
+/mob/living/carbon/human/Bump(atom/A)
+	. = ..()
+	if(shoved && shover)
+		walk(src, 0)
+		var/obj/structure/table/target_table = istype(A, /obj/structure/table) ? A : null
+		var/obj/machinery/disposal/bin/target_disposal_bin = istype(A, /obj/machinery/disposal/bin) ? A : null
+		var/mob/living/carbon/human/target_collateral_human = istype(A, /mob/living/carbon/human) ? A : null
+		if(!is_shove_knockdown_blocked() && !buckled)
+			if((!target_table && !target_collateral_human && !target_disposal_bin))
+				Knockdown(SHOVE_KNOCKDOWN_SOLID)
+				visible_message("<span class='danger'><b>[shover.name]</b> толкает <b>[name]</b>, повалив на пол!</span>",
+					"<span class='danger'>Меня толкает <b>[shover.name]</b>, повалив на пол!</span>", "<span class='hear'>Слышу агрессивную потасовку сопровождающуюся громким стуком!</span>", COMBAT_MESSAGE_RANGE, shover)
+				to_chat(shover, "<span class='danger'>Толкаю <b>[name]</b>, повалив на пол!</span>")
+				log_combat(shover, src, "shoved", "knocking them down")
+			else if(target_table)
+				Knockdown(SHOVE_KNOCKDOWN_TABLE)
+				visible_message("<span class='danger'><b>[shover.name]</b> заталкивает <b>[name]</b> на [target_table]!</span>",
+					"<span class='danger'>Меня заталкивает <b>[shover.name]</b> на [target_table]!</span>", "<span class='hear'>Слышу агрессивную потасовку сопровождающуюся громким стуком!</span>", COMBAT_MESSAGE_RANGE, shover)
+				to_chat(shover, "<span class='danger'>Заталкиваю <b>[name]</b> на [target_table]!</span>")
+				throw_at(target_table, 1, 1, null, FALSE) //1 speed throws with no spin are basically just forcemoves with a hard collision check
+				log_combat(shover, src, "shoved", "onto [target_table] (table)")
+			else if(target_collateral_human)
+				Knockdown(SHOVE_KNOCKDOWN_HUMAN)
+				target_collateral_human.Knockdown(SHOVE_KNOCKDOWN_COLLATERAL)
+				visible_message("<span class='danger'><b>[shover.name]</b> толкает <b>[name]</b> в [target_collateral_human.name]!</span>",
+					"<span class='danger'>Меня толкает <b>[shover.name]</b> в [target_collateral_human.name]!</span>", "<span class='hear'>Слышу агрессивную потасовку сопровождающуюся громким стуком!</span>", COMBAT_MESSAGE_RANGE, shover)
+				to_chat(shover, "<span class='danger'>Толкаю <b>[name]</b> в [target_collateral_human.name]!</span>")
+				log_combat(shover, src, "shoved", "into [target_collateral_human.name]")
+			else if(target_disposal_bin)
+				Knockdown(SHOVE_KNOCKDOWN_SOLID)
+				forceMove(target_disposal_bin)
+				visible_message("<span class='danger'><b>[shover.name]</b> толкает <b>[name]</b> в [target_disposal_bin]!</span>",
+					"<span class='danger'>Меня толкает <b>[shover.name]</b> в [target_disposal_bin]!</span>", "<span class='hear'>Слышу агрессивную потасовку сопровождающуюся громким стуком!</span>", COMBAT_MESSAGE_RANGE, shover)
+				to_chat(shover, "<span class='danger'>Толкаю <b>[name]</b> прямо в [target_disposal_bin]!</span>")
+				log_combat(shover, src, "shoved", "into [target_disposal_bin] (disposal bin)")
+		shoved = FALSE
+		shover = null
+
 /mob/living/carbon/human/proc/clear_shove_slowdown()
 	remove_movespeed_modifier(/datum/movespeed_modifier/shove)
 	var/active_item = get_active_held_item()
 	if(is_type_in_typecache(active_item, GLOB.shove_disarming_types))
-		visible_message("<span class='warning'>[src.name] возвращает свой захват [active_item]!</span>", "<span class='warning'>Возвращаю свой захват [active_item]</span>", null, COMBAT_MESSAGE_RANGE)
+		visible_message("<span class='warning'><b>[src.name]</b> возвращает свой захват [active_item]!</span>", "<span class='warning'>Возвращаю свой захват [active_item]</span>", null, COMBAT_MESSAGE_RANGE)
 
 /mob/living/carbon/human/do_after_coefficent()
 	. = ..()
@@ -1107,24 +1251,6 @@
 		remove_movespeed_modifier(/datum/movespeed_modifier/damage_slowdown)
 		remove_movespeed_modifier(/datum/movespeed_modifier/damage_slowdown_flying)
 
-/mob/living/carbon/human/washed(var/atom/washer)
-	. = ..()
-	if(wear_suit)
-		update_inv_wear_suit()
-	else if(w_uniform && w_uniform.washed(washer))
-		update_inv_w_uniform()
-
-	if(!is_mouth_covered())
-		lip_style = null
-		update_body()
-	if(belt && belt.washed(washer))
-		update_inv_belt()
-
-	var/list/obscured = check_obscured_slots()
-
-	if(gloves && !(HIDEGLOVES in obscured) && gloves.washed(washer))
-		SEND_SIGNAL(src, COMSIG_COMPONENT_CLEAN_ACT, CLEAN_STRENGTH_BLOOD)
-
 /mob/living/carbon/human/adjust_nutrition(change) //Honestly FUCK the oldcoders for putting nutrition on /mob someone else can move it up because holy hell I'd have to fix SO many typechecks
 	if(HAS_TRAIT(src, TRAIT_NOHUNGER))
 		return FALSE
@@ -1132,6 +1258,16 @@
 
 /mob/living/carbon/human/set_nutrition(change) //Seriously fuck you oldcoders.
 	if(HAS_TRAIT(src, TRAIT_NOHUNGER))
+		return FALSE
+	return ..()
+
+/mob/living/carbon/human/is_bleeding()
+	if(NOBLOOD in dna.species.species_traits || bleedsuppress)
+		return FALSE
+	return ..()
+
+/mob/living/carbon/human/get_total_bleed_rate()
+	if(NOBLOOD in dna.species.species_traits)
 		return FALSE
 	return ..()
 

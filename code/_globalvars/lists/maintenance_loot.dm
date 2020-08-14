@@ -49,13 +49,13 @@ GLOBAL_LIST_INIT(trash_loot, list(//junk: useless, very easy to get, or ghetto c
 		/obj/item/reagent_containers/food/snacks/urinalcake = 1,
 
 		/obj/item/airlock_painter = 1,
+		/obj/item/airlock_painter/decal = 1,
 		/obj/item/rack_parts = 1,
-		/obj/item/clothing/mask/breath = 1,
+		/obj/item/clothing/mask/breath/cheap = 1,
 		/obj/item/shard = 1,
 
 		/obj/item/reagent_containers/pill/floorpill = 1,
 		/obj/item/toy/eightball = 1,
-		/obj/item/stack/ducttape = 5,
 		) = 8,
 
 	list(//tier 1 stock parts
@@ -85,7 +85,7 @@ GLOBAL_LIST_INIT(common_loot, list( //common: basic items
 		) = 1,
 
 	list(//equipment
-		/obj/item/clothing/mask/gas = 1,
+		/obj/item/clothing/mask/gas/cheap = 1,
 		/obj/item/radio/headset = 1,
 		/obj/item/storage/backpack = 1,
 		/obj/item/clothing/shoes/sneakers/black = 1,
@@ -107,6 +107,7 @@ GLOBAL_LIST_INIT(common_loot, list( //common: basic items
 		/obj/item/stack/rods/twentyfive = 1,
 		/obj/item/stack/sheet/metal/twenty = 1,
 		/obj/item/stack/sheet/mineral/plasma = 1,
+		/obj/item/sign = 1,
 
 		//assemblies
 		/obj/item/assembly/infra = 1,
@@ -116,8 +117,8 @@ GLOBAL_LIST_INIT(common_loot, list( //common: basic items
 		/obj/item/assembly/timer = 1,
 		/obj/item/assembly/igniter = 1,
 		/obj/item/assembly/health = 1,
-
-		/obj/item/stack/packageWrap = 1,
+		/obj/item/book/granter/crafting_recipe/cookbook = 1,
+		/obj/item/stack/package_wrap = 1,
 		) = 1,
 
 	list(//medical and chemicals
@@ -167,6 +168,7 @@ GLOBAL_LIST_INIT(uncommon_loot, list(//uncommon: useful items
 		/obj/item/grenade/iedcasing/spawned = 1,
 		/obj/item/melee/baton/cattleprod = 1,
 		/obj/item/throwing_star = 1,
+		/obj/item/pen/fountain = 1,
 		) = 8,
 
 	list(//equipment
@@ -194,7 +196,8 @@ GLOBAL_LIST_INIT(uncommon_loot, list(//uncommon: useful items
 		/obj/item/stack/sheet/palputinum/ten = 1,
 		/obj/item/beacon = 1,
 		/obj/item/weaponcrafting/receiver = 1,
-		/obj/item/paper/fluff/stations/soap =1, //recipes count as crafting.
+		/obj/item/paper/fluff/stations/soap = 1, //recipes count as crafting.
+		/obj/item/plaque = 1,
 		) = 8,
 
 	list(//medical and chemicals
@@ -257,6 +260,7 @@ GLOBAL_LIST_INIT(oddity_loot, list(//oddity: strange or crazy items
 #define maint_common_weight 4500
 #define maint_uncommon_weight 1000
 #define maint_oddity_weight 1 //1 out of 10,000 would give metastation (180 spawns) a 2 in 111 chance of spawning an oddity per round, similar to xeno egg
+#define maint_holiday_weight 3500 // When holiday loot is enabled, it'll give every loot item a 25% chance of being a holiday item
 
 //Loot pool used by default maintenance loot spawners
 GLOBAL_LIST_INIT(maintenance_loot, list(
@@ -265,3 +269,21 @@ GLOBAL_LIST_INIT(maintenance_loot, list(
 	GLOB.uncommon_loot = maint_uncommon_weight,
 	GLOB.oddity_loot = maint_oddity_weight,
 	))
+
+GLOBAL_LIST_INIT(ratking_trash, list(//Garbage: used by the regal rat mob when spawning garbage.
+			/obj/item/cigbutt,
+			/obj/item/trash/cheesie,
+			/obj/item/trash/candy,
+			/obj/item/trash/chips,
+			/obj/item/trash/pistachios,
+			/obj/item/trash/plate,
+			/obj/item/trash/popcorn,
+			/obj/item/trash/raisins,
+			/obj/item/trash/sosjerky,
+			/obj/item/trash/syndi_cakes))
+
+GLOBAL_LIST_INIT(ratking_coins, list(//Coins: Used by the regal rat mob when spawning coins.
+			/obj/item/coin/iron,
+			/obj/item/coin/silver,
+			/obj/item/coin/plastic,
+			/obj/item/coin/titanium))

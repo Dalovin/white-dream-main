@@ -7,6 +7,11 @@ INITIALIZE_IMMEDIATE(/mob/dead)
 	throwforce = 0
 	sight = SEE_TURFS | SEE_MOBS | SEE_OBJS | SEE_SELF
 
+
+/mob/dead/set_sidestep(val)
+	val = FALSE
+	. = ..()
+
 /mob/dead/Initialize()
 	SHOULD_CALL_PARENT(FALSE)
 	if(flags_1 & INITIALIZED_1)
@@ -34,19 +39,22 @@ INITIALIZE_IMMEDIATE(/mob/dead)
 /mob/dead/ConveyorMove()	//lol
 	return
 
-/mob/dead/forceMove(atom/destination)
+/mob/dead/forceMove(atom/destination, _step_x=0, _step_y=0)
 	var/turf/old_turf = get_turf(src)
 	var/turf/new_turf = get_turf(destination)
 	if (old_turf?.z != new_turf?.z)
 		onTransitZ(old_turf?.z, new_turf?.z)
 	var/oldloc = loc
+	NORMALIZE_STEP(destination, _step_x, _step_y)
 	loc = destination
+	step_x = _step_x
+	step_y = _step_y
 	Moved(oldloc, NONE, TRUE)
 
 /mob/dead/Stat()
 	..()
 
-	if(!statpanel("ИГРА"))
+	if(!statpanel("Игра"))
 		return
 	stat("Режим:", "[SSticker.hide_mode ? "Secret" : "[GLOB.master_mode]"]")
 
@@ -62,8 +70,7 @@ INITIALIZE_IMMEDIATE(/mob/dead)
 		stat("Таймер:", "СКОРО")
 
 	stat("Игроки:", "[SSticker.totalPlayers]")
-	if(client.holder)
-		stat("Готовы:", "[SSticker.totalPlayersReady]")
+	stat("Готовы:", "[SSticker.totalPlayersReady]")
 
 /mob/dead/proc/server_hop()
 	set category = "OOC"
@@ -104,7 +111,7 @@ INITIALIZE_IMMEDIATE(/mob/dead)
 
 	winset(src, null, "command=.options") //other wise the user never knows if byond is downloading resources
 
-	C << link("[addr]?server_hop=[key]")
+	C << link("[addr]")
 
 /mob/dead/proc/update_z(new_z) // 1+ to register, null to unregister
 	if (registered_z != new_z)
@@ -119,6 +126,8 @@ INITIALIZE_IMMEDIATE(/mob/dead)
 
 /mob/dead/Login()
 	. = ..()
+	if(!. || !client)
+		return FALSE
 	var/turf/T = get_turf(src)
 	if (isturf(T))
 		update_z(T.z)

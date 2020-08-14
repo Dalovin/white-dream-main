@@ -1,4 +1,4 @@
-#define CHALLENGE_TELECRYSTALS 280
+#define CHALLENGE_TELECRYSTALS 30
 #define CHALLENGE_TIME_LIMIT 3000
 #define CHALLENGE_MIN_PLAYERS 50
 #define CHALLENGE_SHUTTLE_DELAY 15000 // 25 minutes, so the ops have at least 5 minutes before the shuttle is callable.
@@ -9,7 +9,7 @@ GLOBAL_LIST_EMPTY(jam_on_wardec)
 	name = "Declaration of War (Challenge Mode)"
 	icon = 'icons/obj/device.dmi'
 	icon_state = "gangtool-red"
-	item_state = "radio"
+	inhand_icon_state = "radio"
 	lefthand_file = 'icons/mob/inhands/misc/devices_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/misc/devices_righthand.dmi'
 	desc = "Use to send a declaration of hostilities to the target, delaying your shuttle departure for 20 minutes while they prepare for your assault.  \
@@ -50,7 +50,7 @@ GLOBAL_LIST_EMPTY(jam_on_wardec)
 	if(!check_allowed(user) || !war_declaration)
 		return
 
-	priority_announce(war_declaration, title = "Declaration of War", sound = 'sound/machines/alarm.ogg')
+	priority_announce(war_declaration, title = "Объявление войны", sound = 'sound/machines/alarm.ogg')
 
 	to_chat(user, "You've attracted the attention of powerful forces within the syndicate. A bonus bundle of telecrystals has been granted to your team. Great things await you if you complete the mission.")
 
@@ -82,14 +82,14 @@ GLOBAL_LIST_EMPTY(jam_on_wardec)
 		tc_to_distribute -= tc_per_nukie
 
 	for (var/mob/living/L in orphans)
-		var/TC = new /obj/item/stack/telecrystal(user.drop_location(), tc_per_nukie)
+		var/TC = new /obj/item/stack/telecrystal(user.drop_location()[1], tc_per_nukie)
 		to_chat(L, "<span class='warning'>Your uplink could not be found so your share of the team's bonus telecrystals has been bluespaced to your [L.put_in_hands(TC) ? "hands" : "feet"].</span>")
 		tc_to_distribute -= tc_per_nukie
 
 	if (tc_to_distribute > 0) // What shall we do with the remainder...
 		for (var/mob/living/simple_animal/hostile/carp/cayenne/C in GLOB.mob_living_list)
 			if (C.stat != DEAD)
-				var/obj/item/stack/telecrystal/TC = new(C.drop_location(), tc_to_distribute)
+				var/obj/item/stack/telecrystal/TC = new(C.drop_location()[1], tc_to_distribute)
 				TC.throw_at(get_step(C, C.dir), 3, 3)
 				C.visible_message("<span class='notice'>[C] coughs up a half-digested telecrystal</span>","<span class='notice'>You cough up a half-digested telecrystal!</span>")
 				break
@@ -103,9 +103,11 @@ GLOBAL_LIST_EMPTY(jam_on_wardec)
 	if(declaring_war)
 		to_chat(user, "<span class='boldwarning'>You are already in the process of declaring war! Make your mind up.</span>")
 		return FALSE
+	/*
 	if(GLOB.player_list.len < CHALLENGE_MIN_PLAYERS)
 		to_chat(user, "<span class='boldwarning'>The enemy crew is too small to be worth declaring war on.</span>")
 		return FALSE
+	*/
 	if(!user.onSyndieBase())
 		to_chat(user, "<span class='boldwarning'>You have to be at your base to use this.</span>")
 		return FALSE

@@ -35,8 +35,7 @@ Consuming extracts:
 			last_produced = world.time
 			for(var/i in 1 to cookies)
 				var/obj/item/S = spawncookie()
-				S.pixel_x = rand(-5, 5)
-				S.pixel_y = rand(-5, 5)
+				S.forceMove(S.loc, rand(-5, 5), rand(-5, 5))
 		return
 	..()
 
@@ -101,7 +100,7 @@ Consuming extracts:
 
 /obj/item/slime_cookie/orange
 	name = "fiery cookie"
-	desc = "A orange cookie with a fiery pattern. Feels warm."
+	desc = "An orange cookie with a fiery pattern. Feels warm."
 	icon_state = "orange"
 	taste = "cinnamon and burning"
 

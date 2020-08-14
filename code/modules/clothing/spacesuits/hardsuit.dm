@@ -6,7 +6,7 @@
 	name = "герметичный шлем"
 	desc = "Специальный шлем, разработаный для работы в опасных условиях, в условиях низкого давления. Имеет радиационную защиту."
 	icon_state = "hardsuit0-engineering"
-	item_state = "eng_helm"
+	inhand_icon_state = "eng_helm"
 	max_integrity = 300
 	armor = list("melee" = 10, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 75, "fire" = 50, "acid" = 75)
 	var/basestate = "hardsuit"
@@ -66,7 +66,7 @@
 	else
 		soundloop.start(user)
 
-/obj/item/clothing/head/helmet/space/hardsuit/proc/display_visor_message(var/msg)
+/obj/item/clothing/head/helmet/space/hardsuit/proc/display_visor_message(msg)
 	var/mob/wearer = loc
 	if(msg && ishuman(wearer))
 		wearer.show_message("[icon2html(src, wearer)]<b><span class='robot'>[msg]</span></b>", MSG_VISUAL)
@@ -98,9 +98,9 @@
 	name = "герметичный шлем"
 	desc = "Специальный костюм позволит работать в опасных условиях космоса."
 	icon_state = "hardsuit-engineering"
-	item_state = "eng_hardsuit"
+	inhand_icon_state = "eng_hardsuit"
 	max_integrity = 300
-	armor = list("melee" = 10, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 75, "fire" = 50, "acid" = 75)
+	armor = list("melee" = 10, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 75, "fire" = 50, "acid" = 75, "wound" = 10)
 	allowed = list(/obj/item/flashlight, /obj/item/tank/internals, /obj/item/t_scanner, /obj/item/construction/rcd, /obj/item/pipe_dispenser)
 	siemens_coefficient = 0
 	var/obj/item/clothing/head/helmet/space/hardsuit/helmet
@@ -165,7 +165,7 @@
 			qdel(I)
 			helmet = new helmettype(src)
 			to_chat(user, "<span class='notice'>You have successfully repaired [src]'s helmet.</span>")
-			new /obj/item/light/bulb/broken(drop_location())
+			new /obj/item/light/bulb/broken(drop_location()[1])
 	return ..()
 
 /obj/item/clothing/suit/space/hardsuit/equipped(mob/user, slot)
@@ -204,8 +204,8 @@
 	name = "инженерный герметичный шлем"
 	desc = "Специальный шлем для работы в опасных условиях космоса. Имеет защиту от радиации."
 	icon_state = "hardsuit0-engineering"
-	item_state = "eng_helm"
-	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 75, "fire" = 100, "acid" = 75)
+	inhand_icon_state = "eng_helm"
+	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 75, "fire" = 100, "acid" = 75, "wound" = 10)
 	hardsuit_type = "engineering"
 	resistance_flags = FIRE_PROOF
 
@@ -213,8 +213,8 @@
 	name = "инженерный скафандр"
 	desc = "Специальный скафандр для работы в опасных условиях космоса. Имеет защиту от радиации"
 	icon_state = "hardsuit-engineering"
-	item_state = "eng_hardsuit"
-	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 75, "fire" = 100, "acid" = 75)
+	inhand_icon_state = "eng_hardsuit"
+	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 75, "fire" = 100, "acid" = 75, "wound" = 10)
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/engine
 	resistance_flags = FIRE_PROOF
 
@@ -223,9 +223,9 @@
 	name = "атмосферный герметичный шлем"
 	desc = "Специальный шлем, разработаный для атмосферных техников. Имеет защиту от температурных воздействий."
 	icon_state = "hardsuit0-atmospherics"
-	item_state = "atmo_helm"
+	inhand_icon_state = "atmo_helm"
 	hardsuit_type = "atmospherics"
-	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 25, "fire" = 100, "acid" = 75)
+	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 25, "fire" = 100, "acid" = 75, "wound" = 10)
 	heat_protection = HEAD												//Uncomment to enable firesuit protection
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 
@@ -233,8 +233,8 @@
 	name = "скафандр атмостеха"
 	desc = "Разработан для работы в условиях космоса. Имеет защиту от температурных воздействий."
 	icon_state = "hardsuit-atmospherics"
-	item_state = "atmo_hardsuit"
-	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 25, "fire" = 100, "acid" = 75)
+	inhand_icon_state = "atmo_hardsuit"
+	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 25, "fire" = 100, "acid" = 75, "wound" = 10)
 	heat_protection = CHEST|GROIN|LEGS|FEET|ARMS|HANDS					//Uncomment to enable firesuit protection
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/engine/atmos
@@ -245,9 +245,9 @@
 	name = "усовершенствованный герметичный шлем"
 	desc = "Усовершенствованный шлем для работы в условиях космоса."
 	icon_state = "hardsuit0-white"
-	item_state = "ce_helm"
+	inhand_icon_state = "ce_helm"
 	hardsuit_type = "white"
-	armor = list("melee" = 40, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 50, "bio" = 100, "rad" = 100, "fire" = 100, "acid" = 90)
+	armor = list("melee" = 40, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 50, "bio" = 100, "rad" = 100, "fire" = 100, "acid" = 90, "wound" = 10)
 	heat_protection = HEAD
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 
@@ -255,8 +255,8 @@
 	icon_state = "hardsuit-white"
 	name = "усовершенствованный скафандр"
 	desc = "Усовершенствованный скафандр для работы в условиях космоса."
-	item_state = "ce_hardsuit"
-	armor = list("melee" = 40, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 50, "bio" = 100, "rad" = 100, "fire" = 100, "acid" = 90)
+	inhand_icon_state = "ce_hardsuit"
+	armor = list("melee" = 40, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 50, "bio" = 100, "rad" = 100, "fire" = 100, "acid" = 90, "wound" = 10)
 	heat_protection = CHEST|GROIN|LEGS|FEET|ARMS|HANDS
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/engine/elite
@@ -268,12 +268,12 @@
 	name = "шахтерский герметичный шлем"
 	desc = "Разработан для работы в условиях космоса, имеет два фонарика для подсветки."
 	icon_state = "hardsuit0-mining"
-	item_state = "mining_helm"
+	inhand_icon_state = "mining_helm"
 	hardsuit_type = "mining"
 	max_heat_protection_temperature = FIRE_SUIT_MAX_TEMP_PROTECT
 	resistance_flags = FIRE_PROOF
 	heat_protection = HEAD
-	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 50, "bio" = 100, "rad" = 50, "fire" = 50, "acid" = 75)
+	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 50, "bio" = 100, "rad" = 50, "fire" = 50, "acid" = 75, "wound" = 15)
 	brightness_on = 7
 	allowed = list(/obj/item/flashlight, /obj/item/tank/internals, /obj/item/resonator, /obj/item/mining_scanner, /obj/item/t_scanner/adv_mining_scanner, /obj/item/gun/energy/kinetic_accelerator)
 
@@ -285,10 +285,10 @@
 	name = "шахтерский скафандр"
 	desc = "Специальный скафандр для работы в космосе. Должен защищать от тварей на Лаваленде."
 	icon_state = "hardsuit-mining"
-	item_state = "mining_hardsuit"
+	inhand_icon_state = "mining_hardsuit"
 	max_heat_protection_temperature = FIRE_SUIT_MAX_TEMP_PROTECT
 	resistance_flags = FIRE_PROOF
-	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 50, "bio" = 100, "rad" = 50, "fire" = 50, "acid" = 75)
+	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 50, "bio" = 100, "rad" = 50, "fire" = 50, "acid" = 75, "wound" = 15)
 	allowed = list(/obj/item/flashlight, /obj/item/tank/internals, /obj/item/storage/bag/ore, /obj/item/pickaxe)
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/mining
 	heat_protection = CHEST|GROIN|LEGS|FEET|ARMS|HANDS
@@ -303,9 +303,9 @@
 	desc = "Два режима работы имеет шлем для работы в спецоперациях. Сейчас он в режиме скафандра. Изготовлено компанией Gorlex Marauders."
 	alt_desc = "Два режима работы имеет шлем для работы в спецоперациях. Сейчас он в боевом режиме. Изготовлено компанией Gorlex Marauders."
 	icon_state = "hardsuit1-syndi"
-	item_state = "syndie_helm"
+	inhand_icon_state = "syndie_helm"
 	hardsuit_type = "syndi"
-	armor = list("melee" = 40, "bullet" = 50, "laser" = 30, "energy" = 40, "bomb" = 35, "bio" = 100, "rad" = 50, "fire" = 50, "acid" = 90)
+	armor = list("melee" = 40, "bullet" = 50, "laser" = 30, "energy" = 40, "bomb" = 35, "bio" = 100, "rad" = 50, "fire" = 50, "acid" = 90, "wound" = 25)
 	on = TRUE
 	var/obj/item/clothing/suit/space/hardsuit/syndi/linkedsuit = null
 	actions_types = list(/datum/action/item_action/toggle_helmet_mode)
@@ -381,10 +381,10 @@
 	desc = "Два режима работы имеет шлем для работы в спецоперациях. Сейчас он в режиме скафандра. Изготовлено компанией Gorlex Marauders.."
 	alt_desc = "Два режима работы имеет шлем для работы в спецоперациях. Сейчас он в боевом режиме. Изготовлено компанией Gorlex Marauders.."
 	icon_state = "hardsuit1-syndi"
-	item_state = "syndie_hardsuit"
+	inhand_icon_state = "syndie_hardsuit"
 	hardsuit_type = "syndi"
 	w_class = WEIGHT_CLASS_NORMAL
-	armor = list("melee" = 40, "bullet" = 50, "laser" = 30, "energy" = 40, "bomb" = 35, "bio" = 100, "rad" = 50, "fire" = 50, "acid" = 90)
+	armor = list("melee" = 40, "bullet" = 50, "laser" = 30, "energy" = 40, "bomb" = 35, "bio" = 100, "rad" = 50, "fire" = 50, "acid" = 90, "wound" = 25)
 	allowed = list(/obj/item/gun, /obj/item/ammo_box,/obj/item/ammo_casing, /obj/item/melee/baton, /obj/item/melee/transforming/energy/sword/saber, /obj/item/restraints/handcuffs, /obj/item/tank/internals)
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/syndi
 	jetpack = /obj/item/tank/jetpack/suit
@@ -397,7 +397,7 @@
 	alt_desc = "Элитная версия синдикатского скафандра с усовершенствованной броней и большей защитой от огня. Сейчас он в боевом режиме. Изготовлено компанией Gorlex Marauders"
 	icon_state = "hardsuit0-syndielite"
 	hardsuit_type = "syndielite"
-	armor = list("melee" = 60, "bullet" = 60, "laser" = 50, "energy" = 60, "bomb" = 55, "bio" = 100, "rad" = 70, "fire" = 100, "acid" = 100)
+	armor = list("melee" = 60, "bullet" = 60, "laser" = 50, "energy" = 60, "bomb" = 55, "bio" = 100, "rad" = 70, "fire" = 100, "acid" = 100, "wound" = 25)
 	heat_protection = HEAD
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 	resistance_flags = FIRE_PROOF | ACID_PROOF
@@ -415,7 +415,7 @@
 	icon_state = "hardsuit0-syndielite"
 	hardsuit_type = "syndielite"
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/syndi/elite
-	armor = list("melee" = 60, "bullet" = 60, "laser" = 50, "energy" = 60, "bomb" = 55, "bio" = 100, "rad" = 70, "fire" = 100, "acid" = 100)
+	armor = list("melee" = 60, "bullet" = 60, "laser" = 50, "energy" = 60, "bomb" = 55, "bio" = 100, "rad" = 70, "fire" = 100, "acid" = 100, "wound" = 25)
 	heat_protection = CHEST|GROIN|LEGS|FEET|ARMS|HANDS
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 	resistance_flags = FIRE_PROOF | ACID_PROOF
@@ -430,7 +430,7 @@
 	desc = "Сделан кустарно для криминальных разборок. В походном режиме."
 	alt_desc = "Сделан кустарно для криминальных разборок. В боевом режиме."
 	icon_state = "hardsuit1-owl"
-	item_state = "s_helmet"
+	inhand_icon_state = "s_helmet"
 	hardsuit_type = "owl"
 	visor_flags_inv = 0
 	visor_flags = 0
@@ -441,7 +441,7 @@
 	desc = "Сделан кустарно для криминальных разборок. В походном режиме."
 	alt_desc = "Сделан кустарно для криминальных разборок. В боевом режиме."
 	icon_state = "hardsuit1-owl"
-	item_state = "s_suit"
+	inhand_icon_state = "s_suit"
 	hardsuit_type = "owl"
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/syndi/owl
 
@@ -451,10 +451,10 @@
 	name = "магический герметический шлем"
 	desc = "Украшеный волшебными камнями, данный шлем излучает магическую энергию."
 	icon_state = "hardsuit0-wiz"
-	item_state = "wiz_helm"
+	inhand_icon_state = "wiz_helm"
 	hardsuit_type = "wiz"
 	resistance_flags = FIRE_PROOF | ACID_PROOF //No longer shall our kind be foiled by lone chemists with spray bottles!
-	armor = list("melee" = 40, "bullet" = 40, "laser" = 40, "energy" = 50, "bomb" = 35, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100)
+	armor = list("melee" = 40, "bullet" = 40, "laser" = 40, "energy" = 50, "bomb" = 35, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100, "wound" = 30)
 	heat_protection = HEAD												//Uncomment to enable firesuit protection
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 
@@ -462,10 +462,10 @@
 	name = "магический скафандр"
 	desc = "Украшеный драгоценными камнями, данный скафандр излучает магическую энергию"
 	icon_state = "hardsuit-wiz"
-	item_state = "wiz_hardsuit"
+	inhand_icon_state = "wiz_hardsuit"
 	w_class = WEIGHT_CLASS_NORMAL
 	resistance_flags = FIRE_PROOF | ACID_PROOF
-	armor = list("melee" = 40, "bullet" = 40, "laser" = 40, "energy" = 50, "bomb" = 35, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100)
+	armor = list("melee" = 40, "bullet" = 40, "laser" = 40, "energy" = 50, "bomb" = 35, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100, "wound" = 30)
 	allowed = list(/obj/item/teleportation_scroll, /obj/item/tank/internals)
 	heat_protection = CHEST|GROIN|LEGS|FEET|ARMS|HANDS					//Uncomment to enable firesuit protection
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
@@ -482,19 +482,19 @@
 	name = "медицицинский герметичный шлем"
 	desc = "Сделан для работы в условиях низкого давления. Не для сварочных работ!"
 	icon_state = "hardsuit0-medical"
-	item_state = "medical_helm"
+	inhand_icon_state = "medical_helm"
 	hardsuit_type = "medical"
 	flash_protect = FLASH_PROTECTION_NONE
-	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 60, "fire" = 60, "acid" = 75)
+	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 60, "fire" = 60, "acid" = 75, "wound" = 10)
 	clothing_flags = STOPSPRESSUREDAMAGE | THICKMATERIAL | SCAN_REAGENTS | SNUG_FIT
 
 /obj/item/clothing/suit/space/hardsuit/medical
 	name = "медицинский скафандр"
 	desc = "Сделан для работы в условиях низкого давления из светоотражающих материалов"
 	icon_state = "hardsuit-medical"
-	item_state = "medical_hardsuit"
+	inhand_icon_state = "medical_hardsuit"
 	allowed = list(/obj/item/flashlight, /obj/item/tank/internals, /obj/item/storage/firstaid, /obj/item/healthanalyzer, /obj/item/stack/medical)
-	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 60, "fire" = 60, "acid" = 75)
+	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 60, "fire" = 60, "acid" = 75, "wound" = 10)
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/medical
 	slowdown = 0.5
 
@@ -506,7 +506,7 @@
 	hardsuit_type = "rd"
 	resistance_flags = ACID_PROOF | FIRE_PROOF
 	max_heat_protection_temperature = FIRE_SUIT_MAX_TEMP_PROTECT
-	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 100, "bio" = 100, "rad" = 60, "fire" = 60, "acid" = 80)
+	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 100, "bio" = 100, "rad" = 60, "fire" = 60, "acid" = 80, "wound" = 15)
 	var/explosion_detection_dist = 21
 	clothing_flags = STOPSPRESSUREDAMAGE | THICKMATERIAL | SCAN_REAGENTS | SNUG_FIT
 	actions_types = list(/datum/action/item_action/toggle_helmet_light, /datum/action/item_action/toggle_research_scanner)
@@ -540,12 +540,12 @@
 	name = "прототип скафандра"
 	desc = "Прототип скафандра, защищающего владельца от взрывной волны. Лучше не тестировать."
 	icon_state = "hardsuit-rd"
-	item_state = "hardsuit-rd"
+	inhand_icon_state = "hardsuit-rd"
 	resistance_flags = ACID_PROOF | FIRE_PROOF
 	max_heat_protection_temperature = FIRE_SUIT_MAX_TEMP_PROTECT //Same as an emergency firesuit. Not ideal for extended exposure.
 	allowed = list(/obj/item/flashlight, /obj/item/tank/internals, /obj/item/gun/energy/wormhole_projector,
 	/obj/item/hand_tele, /obj/item/aicard)
-	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 100, "bio" = 100, "rad" = 60, "fire" = 60, "acid" = 80)
+	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 100, "bio" = 100, "rad" = 60, "fire" = 60, "acid" = 80, "wound" = 15)
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/rd
 	cell = /obj/item/stock_parts/cell/super
 
@@ -554,17 +554,17 @@
 	name = "герметичный шлем охраны"
 	desc = "Специальный шлем для работы в условиях низкого давления. Имеет дополнительный слой брони."
 	icon_state = "hardsuit0-sec"
-	item_state = "sec_helm"
+	inhand_icon_state = "sec_helm"
 	hardsuit_type = "sec"
-	armor = list("melee" = 35, "bullet" = 15, "laser" = 30,"energy" = 40, "bomb" = 10, "bio" = 100, "rad" = 50, "fire" = 75, "acid" = 75)
+	armor = list("melee" = 35, "bullet" = 15, "laser" = 30,"energy" = 40, "bomb" = 10, "bio" = 100, "rad" = 50, "fire" = 75, "acid" = 75, "wound" = 20)
 
 
 /obj/item/clothing/suit/space/hardsuit/security
 	icon_state = "hardsuit-sec"
 	name = "скафандр охраны"
 	desc = "Специальный костюм для работы в условиях низкого давления.  Имеет дополнительный слой брони."
-	item_state = "sec_hardsuit"
-	armor = list("melee" = 35, "bullet" = 15, "laser" = 30, "energy" = 40, "bomb" = 10, "bio" = 100, "rad" = 50, "fire" = 75, "acid" = 75)
+	inhand_icon_state = "sec_hardsuit"
+	armor = list("melee" = 35, "bullet" = 15, "laser" = 30, "energy" = 40, "bomb" = 10, "bio" = 100, "rad" = 50, "fire" = 75, "acid" = 75, "wound" = 20)
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/security
 
 /obj/item/clothing/suit/space/hardsuit/security/Initialize()
@@ -577,14 +577,14 @@
 	desc = "Специальный шлем для работы в условиях низкого давления. Имеет дополнительный слой брони."
 	icon_state = "hardsuit0-hos"
 	hardsuit_type = "hos"
-	armor = list("melee" = 45, "bullet" = 25, "laser" = 30, "energy" = 40, "bomb" = 25, "bio" = 100, "rad" = 50, "fire" = 95, "acid" = 95)
+	armor = list("melee" = 45, "bullet" = 25, "laser" = 30, "energy" = 40, "bomb" = 25, "bio" = 100, "rad" = 50, "fire" = 95, "acid" = 95, "wound" = 25)
 
 
 /obj/item/clothing/suit/space/hardsuit/security/hos
 	icon_state = "hardsuit-hos"
 	name = "скафандр начальника охраны"
 	desc = "Специальный скафандр для работы в условиях низкого давления. Имеет дополнительный слой брони."
-	armor = list("melee" = 45, "bullet" = 25, "laser" = 30, "energy" = 40, "bomb" = 25, "bio" = 100, "rad" = 50, "fire" = 95, "acid" = 95)
+	armor = list("melee" = 45, "bullet" = 25, "laser" = 30, "energy" = 40, "bomb" = 25, "bio" = 100, "rad" = 50, "fire" = 95, "acid" = 95, "wound" = 25)
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/security/hos
 	jetpack = /obj/item/tank/jetpack/suit
 	cell = /obj/item/stock_parts/cell/super
@@ -593,9 +593,9 @@
 /obj/item/clothing/head/helmet/space/hardsuit/swat
 	name = "\improper MK.II шлем спецназа"
 	icon_state = "swat2helm"
-	item_state = "swat2helm"
+	inhand_icon_state = "swat2helm"
 	desc = "Тактический шлем спецназа MK.II."
-	armor = list("melee" = 40, "bullet" = 50, "laser" = 50, "energy" = 60, "bomb" = 50, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100)
+	armor = list("melee" = 40, "bullet" = 50, "laser" = 50, "energy" = 60, "bomb" = 50, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100, "wound" = 15)
 	resistance_flags = FIRE_PROOF | ACID_PROOF
 	flags_inv = HIDEEARS|HIDEEYES|HIDEFACE|HIDEHAIR //we want to see the mask //this makes the hardsuit not fireproof you genius
 	heat_protection = HEAD
@@ -608,8 +608,8 @@
 	name = "\improper MK.II SWAT скафандр"
 	desc = "A MK.II SWAT сделан из усовершенствованных материалов, лучший выбор для охраны и тех, кто хочет повоевать."
 	icon_state = "swat2"
-	item_state = "swat2"
-	armor = list("melee" = 40, "bullet" = 50, "laser" = 50, "energy" = 60, "bomb" = 50, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100)
+	inhand_icon_state = "swat2"
+	armor = list("melee" = 40, "bullet" = 50, "laser" = 50, "energy" = 60, "bomb" = 50, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100, "wound" = 15)
 	resistance_flags = FIRE_PROOF | ACID_PROOF
 	heat_protection = CHEST|GROIN|LEGS|FEET|ARMS|HANDS
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT //this needed to be added a long fucking time ago
@@ -624,14 +624,14 @@
 /obj/item/clothing/head/helmet/space/hardsuit/swat/captain
 	name = "капитанский шлем спецназа"
 	icon_state = "capspace"
-	item_state = "capspacehelmet"
+	inhand_icon_state = "capspacehelmet"
 	desc = "A tactical MK.II шлем спецназа boasting better protection and a reasonable fashion sense."
 
 /obj/item/clothing/suit/space/hardsuit/swat/captain
 	name = "капитанский SWAT скафандр"
 	desc = "A MK.II SWAT suit with streamlined joints and armor made out of superior materials, insulated against intense heat with the complementary gas mask. The most advanced tactical armor available. Usually reserved for heavy hitter corporate security, this one has a regal finish in Nanotrasen company colors. Better not let the assistants get a hold of it."
 	icon_state = "caparmor"
-	item_state = "capspacesuit"
+	inhand_icon_state = "capspacesuit"
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/swat/captain
 	cell = /obj/item/stock_parts/cell/super
 
@@ -640,7 +640,7 @@
 	name = "клоунский герметичный шлем"
 	desc = "Предназначен для работы в условиях низкого давления. Имеет радиационную защиту."
 	icon_state = "hardsuit0-clown"
-	item_state = "hardsuit0-clown"
+	inhand_icon_state = "hardsuit0-clown"
 	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 75, "fire" = 60, "acid" = 30)
 	hardsuit_type = "clown"
 
@@ -648,7 +648,7 @@
 	name = "клоунский скафандр"
 	desc = "Только истинный клоун оденет это."
 	icon_state = "hardsuit-clown"
-	item_state = "clown_hardsuit"
+	inhand_icon_state = "clown_hardsuit"
 	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 75, "fire" = 60, "acid" = 30)
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/clown
 
@@ -666,7 +666,7 @@
 	name = "прототип RIG герметичного шлема"
 	desc = "Обычный древний шлем космонавта"
 	icon_state = "hardsuit0-ancient"
-	item_state = "anc_helm"
+	inhand_icon_state = "anc_helm"
 	armor = list("melee" = 30, "bullet" = 5, "laser" = 5, "energy" = 15, "bomb" = 50, "bio" = 100, "rad" = 100, "fire" = 100, "acid" = 75)
 	hardsuit_type = "ancient"
 	resistance_flags = FIRE_PROOF
@@ -675,7 +675,7 @@
 	name = "прототип RIG скафандра"
 	desc = "Обычный древний скафандр космонавта."
 	icon_state = "hardsuit-ancient"
-	item_state = "anc_hardsuit"
+	inhand_icon_state = "anc_hardsuit"
 	armor = list("melee" = 30, "bullet" = 5, "laser" = 5, "energy" = 15, "bomb" = 50, "bio" = 100, "rad" = 100, "fire" = 100, "acid" = 75)
 	slowdown = 3
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ancient
@@ -723,7 +723,7 @@
 	icon_state = "hardsuit-hos"
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/security/hos
 	allowed = null
-	armor = list("melee" = 30, "bullet" = 15, "laser" = 30, "energy" = 40, "bomb" = 10, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100)
+	armor = list("melee" = 30, "bullet" = 15, "laser" = 30, "energy" = 40, "bomb" = 10, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100, "wound" = 15)
 	resistance_flags = FIRE_PROOF | ACID_PROOF
 	var/current_charges = 3
 	var/max_charges = 3 //How many charges total the shielding has
@@ -783,7 +783,7 @@
 	name = "белый силовой костюм"
 	desc = "Стандартный предмет для игры в захват флага."
 	icon_state = "ert_medical"
-	item_state = "ert_medical"
+	inhand_icon_state = "ert_medical"
 	hardsuit_type = "ert_medical"
 	// Adding TRAIT_NODROP is done when the CTF spawner equips people
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/shielded/ctf
@@ -794,7 +794,7 @@
 /obj/item/clothing/suit/space/hardsuit/shielded/ctf/red
 	name = "красный силовой костюм"
 	icon_state = "ert_security"
-	item_state = "ert_security"
+	inhand_icon_state = "ert_security"
 	hardsuit_type = "ert_security"
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/shielded/ctf/red
 	shield_state = "shield-red"
@@ -804,7 +804,7 @@
 	name = "синий силовой костюм"
 	desc = "Стандартный предмет для игры в захват флага."
 	icon_state = "ert_command"
-	item_state = "ert_command"
+	inhand_icon_state = "ert_command"
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/shielded/ctf/blue
 
 
@@ -813,21 +813,21 @@
 	name = "экранированый герметичный шлем"
 	desc = "Стандартный предмет для игры в захват флага."
 	icon_state = "hardsuit0-ert_medical"
-	item_state = "hardsuit0-ert_medical"
+	inhand_icon_state = "hardsuit0-ert_medical"
 	hardsuit_type = "ert_medical"
 	armor = list("melee" = 0, "bullet" = 30, "laser" = 30, "energy" = 40, "bomb" = 50, "bio" = 100, "rad" = 100, "fire" = 95, "acid" = 95)
 
 
 /obj/item/clothing/head/helmet/space/hardsuit/shielded/ctf/red
 	icon_state = "hardsuit0-ert_security"
-	item_state = "hardsuit0-ert_security"
+	inhand_icon_state = "hardsuit0-ert_security"
 	hardsuit_type = "ert_security"
 
 /obj/item/clothing/head/helmet/space/hardsuit/shielded/ctf/blue
 	name = "экранированый герметичный шлем"
 	desc = "Стандартный предмет для игры в захват флага."
 	icon_state = "hardsuit0-ert_commander"
-	item_state = "hardsuit0-ert_commander"
+	inhand_icon_state = "hardsuit0-ert_commander"
 	hardsuit_type = "ert_commander"
 
 
@@ -840,9 +840,9 @@
 	name = "кроваво-красный скафандр"
 	desc = "Улучшеный костюм с силовым полем."
 	icon_state = "hardsuit1-syndi"
-	item_state = "syndie_hardsuit"
+	inhand_icon_state = "syndie_hardsuit"
 	hardsuit_type = "syndi"
-	armor = list("melee" = 40, "bullet" = 50, "laser" = 30, "energy" = 40, "bomb" = 35, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100)
+	armor = list("melee" = 40, "bullet" = 50, "laser" = 30, "energy" = 40, "bomb" = 35, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100, "wound" = 30)
 	allowed = list(/obj/item/gun, /obj/item/ammo_box, /obj/item/ammo_casing, /obj/item/melee/baton, /obj/item/melee/transforming/energy/sword/saber, /obj/item/restraints/handcuffs, /obj/item/tank/internals)
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/shielded/syndi
 	slowdown = 0
@@ -874,21 +874,21 @@
 	name = "кроваво-красный шлем"
 	desc = "Шлем с силовым полем."
 	icon_state = "hardsuit1-syndi"
-	item_state = "syndie_helm"
+	inhand_icon_state = "syndie_helm"
 	hardsuit_type = "syndi"
-	armor = list("melee" = 40, "bullet" = 50, "laser" = 30, "energy" = 40, "bomb" = 35, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100)
+	armor = list("melee" = 40, "bullet" = 50, "laser" = 30, "energy" = 40, "bomb" = 35, "bio" = 100, "rad" = 50, "fire" = 100, "acid" = 100, "wound" = 30)
 
 ///SWAT version
 /obj/item/clothing/suit/space/hardsuit/shielded/swat
 	name = "скафандр эскадрона смерти"
 	desc = "Усовершенствованный скафандр для секретных операций."
 	icon_state = "deathsquad"
-	item_state = "swat_suit"
+	inhand_icon_state = "swat_suit"
 	hardsuit_type = "syndi"
 	max_charges = 4
 	current_charges = 4
 	recharge_delay = 15
-	armor = list("melee" = 80, "bullet" = 80, "laser" = 50, "energy" = 60, "bomb" = 100, "bio" = 100, "rad" = 100, "fire" = 100, "acid" = 100)
+	armor = list("melee" = 80, "bullet" = 80, "laser" = 50, "energy" = 60, "bomb" = 100, "bio" = 100, "rad" = 100, "fire" = 100, "acid" = 100, "wound" = 30)
 	strip_delay = 130
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/shielded/swat
@@ -898,9 +898,9 @@
 	name = "герметичный шлем эскадрона смерти"
 	desc = "Усовершенствованный шлем для секретных операций с силовой бронёй."
 	icon_state = "deathsquad"
-	item_state = "deathsquad"
+	inhand_icon_state = "deathsquad"
 	hardsuit_type = "syndi"
-	armor = list("melee" = 80, "bullet" = 80, "laser" = 50, "energy" = 60, "bomb" = 100, "bio" = 100, "rad" = 100, "fire" = 100, "acid" = 100)
+	armor = list("melee" = 80, "bullet" = 80, "laser" = 50, "energy" = 60, "bomb" = 100, "bio" = 100, "rad" = 100, "fire" = 100, "acid" = 100, "wound" = 30)
 	strip_delay = 130
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 	actions_types = list()

@@ -76,7 +76,6 @@
 	current_amount--
 	for(var/i in 1 to projectiles_per_fire)
 		var/obj/projectile/P = new projectile_type(user.loc)
-		P.firer = user
 		P.preparePixelProjectile(target, user)
 		for(var/V in projectile_var_overrides)
 			if(P.vars[V])
@@ -95,7 +94,7 @@
 	charge_max = 100
 	clothes_req = FALSE
 	invocation = "P'WAH, UNLIM'TED P'WAH"
-	invocation_type = "shout"
+	invocation_type = INVOCATION_SHOUT
 	cooldown_min = 20
 	base_icon_state = "lightning"
 	action_icon_state = "lightning0"
@@ -113,7 +112,7 @@
 	charge_max = 60
 	clothes_req = FALSE
 	invocation = "ONI SOMA"
-	invocation_type = "shout"
+	invocation_type = INVOCATION_SHOUT
 	range = 20
 	cooldown_min = 20 //10 deciseconds reduction per rank
 	projectile_type = /obj/projectile/magic/aoe/fireball
@@ -136,7 +135,7 @@
 	charge_max = 50
 	clothes_req = FALSE
 	invocation = "Sigi'lu M'Fan 'Tasia"
-	invocation_type = "shout"
+	invocation_type = INVOCATION_SHOUT
 	range = 40
 	cooldown_min = 10
 	projectile_amount = 5

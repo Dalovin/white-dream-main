@@ -5,6 +5,7 @@
 	icon_state = "printer"
 	w_class = WEIGHT_CLASS_NORMAL
 	device_type = MC_PRINT
+	expansion_hw = TRUE
 	var/stored_paper = 20
 	var/max_paper = 30
 
@@ -23,7 +24,7 @@
 	if(!check_functionality())
 		return FALSE
 
-	var/obj/item/paper/P = new/obj/item/paper(holder.drop_location())
+	var/obj/item/paper/P = new/obj/item/paper(holder.drop_location()[1])
 
 	// Damaged printer causes the resulting paper to be somewhat harder to read.
 	if(damage > damage_malfunction)
@@ -33,7 +34,6 @@
 	if(paper_title)
 		P.name = paper_title
 	P.update_icon()
-	P.reload_fields()
 	stored_paper--
 	P = null
 	return TRUE

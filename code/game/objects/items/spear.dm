@@ -3,23 +3,25 @@
 	icon_state = "spearglass0"
 	lefthand_file = 'icons/mob/inhands/weapons/polearms_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/weapons/polearms_righthand.dmi'
-	name = "spear"
-	desc = "A haphazardly-constructed yet still deadly weapon of ancient design."
+	name = "копьё"
+	desc = "Случайно сконструированное, но все же смертельное оружие древнего дизайна."
 	force = 10
 	w_class = WEIGHT_CLASS_BULKY
 	slot_flags = ITEM_SLOT_BACK
 	throwforce = 20
 	throw_speed = 4
-	embedding = list("impact_pain_mult" = 3)
+	embedding = list("impact_pain_mult" = 2, "remove_pain_mult" = 4, "jostle_chance" = 2.5)
 	armour_penetration = 10
 	custom_materials = list(/datum/material/iron=1150, /datum/material/glass=2075)
 	hitsound = 'sound/weapons/bladeslice.ogg'
-	attack_verb = list("attacked", "poked", "jabbed", "torn", "gored")
-	sharpness = IS_SHARP
+	attack_verb = list("attacked", "poked", "jabbed", "tore", "lacerated", "gored")
+	sharpness = SHARP_EDGED // i know the whole point of spears is that they're pointy, but edged is more devastating at the moment so
 	max_integrity = 200
 	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 30)
-	var/war_cry = "AAAAARGH!!!"
+	var/war_cry = "ААААААА!!!"
 	var/icon_prefix = "spearglass"
+	wound_bonus = -15
+	bare_wound_bonus = 15
 
 /obj/item/spear/ComponentInitialize()
 	. = ..()
@@ -36,16 +38,18 @@
 
 /obj/item/spear/CheckParts(list/parts_list)
 	var/obj/item/shard/tip = locate() in parts_list
-	if (istype(tip, /obj/item/shard/plasma))
-		throwforce = 21
-		icon_prefix = "spearplasma"
-		AddComponent(/datum/component/two_handed, force_unwielded=11, force_wielded=19, icon_wielded="[icon_prefix]1")
-	update_icon()
-	qdel(tip)
-	..()
+	if(tip)
+		if (istype(tip, /obj/item/shard/plasma))
+			throwforce = 21
+			icon_prefix = "spearplasma"
+			AddComponent(/datum/component/two_handed, force_unwielded=11, force_wielded=19, icon_wielded="[icon_prefix]1")
+		update_icon()
+		parts_list -= tip
+		qdel(tip)
+	return ..()
 
 /obj/item/spear/explosive
-	name = "explosive lance"
+	name = "взрывное копьё"
 	var/obj/item/grenade/explosive = null
 	var/wielded = FALSE // track wielded status on item
 
@@ -75,7 +79,7 @@
 		QDEL_NULL(explosive)
 	G.forceMove(src)
 	explosive = G
-	desc = "A makeshift spear with [G] attached to it"
+	desc = "Самодельное копье с на нём [G]"
 
 /obj/item/spear/explosive/CheckParts(list/parts_list)
 	var/obj/item/grenade/G = locate() in parts_list
@@ -105,13 +109,13 @@
 
 /obj/item/spear/explosive/examine(mob/user)
 	. = ..()
-	. += "<span class='notice'>Alt-click to set your war cry.</span>"
+	. += "<span class='notice'>Alt-клик для установки боевого клича.</span>"
 
 /obj/item/spear/explosive/AltClick(mob/user)
 	if(user.canUseTopic(src, BE_CLOSE))
 		..()
 		if(istype(user) && loc == user)
-			var/input = stripped_input(user,"What do you want your war cry to be? You will shout it when you hit someone in melee.", ,"", 50)
+			var/input = stripped_input(user,"Какой боевой клич будет? Буду это кричать, когда буду бить кого-то в ближнем бою.", ,"", 50)
 			if(input)
 				src.war_cry = input
 
@@ -122,7 +126,7 @@
 	if(wielded)
 		user.say("[war_cry]", forced="spear warcry")
 		explosive.forceMove(AM)
-		explosive.prime()
+		explosive.prime(lanced_by=user)
 		qdel(src)
 
 //GREY TIDE
@@ -156,8 +160,8 @@
  */
 /obj/item/spear/bonespear	//Blatant imitation of spear, but made out of bone. Not valid for explosive modification.
 	icon_state = "bone_spear0"
-	name = "bone spear"
-	desc = "A haphazardly-constructed yet still deadly weapon. The pinnacle of modern technology."
+	name = "костяное копьё"
+	desc = "Случайно сконструированное, но все еще смертельное оружие. Вершина современных технологий."
 	force = 12
 	throwforce = 22
 	armour_penetration = 15				//Enhanced armor piercing

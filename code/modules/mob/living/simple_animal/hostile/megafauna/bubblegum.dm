@@ -32,8 +32,8 @@ Difficulty: Hard
 	desc = "In what passes for a hierarchy among slaughter demons, this one is king."
 	health = 2500
 	maxHealth = 2500
-	attack_verb_continuous = "rends"
-	attack_verb_simple = "rend"
+	attack_verb_continuous = "уничтожает"
+	attack_verb_simple = "уничтожает"
 	attack_sound = 'sound/magic/demon_attack1.ogg'
 	icon_state = "bubblegum"
 	icon_living = "bubblegum"
@@ -47,7 +47,7 @@ Difficulty: Hard
 	melee_damage_lower = 40
 	melee_damage_upper = 40
 	speed = 5
-	move_to_delay = 5
+	move_to_delay = 0.5
 	retreat_distance = 5
 	minimum_distance = 5
 	rapid_melee = 8 // every 1/4 second
@@ -74,6 +74,7 @@ Difficulty: Hard
 							   /datum/action/innate/megafauna_attack/hallucination_surround,
 							   /datum/action/innate/megafauna_attack/blood_warp)
 	small_sprite_type = /datum/action/small_sprite/megafauna/bubblegum
+	faction = list("mining", "boss", "hell")
 
 /datum/action/innate/megafauna_attack/triple_charge
 	name = "Triple Charge"
@@ -160,6 +161,7 @@ Difficulty: Hard
 			SLEEP_CHECK_DEATH(6)
 	SetRecoveryTime(20)
 
+
 /mob/living/simple_animal/hostile/megafauna/bubblegum/proc/charge(atom/chargeat = target, delay = 3, chargepast = 2)
 	if(!chargeat)
 		return
@@ -174,16 +176,16 @@ Difficulty: Hard
 	charging = TRUE
 	revving_charge = TRUE
 	DestroySurroundings()
-	walk(src, 0)
+	walk(src, NONE)
 	setDir(dir)
 	var/obj/effect/temp_visual/decoy/D = new /obj/effect/temp_visual/decoy(loc,src)
 	animate(D, alpha = 0, color = "#FF0000", transform = matrix()*2, time = 3)
 	SLEEP_CHECK_DEATH(delay)
 	revving_charge = FALSE
-	var/movespeed = 0.7
-	walk_towards(src, T, movespeed)
-	SLEEP_CHECK_DEATH(get_dist(src, T) * movespeed)
-	walk(src, 0) // cancel the movement
+	var/charge_speed = step_size * 4
+	walk_towards(src, T, 0, charge_speed)
+	SLEEP_CHECK_DEATH(bounds_dist(src, T) / charge_speed)
+	walk(src, NONE) // cancel the movement
 	try_bloodattack()
 	charging = FALSE
 
@@ -245,7 +247,7 @@ Difficulty: Hard
 			to_chat(L, "<span class='userdanger'>[src] rends you!</span>")
 			playsound(T, attack_sound, 100, TRUE, -1)
 			var/limb_to_hit = L.get_bodypart(pick(BODY_ZONE_HEAD, BODY_ZONE_CHEST, BODY_ZONE_R_ARM, BODY_ZONE_L_ARM, BODY_ZONE_R_LEG, BODY_ZONE_L_LEG))
-			L.apply_damage(10, BRUTE, limb_to_hit, L.run_armor_check(limb_to_hit, "melee", null, null, armour_penetration))
+			L.apply_damage(10, BRUTE, limb_to_hit, L.run_armor_check(limb_to_hit, "melee", null, null, armour_penetration), wound_bonus = CANT_WOUND)
 	SLEEP_CHECK_DEATH(3)
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/proc/bloodgrab(turf/T, handedness)
@@ -334,12 +336,12 @@ Difficulty: Hard
 	var/datum/callback/cb = CALLBACK(src, .proc/blood_enrage_end)
 	addtimer(cb, enrage_time)
 
-/mob/living/simple_animal/hostile/megafauna/bubblegum/proc/blood_enrage_end(var/newcolor = rgb(149, 10, 10))
+/mob/living/simple_animal/hostile/megafauna/bubblegum/proc/blood_enrage_end(newcolor = rgb(149, 10, 10))
 	update_approach()
 	change_move_delay()
 	remove_atom_colour(TEMPORARY_COLOUR_PRIORITY, newcolor)
 
-/mob/living/simple_animal/hostile/megafauna/bubblegum/proc/change_move_delay(var/newmove = initial(move_to_delay))
+/mob/living/simple_animal/hostile/megafauna/bubblegum/proc/change_move_delay(newmove = initial(move_to_delay))
 	move_to_delay = newmove
 	set_varspeed(move_to_delay)
 	handle_automated_action() // need to recheck movement otherwise move_to_delay won't update until the next checking aka will be wrong speed for a bit
@@ -352,6 +354,9 @@ Difficulty: Hard
 
 /obj/effect/decal/cleanable/blood/bubblegum
 	bloodiness = 0
+	bound_width = 32 // these are a tile large
+	bound_height = 32
+	bound_x = 0
 
 /obj/effect/decal/cleanable/blood/bubblegum/can_bloodcrawl_in()
 	return TRUE
@@ -442,6 +447,9 @@ Difficulty: Hard
 		..()
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/Move()
+	if(!stat && COOLDOWN_FINISHED(src, next_move_sound))
+		playsound(src.loc, 'sound/effects/meteorimpact.ogg', 200, 1, 2, 1)
+		COOLDOWN_START(src, next_move_sound, 0.5 SECONDS)
 	update_approach()
 	if(revving_charge)
 		return FALSE
@@ -451,23 +459,25 @@ Difficulty: Hard
 	..()
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/Moved(atom/OldLoc, Dir, Forced = FALSE)
-	if(Dir)
-		new /obj/effect/decal/cleanable/blood/bubblegum(src.loc)
+	if(Dir && OldLoc != loc)
+		new /obj/effect/decal/cleanable/blood/bubblegum(loc)
 	if(charging)
 		DestroySurroundings()
-	playsound(src, 'sound/effects/meteorimpact.ogg', 200, TRUE, 2, TRUE)
 	return ..()
 
 /mob/living/simple_animal/hostile/megafauna/bubblegum/Bump(atom/A)
 	if(charging)
 		if(isturf(A) || isobj(A) && A.density)
-			A.ex_act(EXPLODE_HEAVY)
+			if(isobj(A))
+				SSexplosions.medobj += A
+			else
+				SSexplosions.medturf += A
 		DestroySurroundings()
 		if(isliving(A))
 			var/mob/living/L = A
 			L.visible_message("<span class='danger'>[src] slams into [L]!</span>", "<span class='userdanger'>[src] tramples you into the ground!</span>")
 			src.forceMove(get_turf(L))
-			L.apply_damage(istype(src, /mob/living/simple_animal/hostile/megafauna/bubblegum/hallucination) ? 15 : 30, BRUTE)
+			L.apply_damage(istype(src, /mob/living/simple_animal/hostile/megafauna/bubblegum/hallucination) ? 15 : 30, BRUTE, wound_bonus = CANT_WOUND)
 			playsound(get_turf(L), 'sound/effects/meteorimpact.ogg', 100, TRUE)
 			shake_camera(L, 4, 3)
 			shake_camera(src, 2, 3)

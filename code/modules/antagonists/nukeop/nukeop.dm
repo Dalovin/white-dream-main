@@ -6,6 +6,7 @@
 	antag_hud_type = ANTAG_HUD_OPS
 	antag_hud_name = "synd"
 	antag_moodlet = /datum/mood_event/focused
+	show_to_ghosts = TRUE
 	var/datum/team/nuclear/nuke_team
 	var/always_new_team = FALSE //If not assigned a team by default ops will try to join existing ones, set this to TRUE to always create new team.
 	var/send_to_spawnpoint = TRUE //Should the user be moved to default spawnpoint.
@@ -34,7 +35,7 @@
 	return TRUE
 
 /datum/antagonist/nukeop/greet()
-	owner.current.playsound_local(get_turf(owner.current), 'sound/ambience/antag/ops.ogg',100,0)
+	owner.current.playsound_local(get_turf(owner.current), 'white/valtos/sounds/menu_loop.ogg',100,0)
 	to_chat(owner, "<span class='notice'>You are a [nuke_team ? nuke_team.syndicate_name : "syndicate"] agent!</span>")
 	owner.announce_objectives()
 
@@ -177,7 +178,7 @@
 		owner.current.real_name = "Syndicate [title]"
 
 /datum/antagonist/nukeop/leader/greet()
-	owner.current.playsound_local(get_turf(owner.current), 'sound/ambience/antag/ops.ogg',100,0)
+	owner.current.playsound_local(get_turf(owner.current), 'white/valtos/sounds/menu_loop.ogg',100,0)
 	to_chat(owner, "<B>You are the Syndicate [title] for this mission. You are responsible for the distribution of telecrystals and your ID is the only one who can open the launch bay doors.</B>")
 	to_chat(owner, "<B>If you feel you are not up to this task, give your ID to another operative.</B>")
 	if(!CONFIG_GET(flag/disable_warops))
@@ -237,7 +238,7 @@
 			else //Already set by admins/something else?
 				nuke_team.memorized_code = nuke.r_code
 		else
-			stack_trace("Station self destruct not found during lone op team creation.")
+			stack_trace("Station self-destruct not found during lone op team creation.")
 			nuke_team.memorized_code = null
 
 /datum/antagonist/nukeop/reinforcement

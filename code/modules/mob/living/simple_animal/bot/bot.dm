@@ -95,7 +95,7 @@
 	var/can_salute = TRUE
 	var/salute_delay = 60 SECONDS
 
-	hud_possible = list(DIAG_STAT_HUD, DIAG_BOT_HUD, DIAG_HUD, DIAG_PATH_HUD = HUD_LIST_LIST) //Diagnostic HUD views
+	hud_possible = list(DIAG_STAT_HUD, DIAG_BOT_HUD, DIAG_HUD, DIAG_PATH_HUD = HUD_LIST_LIST, HACKER_HUD) //Diagnostic HUD views
 
 /mob/living/simple_animal/bot/proc/get_mode()
 	if(client) //Player bots do not have modes, thus the override. Also an easy way for PDA users/AI to know when a bot is a player.
@@ -110,6 +110,27 @@
 	else
 		return "<span class='average'>[mode_name[mode]]</span>"
 
+/**
+  * Returns a status string about the bot's current status, if it's moving, manually controlled, or idle.
+  */
+/mob/living/simple_animal/bot/proc/get_mode_ui()
+	if(client) //Player bots do not have modes, thus the override. Also an easy way for PDA users/AI to know when a bot is a player.
+		return paicard ? "pAI Controlled" : "Autonomous"
+	else if(!on)
+		return "Inactive"
+	else if(!mode)
+		return "Idle"
+	else
+		return "[mode_name[mode]]"
+
+// bots don't need sidestepping
+/mob/living/simple_animal/bot/set_sidestep(val)
+	if(client)
+		return ..()
+	if(slider)
+		qdel(slider)
+	can_sidestep = FALSE
+
 /mob/living/simple_animal/bot/proc/turn_on()
 	if(stat)
 		return FALSE
@@ -117,6 +138,7 @@
 	update_mobility()
 	set_light(initial(light_range))
 	update_icon()
+	to_chat(src, "<span class='boldnotice'>You turned on!</span>")
 	diag_hud_set_botstat()
 	return TRUE
 
@@ -125,6 +147,7 @@
 	update_mobility()
 	set_light(0)
 	bot_reset() //Resets an AI's call, should it exist.
+	to_chat(src, "<span class='userdanger'>You turned off!</span>")
 	update_icon()
 
 /mob/living/simple_animal/bot/Initialize()
@@ -214,6 +237,17 @@
 			. += "[src]'s parts look very loose!"
 	else
 		. += "[src] is in pristine condition."
+	. += "<span class='notice'>Its maintenance panel is [open ? "open" : "closed"].</span>"
+	. += "<span class='info'>You can use a <b>screwdriver</b> to [open ? "close" : "open"] it.</span>"
+	if(open)
+		. += "<span class='notice'>Its control panel is [locked ? "locked" : "unlocked"].</span>"
+		var/is_sillycone = issilicon(user)
+		if(!emagged && (is_sillycone || user.Adjacent(src)))
+			. += "<span class='info'>Alt-click [is_sillycone ? "" : "or use your ID on "]it to [locked ? "un" : ""]lock its control panel.</span>"
+	if(paicard)
+		. += "<span class='notice'>It has a pAI device installed.</span>"
+		if(!open)
+			. += "<span class='info'>You can use a <b>hemostat</b> to remove it.</span>"
 
 /mob/living/simple_animal/bot/adjustHealth(amount, updating_health = TRUE, forced = FALSE)
 	if(amount>0 && prob(10))
@@ -248,7 +282,7 @@
 	if(!commissioned && can_salute)
 		for(var/mob/living/simple_animal/bot/B in get_hearers_in_view(5, get_turf(src)))
 			if(B.commissioned)
-				visible_message("<b>[src]</b> performs an elaborate salute for [B]!")
+				visible_message("<b>[capitalize(src)]</b> performs an elaborate salute for [B]!")
 				can_salute = FALSE
 				addtimer(VARSET_CALLBACK(src, can_salute, TRUE), salute_delay)
 				break
@@ -278,6 +312,25 @@
 /mob/living/simple_animal/bot/interact(mob/user)
 	show_controls(user)
 
+/mob/living/simple_animal/bot/AltClick(mob/user)
+	if(!user.canUseTopic(src, !issilicon(user)))
+		return
+	unlock_with_id(user)
+
+/mob/living/simple_animal/bot/proc/unlock_with_id(mob/user)
+	if(emagged)
+		to_chat(user, "<span class='danger'>ERROR</span>")
+		return
+	if(open)
+		to_chat(user, "<span class='warning'>Please close the access panel before [locked ? "un" : ""]locking it.</span>")
+		return
+	if(!bot_core.allowed(user))
+		to_chat(user, "<span class='warning'>Access denied.</span>")
+		return
+	locked = !locked
+	to_chat(user, "<span class='notice'>Controls are now [locked ? "locked" : "unlocked"].</span>")
+	return TRUE
+
 /mob/living/simple_animal/bot/attackby(obj/item/W, mob/user, params)
 	if(W.tool_behaviour == TOOL_SCREWDRIVER)
 		if(!locked)
@@ -286,16 +339,7 @@
 		else
 			to_chat(user, "<span class='warning'>The maintenance panel is locked!</span>")
 	else if(istype(W, /obj/item/card/id) || istype(W, /obj/item/pda))
-		if(bot_core.allowed(user) && !open && !emagged)
-			locked = !locked
-			to_chat(user, "<span class='notice'>Controls are now [locked ? "locked" : "unlocked"].</span>")
-		else
-			if(emagged)
-				to_chat(user, "<span class='danger'>ERROR</span>")
-			if(open)
-				to_chat(user, "<span class='warning'>Please close the access panel before locking it.</span>")
-			else
-				to_chat(user, "<span class='warning'>Access denied.</span>")
+		unlock_with_id(user)
 	else if(istype(W, /obj/item/paicard))
 		insertpai(user, W)
 	else if(W.tool_behaviour == TOOL_HEMOSTAT && paicard)
@@ -344,10 +388,12 @@
 		ejectpai(0)
 	if(on)
 		turn_off()
-	spawn(severity*300)
-		stat &= ~EMPED
-		if(was_on)
-			turn_on()
+	addtimer(CALLBACK(src, .proc/emp_reset, was_on), severity*30 SECONDS)
+
+/mob/living/simple_animal/bot/proc/emp_reset(was_on)
+	stat &= ~EMPED
+	if(was_on)
+		turn_on()
 
 /mob/living/simple_animal/bot/proc/set_custom_texts() //Superclass for setting hack texts. Appears only if a set is not given to a bot locally.
 	text_hack = "You hack [name]."
@@ -362,22 +408,19 @@
 	else
 		say(message)
 
-/mob/living/simple_animal/bot/radio(message, message_mode, list/spans, language)
+/mob/living/simple_animal/bot/radio(message, list/message_mods = list(), list/spans, language)
 	. = ..()
 	if(. != 0)
 		return
 
-	switch(message_mode)
-		if(MODE_HEADSET)
-			Radio.talk_into(src, message, , spans, language)
-			return REDUCE_RANGE
-
-		if(MODE_DEPARTMENT)
-			Radio.talk_into(src, message, message_mode, spans, language)
-			return REDUCE_RANGE
-
-	if(message_mode in GLOB.radiochannels)
-		Radio.talk_into(src, message, message_mode, spans, language)
+	if(message_mods[MODE_HEADSET])
+		Radio.talk_into(src, message, , spans, language, message_mods)
+		return REDUCE_RANGE
+	else if(message_mods[RADIO_EXTENSION] == MODE_DEPARTMENT)
+		Radio.talk_into(src, message, message_mods[RADIO_EXTENSION], spans, language, message_mods)
+		return REDUCE_RANGE
+	else if(message_mods[RADIO_EXTENSION] in GLOB.radiochannels)
+		Radio.talk_into(src, message, message_mods[RADIO_EXTENSION], spans, language, message_mods)
 		return REDUCE_RANGE
 
 /mob/living/simple_animal/bot/proc/drop_part(obj/item/drop_item, dropzone)
@@ -481,16 +524,16 @@ Pass a positive integer as an argument to override a bot's default speed.
 		return FALSE
 	dest = get_turf(dest) //We must always compare turfs, so get the turf of the dest var if dest was originally something else.
 	var/turf/last_node = get_turf(path[path.len]) //This is the turf at the end of the path, it should be equal to dest.
-	if(get_turf(src) == dest) //We have arrived, no need to move again.
+	if(dest in locs) //We have arrived, no need to move again.
 		return TRUE
 	else if(dest != last_node) //The path should lead us to our given destination. If this is not true, we must stop.
 		set_path(null)
 		return FALSE
 	var/step_count = move_speed ? move_speed : base_speed //If a value is passed into move_speed, use that instead of the default speed var.
-
+	//step_count = round((step_count * 32) / step_size)
 	if(step_count >= 1 && tries < BOT_STEP_MAX_RETRIES)
 		for(var/step_number = 0, step_number < step_count,step_number++)
-			addtimer(CALLBACK(src, .proc/bot_step, dest), BOT_STEP_DELAY*step_number)
+			addtimer(CALLBACK(src, .proc/bot_step, dest), BOT_STEP_DELAY*step_count)
 	else
 		return FALSE
 	return TRUE
@@ -500,15 +543,15 @@ Pass a positive integer as an argument to override a bot's default speed.
 	if(!path)
 		return FALSE
 	if(path.len > 1)
-		step_towards(src, path[1])
-		if(get_turf(src) == path[1]) //Successful move
-			increment_path()
+		walk_to(src, path[1])
+		if(path[1] in obounds()) //Successful move and entire bot in on turf
 			tries = 0
+			increment_path()
 		else
 			tries++
 			return FALSE
 	else if(path.len == 1)
-		step_to(src, dest)
+		walk_to(src, dest)
 		set_path(null)
 	return TRUE
 
@@ -582,10 +625,11 @@ Pass a positive integer as an argument to override a bot's default speed.
 
 /mob/living/simple_animal/bot/proc/bot_patrol()
 	patrol_step()
-	spawn(5)
-		if(mode == BOT_PATROL)
-			patrol_step()
-	return
+	addtimer(CALLBACK(src, .proc/do_patrol), 5)
+
+/mob/living/simple_animal/bot/proc/do_patrol()
+	if(mode == BOT_PATROL)
+		patrol_step()
 
 /mob/living/simple_animal/bot/proc/start_patrol()
 
@@ -621,28 +665,30 @@ Pass a positive integer as an argument to override a bot's default speed.
 	if(client)		// In use by player, don't actually move.
 		return
 
-	if(loc == patrol_target)		// reached target
+	if(patrol_target in obounds())		// reached target
 		//Find the next beacon matching the target.
 		if(!get_next_patrol_target())
 			find_patrol_target() //If it fails, look for the nearest one instead.
 		return
 
 	else if(path.len > 0 && patrol_target)		// valid path
-		if(path[1] == loc)
+		if(path[1] in obounds())
 			increment_path()
 			return
 
 
 		var/moved = bot_move(patrol_target)//step_towards(src, next)	// attempt to move
 		if(!moved) //Couldn't proceed the next step of the path BOT_STEP_MAX_RETRIES times
-			spawn(2)
-				calc_path()
-				if(path.len == 0)
-					find_patrol_target()
-				tries = 0
+			addtimer(CALLBACK(src, .proc/patrol_step_not_moved), 2)
 
 	else	// no path, so calculate new one
 		mode = BOT_START_PATROL
+
+/mob/living/simple_animal/bot/proc/patrol_step_not_moved()
+	calc_path()
+	if(!length(path))
+		find_patrol_target()
+	tries = 0
 
 // finds the nearest beacon to self
 /mob/living/simple_animal/bot/proc/find_patrol_target()
@@ -744,34 +790,38 @@ Pass a positive integer as an argument to override a bot's default speed.
 
 /mob/living/simple_animal/bot/proc/calc_summon_path(turf/avoid)
 	check_bot_access()
-	spawn()
-		set_path(get_path_to(src, summon_target, /turf/proc/Distance_cardinal, 0, 150, id=access_card, exclude=avoid))
-		if(!path.len) //Cannot reach target. Give up and announce the issue.
-			speak("Summon command failed, destination unreachable.",radio_channel)
-			bot_reset()
+	INVOKE_ASYNC(src, .proc/do_calc_summon_path, avoid)
+
+/mob/living/simple_animal/bot/proc/do_calc_summon_path(turf/avoid)
+	set_path(get_path_to(src, summon_target, /turf/proc/Distance_cardinal, 0, 150, id=access_card, exclude=avoid))
+	if(!length(path)) //Cannot reach target. Give up and announce the issue.
+		speak("Summon command failed, destination unreachable.",radio_channel)
+		bot_reset()
 
 /mob/living/simple_animal/bot/proc/summon_step()
 
 	if(client)		// In use by player, don't actually move.
 		return
 
-	if(loc == summon_target)		// Arrived to summon location.
+	if(summon_target in locs)		// Arrived to summon location.
 		bot_reset()
 		return
 
 	else if(path.len > 0 && summon_target)		//Proper path acquired!
-		if(path[1] == loc)
+		if(path[1] in obounds())
 			increment_path()
 			return
 
 		var/moved = bot_move(summon_target, 3)	// Move attempt
 		if(!moved)
-			spawn(2)
-				calc_summon_path()
-				tries = 0
+			addtimer(CALLBACK(src, .proc/summon_step_not_moved), 2)
 
 	else	// no path, so calculate new one
 		calc_summon_path()
+
+/mob/living/simple_animal/bot/proc/summon_step_not_moved()
+	calc_summon_path()
+	tries = 0
 
 /mob/living/simple_animal/bot/Bump(atom/A) //Leave no door unopened!
 	. = ..()
@@ -840,7 +890,7 @@ Pass a positive integer as an argument to override a bot's default speed.
 				log_game("Safety lock of [src] was re-enabled by [key_name(usr)] in [AREACOORD(src)]")
 				bot_reset()
 		if("ejectpai")
-			if(paicard && (!locked || issilicon(usr) || IsAdminGhost(usr)))
+			if(paicard && (!locked || issilicon(usr) || isAdminGhostAI(usr)))
 				to_chat(usr, "<span class='notice'>You eject [paicard] from [bot_name].</span>")
 				ejectpai(usr)
 	update_controls()
@@ -867,13 +917,13 @@ Pass a positive integer as an argument to override a bot's default speed.
 	if(emagged == 2) //An emagged bot cannot be controlled by humans, silicons can if one hacked it.
 		if(!hacked) //Manually emagged by a human - access denied to all.
 			return TRUE
-		else if(!issilicon(user) && !IsAdminGhost(user)) //Bot is hacked, so only silicons and admins are allowed access.
+		else if(!issilicon(user) && !isAdminGhostAI(user)) //Bot is hacked, so only silicons and admins are allowed access.
 			return TRUE
 	return FALSE
 
 /mob/living/simple_animal/bot/proc/hack(mob/user)
 	var/hack
-	if(issilicon(user) || IsAdminGhost(user)) //Allows silicons or admins to toggle the emag status of a bot.
+	if(issilicon(user) || isAdminGhostAI(user)) //Allows silicons or admins to toggle the emag status of a bot.
 		hack += "[emagged == 2 ? "Software compromised! Unit may exhibit dangerous or erratic behavior." : "Unit operating normally. Release safety lock?"]<BR>"
 		hack += "Harm Prevention Safety System: <A href='?src=[REF(src)];operation=hack'>[emagged ? "<span class='bad'>DANGER</span>" : "Engaged"]</A><BR>"
 	else if(!locked) //Humans with access can use this option to hide a bot from the AI's remote control panel and PDA control.
@@ -882,7 +932,7 @@ Pass a positive integer as an argument to override a bot's default speed.
 
 /mob/living/simple_animal/bot/proc/showpai(mob/user)
 	var/eject = ""
-	if((!locked || issilicon(usr) || IsAdminGhost(usr)))
+	if((!locked || issilicon(usr) || isAdminGhostAI(usr)))
 		if(paicard || allow_pai)
 			eject += "Personality card status: "
 			if(paicard)
@@ -949,6 +999,8 @@ Pass a positive integer as an argument to override a bot's default speed.
 
 /mob/living/simple_animal/bot/Login()
 	. = ..()
+	if(!. || !client)
+		return FALSE
 	access_card.access += player_access
 	diag_hud_set_botmode()
 
@@ -971,7 +1023,7 @@ Pass a positive integer as an argument to override a bot's default speed.
 	faction -= "silicon"
 
 /mob/living/simple_animal/bot/proc/set_path(list/newpath)
-	path = newpath ? newpath : list()
+	QDEL_LIST(path) // wipe the old path
 	if(!path_hud)
 		return
 	var/list/path_huds_watching_me = list(GLOB.huds[DATA_HUD_DIAGNOSTIC_ADVANCED])
@@ -1031,4 +1083,8 @@ Pass a positive integer as an argument to override a bot's default speed.
 	var/image/I = path[path[1]]
 	if(I)
 		I.icon_state = null
+	qdel(path[1])
 	path.Cut(1, 2)
+
+/mob/living/simple_animal/bot/rust_heretic_act()
+	adjustBruteLoss(400)

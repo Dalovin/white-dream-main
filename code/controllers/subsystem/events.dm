@@ -100,7 +100,7 @@ SUBSYSTEM_DEF(events)
 // Why the heck is this here! Took me so damn long to find!
 /client/proc/forceEvent()
 	set name = "Trigger Event"
-	set category = "ФАН"
+	set category = "Фан"
 
 	if(!holder ||!check_rights(R_FUN))
 		return
@@ -158,7 +158,7 @@ SUBSYSTEM_DEF(events)
 	var/MM = text2num(time2text(world.timeofday, "MM")) 	// get the current month
 	var/DD = text2num(time2text(world.timeofday, "DD")) 	// get the current day
 	var/DDD = time2text(world.timeofday, "DDD")	// get the current weekday
-	var/W = weekdayofthemonth()	// is this the first monday? second? etc.
+	var/W = week_of_the_month()	// is this the first monday? second? etc.
 
 	for(var/H in subtypesof(/datum/holiday))
 		var/datum/holiday/holiday = new H()

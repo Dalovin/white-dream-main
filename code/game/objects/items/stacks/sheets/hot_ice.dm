@@ -1,11 +1,11 @@
 /obj/item/stack/sheet/hot_ice
-	name = "hot ice"
+	name = "горячий лёд"
 	icon_state = "hot-ice"
-	item_state = "hot-ice"
-	singular_name = "hot ice"
+	inhand_icon_state = "hot-ice"
+	singular_name = "горячий лёд"
 	icon = 'icons/obj/stack_objects.dmi'
 	custom_materials = list(/datum/material/hot_ice=MINERAL_MATERIAL_AMOUNT)
-	grind_results = list(/datum/reagent/toxin/plasma = 300)
+	grind_results = list(/datum/reagent/toxin/hot_ice = 25)
 	material_type = /datum/material/hot_ice
 
 /obj/item/stack/sheet/hot_ice/suicide_act(mob/living/carbon/user)

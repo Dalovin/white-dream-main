@@ -12,13 +12,16 @@
 
 	pipe_flags = PIPING_ONE_PER_TURF
 	pipe_state = "connector"
-
+	bound_width = 18
+	bound_height = 18
+	bound_x = 7
+	bound_y = 7
 	var/obj/machinery/portable_atmospherics/connected_device
 
 /obj/machinery/atmospherics/components/unary/portables_connector/New()
 	..()
 	var/datum/gas_mixture/air_contents = airs[1]
-	air_contents.volume = 0
+	air_contents.set_volume(0)
 
 /obj/machinery/atmospherics/components/unary/portables_connector/Destroy()
 	if(connected_device)

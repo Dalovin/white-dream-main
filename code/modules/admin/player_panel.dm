@@ -2,7 +2,7 @@
 	if(!check_rights())
 		return
 	log_admin("[key_name(usr)] checked the player panel.")
-	var/dat = "<html><head><meta http-equiv='X-UA-Compatible' content='charset=utf-8;IE=edge'/><title>Player Panel</title></head>"
+	var/dat = "<html><head><meta charset=\"utf-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"><title>Player Panel</title></head>"
 
 	//javascript, the part that does most of the work~
 	dat += {"
@@ -83,6 +83,7 @@
 					body += "<a href='?_src_=holder;[HrefToken()];adminplayeropts="+ref+"'>PP</a> - "
 					body += "<a href='?_src_=holder;[HrefToken()];showmessageckey="+ckey+"'>N</a> - "
 					body += "<a href='?_src_=vars;[HrefToken()];Vars="+ref+"'>VV</a> - "
+					body += "<a href='?_src_=vars;[HrefToken()];skill="+ref+"'>SP</a> - "
 					body += "<a href='?_src_=holder;[HrefToken()];traitor="+ref+"'>TP</a> - "
 					if (job == "Cyborg")
 						body += "<a href='?_src_=holder;[HrefToken()];borgpanel="+ref+"'>BP</a> - "

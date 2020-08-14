@@ -18,9 +18,9 @@
 /datum/wires/apc/get_status()
 	var/obj/machinery/power/apc/A = holder
 	var/list/status = list()
-	status += "The interface light is [A.locked ? "red" : "green"]."
-	status += "The short indicator is [A.shorted ? "lit" : "off"]."
-	status += "The AI connection light is [!A.aidisabled ? "on" : "off"]."
+	status += "Индикатор блокировки [A.locked ? "красный" : "зелёный"]."
+	status += "Индикатор питания [A.shorted ? "горит" : "не горит"]."
+	status += "Индикатор соединения с ИИ [!A.aidisabled ? "горит" : "не горит"]."
 	return status
 
 /datum/wires/apc/on_pulse(wire)
@@ -53,3 +53,9 @@
 				A.aidisabled = FALSE
 			else
 				A.aidisabled = TRUE
+
+/datum/wires/apc/can_reveal_wires(mob/user)
+	if(HAS_TRAIT(user, TRAIT_KNOW_ENGI_WIRES))
+		return TRUE
+
+	return ..()

@@ -1,6 +1,6 @@
 //the base mining mob
 /mob/living/simple_animal/hostile/asteroid
-	vision_range = 2
+	vision_range = 64
 	atmos_requirements = list("min_oxy" = 0, "max_oxy" = 0, "min_tox" = 0, "max_tox" = 0, "min_co2" = 0, "max_co2" = 0, "min_n2" = 0, "max_n2" = 0)
 	faction = list("mining")
 	weather_immunities = list("lava","ash")
@@ -21,13 +21,9 @@
 	var/icon_aggro = null
 	var/crusher_drop_mod = 25
 
-/mob/living/simple_animal/hostile/asteroid/Initialize(mapload)
-	. = ..()
-	apply_status_effect(STATUS_EFFECT_CRUSHERDAMAGETRACKING)
-
 /mob/living/simple_animal/hostile/asteroid/Aggro()
 	..()
-	if(vision_range != aggro_vision_range)
+	if(vision_range == aggro_vision_range && icon_aggro)
 		icon_state = icon_aggro
 
 /mob/living/simple_animal/hostile/asteroid/LoseAggro()

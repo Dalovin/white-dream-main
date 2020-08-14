@@ -12,17 +12,18 @@
 	speak_chance = 1
 	turns_per_move = 5
 	see_in_dark = 6
-	butcher_results = list(/obj/item/reagent_containers/food/snacks/meat/slab = 4, /obj/item/clothing/head/goatpelt = 1)
+	butcher_results = list(/obj/item/reagent_containers/food/snacks/meat/slab = 4)
 	response_help_continuous = "pets"
 	response_help_simple = "pet"
 	response_disarm_continuous = "gently pushes aside"
 	response_disarm_simple = "gently push aside"
 	response_harm_continuous = "kicks"
 	response_harm_simple = "kick"
-	faction = list("goat")
+	faction = list("neutral")
 	mob_biotypes = MOB_ORGANIC|MOB_BEAST
-	attack_verb_continuous = "kicks"
-	attack_verb_simple = "kick"
+	attack_same = 1
+	attack_verb_continuous = "бьёт"
+	attack_verb_simple = "бьёт"
 	attack_sound = 'sound/weapons/punch1.ogg'
 	health = 40
 	maxHealth = 40
@@ -131,8 +132,8 @@
 	response_disarm_simple = "gently push aside"
 	response_harm_continuous = "kicks"
 	response_harm_simple = "kick"
-	attack_verb_continuous = "kicks"
-	attack_verb_simple = "kick"
+	attack_verb_continuous = "бьёт"
+	attack_verb_simple = "бьёт"
 	attack_sound = 'sound/weapons/punch1.ogg'
 	health = 50
 	maxHealth = 50
@@ -143,6 +144,8 @@
 	tame_chance = 25
 	bonus_tame_chance = 15
 	footstep_type = FOOTSTEP_MOB_SHOE
+	pet_bonus = TRUE
+	pet_bonus_emote = "moos happily!"
 
 /mob/living/simple_animal/cow/Initialize()
 	udder = new()
@@ -184,24 +187,27 @@
 		to_chat(src, "<span class='userdanger'>You are tipped over by [M]!</span>")
 		Paralyze(60, ignore_canstun = TRUE)
 		icon_state = icon_dead
-		spawn(rand(20,50))
-			if(!stat && M)
-				icon_state = icon_living
-				var/external
-				var/internal
-				switch(pick(1,2,3,4))
-					if(1,2,3)
-						var/text = pick("imploringly.", "pleadingly.",
-							"with a resigned expression.")
-						external = "[src] looks at [M] [text]"
-						internal = "You look at [M] [text]"
-					if(4)
-						external = "[src] seems resigned to its fate."
-						internal = "You resign yourself to your fate."
-				visible_message("<span class='notice'>[external]</span>",
-					"<span class='revennotice'>[internal]</span>")
+		addtimer(CALLBACK(src, .proc/cow_tipped, M), rand(20,50))
+
 	else
 		..()
+
+/mob/living/simple_animal/cow/proc/cow_tipped(mob/living/carbon/M)
+	if(QDELETED(M) || stat)
+		return
+	icon_state = icon_living
+	var/external
+	var/internal
+	if(prob(75))
+		var/text = pick("imploringly.", "pleadingly.",
+			"with a resigned expression.")
+		external = "[src] looks at [M] [text]"
+		internal = "You look at [M] [text]"
+	else
+		external = "[src] seems resigned to its fate."
+		internal = "You resign yourself to your fate."
+	visible_message("<span class='notice'>[external]</span>",
+		"<span class='revennotice'>[internal]</span>")
 
 ///Wisdom cow, gives XP to a random skill and speaks wisdoms
 /mob/living/simple_animal/cow/wisdom
@@ -220,7 +226,7 @@
 /mob/living/simple_animal/cow/wisdom/attack_hand(mob/living/carbon/M)
 	if(!stat && M.a_intent == INTENT_HELP)
 		to_chat(M, "<span class='nicegreen'>[src] whispers you some intense wisdoms and then disappears!</span>")
-		M.mind?.adjust_experience(pick(subtypesof(/datum/skill)), 500)
+		M.mind?.adjust_experience(pick(GLOB.skill_types), 500)
 		do_smoke(1, get_turf(src))
 		qdel(src)
 		return
@@ -250,8 +256,8 @@
 	response_disarm_simple = "gently push aside"
 	response_harm_continuous = "kicks"
 	response_harm_simple = "kick"
-	attack_verb_continuous = "kicks"
-	attack_verb_simple = "kick"
+	attack_verb_continuous = "бьёт"
+	attack_verb_simple = "бьёт"
 	health = 3
 	maxHealth = 3
 	ventcrawler = VENTCRAWLER_ALWAYS
@@ -259,13 +265,15 @@
 	pass_flags = PASSTABLE | PASSGRILLE | PASSMOB
 	mob_size = MOB_SIZE_TINY
 	gold_core_spawnable = FRIENDLY_SPAWN
+	pet_bonus = TRUE
+	pet_bonus_emote = "chirps!"
 
 	footstep_type = FOOTSTEP_MOB_CLAW
 
 /mob/living/simple_animal/chick/Initialize()
 	. = ..()
-	pixel_x = rand(-6, 6)
-	pixel_y = rand(0, 10)
+	if(loc)
+		forceMove(loc, rand(-6, 6), rand(0, 10))
 
 /mob/living/simple_animal/chick/Life()
 	. =..()
@@ -305,8 +313,8 @@
 	response_disarm_simple = "gently push aside"
 	response_harm_continuous = "kicks"
 	response_harm_simple = "kick"
-	attack_verb_continuous = "kicks"
-	attack_verb_simple = "kick"
+	attack_verb_continuous = "бьёт"
+	attack_verb_simple = "бьёт"
 	health = 15
 	maxHealth = 15
 	ventcrawler = VENTCRAWLER_ALWAYS
@@ -331,8 +339,7 @@
 	icon_state = "[icon_prefix]_[body_color]"
 	icon_living = "[icon_prefix]_[body_color]"
 	icon_dead = "[icon_prefix]_[body_color]_dead"
-	pixel_x = rand(-6, 6)
-	pixel_y = rand(0, 10)
+	forceMove(loc, rand(-6, 6), rand(0, 10))
 	++chicken_count
 
 /mob/living/simple_animal/chicken/Destroy()
@@ -359,8 +366,7 @@
 		visible_message("<span class='alertalien'>[src] [pick(layMessage)]</span>")
 		eggsleft--
 		var/obj/item/E = new egg_type(get_turf(src))
-		E.pixel_x = rand(-6,6)
-		E.pixel_y = rand(-6,6)
+		E.forceMove(E.loc, rand(-6,6), rand(-6,6))
 		if(eggsFertile)
 			if(chicken_count < MAX_CHICKENS && prob(25))
 				START_PROCESSING(SSobj, E)
@@ -423,8 +429,8 @@
 	response_disarm_simple = "gently nudges aside"
 	response_harm_continuous = "kicks"
 	response_harm_simple = "kick"
-	attack_verb_continuous = "bucks"
-	attack_verb_simple = "buck"
+	attack_verb_continuous = "насаживает"
+	attack_verb_simple = "насаживает"
 	attack_sound = 'sound/weapons/punch1.ogg'
 	health = 75
 	maxHealth = 75

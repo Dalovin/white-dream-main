@@ -53,7 +53,7 @@
 	name = "медицинский HUD с ПНВ"
 	desc = "Усовершенствованный медицинский дисплей, позволяющий врачам находить пациентов в полной темноте."
 	icon_state = "healthhudnight"
-	item_state = "glasses"
+	inhand_icon_state = "glasses"
 	darkness_view = 8
 	flash_protect = FLASH_PROTECTION_SENSITIVE
 	lighting_alpha = LIGHTING_PLANE_ALPHA_MOSTLY_VISIBLE
@@ -80,7 +80,7 @@
 	name = "диагностический HUD с ПНВ"
 	desc = "A robotics diagnostic HUD fitted with a light amplifier."
 	icon_state = "diagnostichudnight"
-	item_state = "glasses"
+	inhand_icon_state = "glasses"
 	darkness_view = 8
 	flash_protect = FLASH_PROTECTION_SENSITIVE
 	lighting_alpha = LIGHTING_PLANE_ALPHA_MOSTLY_VISIBLE
@@ -90,12 +90,12 @@
 	name = "диагностические солнцезащитные очки"
 	desc = "Солнцезащитные очки с диагностическим HUD."
 	icon_state = "sunhuddiag"
-	item_state = "glasses"
+	inhand_icon_state = "glasses"
 	flash_protect = FLASH_PROTECTION_FLASH
 	tint = 1
 
 /obj/item/clothing/glasses/hud/security
-	name = "HUD секьюрити"
+	name = "HUD офицера"
 	desc = "Главный дисплей, который сканирует гуманоидов в поле зрения и предоставляет точные данные о состоянии их идентификатора и записях безопасности."
 	icon_state = "securityhud"
 	hud_type = DATA_HUD_SECURITY_ADVANCED
@@ -103,8 +103,8 @@
 	glass_colour_type = /datum/client_colour/glass_colour/red
 
 /obj/item/clothing/glasses/hud/security/chameleon
-	name = "хамелеонный HUD секьюрити"
-	desc = "Украденный HUD секьюрити, интегрированный с технологией хамелеона Синдиката. Обеспечивает защиту от вспышек."
+	name = "хамелеонный HUD офицера"
+	desc = "Украденный HUD офицера, интегрированный с технологией хамелеона Синдиката. Обеспечивает защиту от вспышек."
 	flash_protect = FLASH_PROTECTION_FLASH
 
 	// Yes this code is the same as normal chameleon glasses, but we don't
@@ -132,7 +132,7 @@
 	icon_state = "hudpatch"
 
 /obj/item/clothing/glasses/hud/security/sunglasses
-	name = "солнцезащитный секьюрити HUD"
+	name = "солнцезащитный HUD офицера"
 	desc = "Солнцезащитные очки с защитой от вспышек и HUD."
 	icon_state = "sunhudsec"
 	darkness_view = 1
@@ -141,7 +141,7 @@
 	glass_colour_type = /datum/client_colour/glass_colour/darkred
 
 /obj/item/clothing/glasses/hud/security/night
-	name = "секьюрити HUD с ПНВ"
+	name = "HUD офицера с ПНВ"
 	desc = "Усовершенствованный головной дисплей, который обеспечивает идентификационные данные и видение в полной темноте."
 	icon_state = "securityhudnight"
 	darkness_view = 8
@@ -153,19 +153,19 @@
 	name = "HUD GAR очки"
 	desc = "GAR очки с HUD."
 	icon_state = "gars"
-	item_state = "garb"
+	inhand_icon_state = "garb"
 	force = 10
 	throwforce = 10
 	throw_speed = 4
 	attack_verb = list("режет")
 	hitsound = 'sound/weapons/bladeslice.ogg'
-	sharpness = IS_SHARP
+	sharpness = SHARP_EDGED
 
 /obj/item/clothing/glasses/hud/security/sunglasses/gars/supergars
 	name = "гига HUD GAR очки"
 	desc = "GIGA GAR очки с HUD."
 	icon_state = "supergars"
-	item_state = "garb"
+	inhand_icon_state = "garb"
 	force = 12
 	throwforce = 12
 
@@ -240,5 +240,5 @@
 	name = "sunglasses"
 	desc = "These sunglasses are special, and let you view potential criminals."
 	icon_state = "sun"
-	item_state = "sunglasses"
+	inhand_icon_state = "sunglasses"
 

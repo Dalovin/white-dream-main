@@ -10,7 +10,12 @@
 	datum_flags = DF_USE_TAG
 	density = TRUE
 	layer = MOB_LAYER
-	animate_movement = SLIDE_STEPS
+	step_size = 32 // mob movespeed system will handle
+	bound_width = 16
+	bound_height = 16
+	bound_x = 8
+	brotation = NONE
+
 	flags_1 = HEAR_1
 	hud_possible = list(ANTAG_HUD)
 	pressure_resistance = 8
@@ -29,7 +34,7 @@
 	/// The calculated mob speed slowdown based on the modifiers list
 	var/cached_multiplicative_slowdown
 	/// List of action hud items the user has
-	var/list/datum/action/actions = list()
+	var/list/datum/action/actions
 	/// A special action? No idea why this lives here
 	var/list/datum/action/chameleon_item_actions
 
@@ -136,7 +141,7 @@
 	var/research_scanner = FALSE
 
 	/// Is the mob throw intent on
-	var/in_throw_mode = 0
+	var/in_throw_mode = FALSE
 
 	/// What job does this mob have
 	var/job = null//Living
@@ -156,7 +161,7 @@
 	  * Spells that do not transfer from one mob to another and can not be lost in mindswap.
 	  * obviously do not live in the mind
 	  */
-	var/list/mob_spell_list = list()
+	var/list/mob_spell_list
 
 
 	/// bitflags defining which status effects can be inflicted (replaces canknockdown, canstun, etc)
@@ -187,6 +192,9 @@
 	///List of progress bars this mob is currently seeing for actions
 	var/list/progressbars = null	//for stacking do_after bars
 
+	///For storing what do_after's someone has, in case we want to restrict them to only one of a certain do_after at a time
+	var/list/do_afters
+
 	///Allows a datum to intercept all click calls this mob is the source of
 	var/datum/click_intercept
 
@@ -200,9 +208,7 @@
 	var/list/client_colours = list()
 	var/hud_type = /datum/hud
 
-	var/datum/hSB/sandbox = null
-
-	var/bloody_hands = 0
+	var/datum/h_sandbox/sandbox = null
 
 	var/datum/focus //What receives our keyboard inputs. src by default
 

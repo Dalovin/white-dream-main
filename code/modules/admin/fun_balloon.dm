@@ -108,7 +108,7 @@
 /obj/effect/forcefield/arena_shuttle
 	name = "portal"
 	timeleft = 0
-	var/list/warp_points
+	var/list/warp_points = list()
 
 /obj/effect/forcefield/arena_shuttle/Initialize()
 	. = ..()
@@ -137,7 +137,7 @@
 	desc = "For the winners."
 
 /obj/effect/landmark/shuttle_arena_entrance
-	name = "the arena"
+	name = "\proper the arena"
 	desc = "A lava filled battlefield."
 
 

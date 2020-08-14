@@ -32,7 +32,7 @@
 	custom_materials = list(/datum/material/iron = 2000)
 	max_integrity = 100
 	integrity_failure = 0.33
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 	canSmoothWith = list(/obj/structure/table, /obj/structure/table/reinforced, /obj/structure/table/greyscale)
 
 /obj/structure/table/examine(mob/user)
@@ -43,9 +43,9 @@
 	return "<span class='notice'>Верхушка <b>прикручена</b>, но основные <b>болты</b> также видны.</span>"
 
 /obj/structure/table/update_icon()
-	if(smooth)
-		queue_smooth(src)
-		queue_smooth_neighbors(src)
+	if(smoothing_flags)
+		QUEUE_SMOOTH(src)
+		QUEUE_SMOOTH_NEIGHBORS(src)
 
 /obj/structure/table/narsie_act()
 	var/atom/A = loc
@@ -67,7 +67,7 @@
 					to_chat(user, "<span class='warning'>Надо бы посильнее взять!</span>")
 					return
 				if(user.grab_state >= GRAB_NECK)
-					tableheadsmash(user, pushed_mob)
+					tablelimbsmash(user, pushed_mob)
 				else
 					tablepush(user, pushed_mob)
 			if(user.a_intent == INTENT_HELP)
@@ -79,7 +79,7 @@
 					return
 			user.stop_pulling()
 		else if(user.pulling.pass_flags & PASSTABLE)
-			user.Move_Pulled(src)
+			user.Move_Pulled(src, user.client?.mouseParams)
 			if (user.pulling.loc == loc)
 				user.visible_message("<span class='notice'><b>[user]</b> кладёт <b>[user.pulling]</b> на <b>[src]</b>.</span>",
 					"<span class='notice'>Кладу на <b>[user.pulling]</b> на <b>[src]</b>.</span>")
@@ -136,18 +136,22 @@
 	log_combat(user, pushed_mob, "tabled", null, "onto [src]")
 	SEND_SIGNAL(pushed_mob, COMSIG_ADD_MOOD_EVENT, "table", /datum/mood_event/table)
 
-/obj/structure/table/proc/tableheadsmash(mob/living/user, mob/living/pushed_mob)
+/obj/structure/table/proc/tablelimbsmash(mob/living/user, mob/living/pushed_mob)
 	pushed_mob.Knockdown(30)
-	pushed_mob.apply_damage(40, BRUTE, BODY_ZONE_HEAD)
+	var/obj/item/bodypart/banged_limb = pushed_mob.get_bodypart(user.zone_selected) || pushed_mob.get_bodypart(BODY_ZONE_HEAD)
+	var/extra_wound = 0
+	if(HAS_TRAIT(user, TRAIT_HULK))
+		extra_wound = 20
+	banged_limb.receive_damage(30, wound_bonus = extra_wound)
 	pushed_mob.apply_damage(60, STAMINA)
 	take_damage(50)
 	if(user.mind?.martial_art.smashes_tables && user.mind?.martial_art.can_use(user))
 		deconstruct(FALSE)
-	playsound(pushed_mob, 'sound/effects/tableheadsmash.ogg', 90, TRUE)
+	playsound(pushed_mob, "sound/effects/bang.ogg", 90, TRUE)
 	pushed_mob.visible_message("<span class='danger'><b>[user]</b> хуярит голову <b>[pushed_mob]</b> об <b>[src]</b>!</span>",
 								"<span class='userdanger'><b>[user]</b> бьёт моей головой об <b>[src]</b>!</span>")
-	log_combat(user, pushed_mob, "head slammed", null, "against <b>[src]</b>")
-	SEND_SIGNAL(pushed_mob, COMSIG_ADD_MOOD_EVENT, "table", /datum/mood_event/table_headsmash)
+	log_combat(user, pushed_mob, "head slammed", null, "against [src]")
+	SEND_SIGNAL(pushed_mob, COMSIG_ADD_MOOD_EVENT, "table", /datum/mood_event/table_limbsmash, banged_limb)
 
 /obj/structure/table/attackby(obj/item/I, mob/user, params)
 	if(!(flags_1 & NODECONSTRUCT_1) && user.a_intent != INTENT_HELP)
@@ -170,7 +174,7 @@
 			for(var/x in T.contents)
 				var/obj/item/item = x
 				AfterPutItemOnTable(item, user)
-			SEND_SIGNAL(I, COMSIG_TRY_STORAGE_QUICK_EMPTY, drop_location())
+			SEND_SIGNAL(I, COMSIG_TRY_STORAGE_QUICK_EMPTY, drop_location()[1])
 			user.visible_message("<span class='notice'><b>[user]</b> опустошает <b>[I]</b> на <b>[src]</b>.</span>")
 			return
 		// If the tray IS empty, continue on (tray will be placed on the table like other items)
@@ -183,7 +187,7 @@
 		switch(user.a_intent)
 			if(INTENT_HARM)
 				user.unbuckle_mob(carried_mob)
-				tableheadsmash(user, carried_mob)
+				tablelimbsmash(user, carried_mob)
 			if(INTENT_HELP)
 				var/tableplace_delay = 3.5 SECONDS
 				var/skills_space = ""
@@ -210,8 +214,9 @@
 			if(!click_params || !click_params["icon-x"] || !click_params["icon-y"])
 				return
 			//Clamp it so that the icon never moves more than 16 pixels in either direction (thus leaving the table turf)
-			I.pixel_x = clamp(text2num(click_params["icon-x"]) - 16, -(world.icon_size/2), world.icon_size/2)
-			I.pixel_y = clamp(text2num(click_params["icon-y"]) - 16, -(world.icon_size/2), world.icon_size/2)
+			var/_step_x = clamp(text2num(click_params["icon-x"]) - 16, -(world.icon_size/2), world.icon_size/2)
+			var/_step_y = clamp(text2num(click_params["icon-y"]) - 16, -(world.icon_size/2), world.icon_size/2)
+			I.forceStep(null, _step_x, _step_y)
 			AfterPutItemOnTable(I, user)
 			return TRUE
 	else
@@ -235,6 +240,20 @@
 			new framestack(T, framestackamount)
 	qdel(src)
 
+/obj/structure/table/rcd_vals(mob/user, obj/item/construction/rcd/the_rcd)
+	switch(the_rcd.mode)
+		if(RCD_DECONSTRUCT)
+			return list("mode" = RCD_DECONSTRUCT, "delay" = 24, "cost" = 16)
+	return FALSE
+
+/obj/structure/table/rcd_act(mob/user, obj/item/construction/rcd/the_rcd, passed_mode)
+	switch(passed_mode)
+		if(RCD_DECONSTRUCT)
+			to_chat(user, "<span class='notice'>You deconstruct the table.</span>")
+			qdel(src)
+			return TRUE
+	return FALSE
+
 
 /obj/structure/table/greyscale
 	icon = 'icons/obj/smooth_structures/table_greyscale.dmi'
@@ -245,9 +264,9 @@
 ///Table on wheels
 /obj/structure/table/rolling
 	name = "Rolling table"
-	desc = "A NT brand \"Rolly poly\" rolling table. It can and will move."
+	desc = "An NT brand \"Rolly poly\" rolling table. It can and will move."
 	anchored = FALSE
-	smooth = SMOOTH_FALSE
+	smoothing_flags = NONE
 	canSmoothWith = list()
 	icon = 'icons/obj/smooth_structures/rollingtable.dmi'
 	icon_state = "rollingtable"
@@ -310,7 +329,7 @@
 		check_break(AM)
 
 /obj/structure/table/glass/proc/throw_check(mob/living/M)
-	if(M.loc == get_turf(src))
+	if(src in obounds(M))
 		check_break(M)
 
 /obj/structure/table/glass/proc/check_break(mob/living/M)
@@ -465,7 +484,7 @@
 	icon_state = "r_table"
 	deconstruction_ready = 0
 	buildstack = /obj/item/stack/sheet/plasteel
-	canSmoothWith = list(/obj/structure/table/reinforced, /obj/structure/table)
+	canSmoothWith = list(/obj/structure/table/reinforced, /obj/structure/table, /obj/structure/table/reinforced/ctf)
 	max_integrity = 200
 	integrity_failure = 0.25
 	armor = list("melee" = 10, "bullet" = 30, "laser" = 30, "energy" = 100, "bomb" = 20, "bio" = 0, "rad" = 0, "fire" = 80, "acid" = 70)
@@ -517,7 +536,7 @@
 	icon = 'icons/obj/surgery.dmi'
 	icon_state = "optable"
 	buildstack = /obj/item/stack/sheet/mineral/silver
-	smooth = SMOOTH_FALSE
+	smoothing_flags = NONE
 	can_buckle = 1
 	buckle_lying = -1
 	buckle_requires_restraints = 1
@@ -526,8 +545,8 @@
 
 /obj/structure/table/optable/Initialize()
 	. = ..()
-	for(var/direction in GLOB.cardinals)
-		computer = locate(/obj/machinery/computer/operating, get_step(src, direction))
+	for(var/direction in GLOB.alldirs)
+		computer = locate(/obj/machinery/computer/operating) in get_step(src, direction)
 		if(computer)
 			computer.table = src
 			break
@@ -540,18 +559,24 @@
 /obj/structure/table/optable/tablepush(mob/living/user, mob/living/pushed_mob)
 	pushed_mob.forceMove(loc)
 	pushed_mob.set_resting(TRUE, TRUE)
-	visible_message("<span class='notice'><b>[user]</b> кладет [pushed_mob] на <b>[src]</b>.</span>")
-	check_patient()
+	visible_message("<span class='notice'><b>[user]</b> укладывает <b>[pushed_mob]</b> на <b>[src]</b>.</span>")
+	get_patient()
 
-/obj/structure/table/optable/proc/check_patient()
-	var/mob/living/carbon/human/M = locate(/mob/living/carbon/human, loc)
+/obj/structure/table/optable/proc/get_patient()
+	var/mob/living/carbon/M = locate(/mob/living/carbon) in loc
 	if(M)
 		if(M.resting)
 			patient = M
-			return TRUE
 	else
 		patient = null
+
+/obj/structure/table/optable/proc/check_eligible_patient()
+	get_patient()
+	if(!patient)
 		return FALSE
+	if(ishuman(patient) ||  ismonkey(patient))
+		return TRUE
+	return FALSE
 
 /*
  * Racks

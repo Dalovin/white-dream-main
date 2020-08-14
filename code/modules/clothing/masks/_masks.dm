@@ -37,7 +37,7 @@
 			if(HAS_BLOOD_DNA(src))
 				. += mutable_appearance('icons/effects/blood.dmi', "maskblood")
 
-/obj/item/clothing/mask/update_clothes_damaged_state(damaging = TRUE)
+/obj/item/clothing/mask/update_clothes_damaged_state(damaged_state = CLOTHING_DAMAGED)
 	..()
 	if(ismob(loc))
 		var/mob/M = loc
@@ -55,11 +55,11 @@
 		clothing_flags |= visor_flags
 		flags_inv |= visor_flags_inv
 		flags_cover |= visor_flags_cover
-		to_chat(user, "<span class='notice'>You push \the [src] back into place.</span>")
+		to_chat(user, "<span class='notice'>Натягиваю [src.name] на лицо.</span>")
 		slot_flags = initial(slot_flags)
 	else
 		icon_state += "_up"
-		to_chat(user, "<span class='notice'>You push \the [src] out of the way.</span>")
+		to_chat(user, "<span class='notice'>Поднимаю [src.name] открывая лицо.</span>")
 		gas_transfer_coefficient = null
 		permeability_coefficient = null
 		clothing_flags &= ~visor_flags

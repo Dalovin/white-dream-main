@@ -41,20 +41,18 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 	if(delete_after_roundstart)
 		qdel(src)
 
-/obj/effect/landmark/start/New()
+/obj/effect/landmark/start/Initialize()
+	. = ..()
 	GLOB.start_landmarks_list += src
 	if(jobspawn_override)
-		if(!GLOB.jobspawn_overrides[name])
-			GLOB.jobspawn_overrides[name] = list()
-		GLOB.jobspawn_overrides[name] += src
-	..()
+		LAZYADDASSOC(GLOB.jobspawn_overrides, name, src)
 	if(name != "start")
 		tag = "start*[name]"
 
 /obj/effect/landmark/start/Destroy()
 	GLOB.start_landmarks_list -= src
 	if(jobspawn_override)
-		GLOB.jobspawn_overrides[name] -= src
+		LAZYREMOVEASSOC(GLOB.jobspawn_overrides, name, src)
 	return ..()
 
 // START LANDMARKS FOLLOW. Don't change the names unless
@@ -109,13 +107,13 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 
 /obj/effect/landmark/start/security_officer
 	name = "Russian Officer"
-	icon_state = "Security Officer"
+	icon_state = "Russian Officer"
 
 /obj/effect/landmark/start/security_officer/New()
 	if (prob(50)) //lazy bitch
 		name = "International Officer"
 		if (prob(75))
-			name = "Kazakhstan Officer"
+			name = "Veteran"
 	..()
 
 /obj/effect/landmark/start/botanist
@@ -215,7 +213,7 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 
 /obj/effect/landmark/start/ai/after_round_start()
 	if(latejoin_active && !used)
-		new /obj/structure/AIcore/latejoin_inactive(loc)
+		new /obj/structure/ai_core/latejoin_inactive(loc)
 	return ..()
 
 /obj/effect/landmark/start/ai/secondary

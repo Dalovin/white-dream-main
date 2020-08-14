@@ -45,7 +45,7 @@
 	C.play_tool_sound(src, 80)
 	return remove_tile(user, silent, (C.tool_behaviour == TOOL_SCREWDRIVER))
 
-/turf/open/floor/wood/remove_tile(mob/user, silent = FALSE, make_tile = TRUE)
+/turf/open/floor/wood/remove_tile(mob/user, silent = FALSE, make_tile = TRUE, force_plating)
 	if(broken || burnt)
 		broken = 0
 		burnt = 0
@@ -55,12 +55,11 @@
 		if(make_tile)
 			if(user && !silent)
 				to_chat(user, "<span class='notice'>Откручиваю доски.</span>")
-			if(floor_tile)
-				new floor_tile(src)
+			spawn_tile()
 		else
 			if(user && !silent)
 				to_chat(user, "<span class='notice'>Силой отрываю доски, уничтожая их в процессе.</span>")
-	return make_plating()
+	return make_plating(force_plating)
 
 /turf/open/floor/wood/cold
 	temperature = 255.37
@@ -104,7 +103,7 @@
 	floor_tile = /obj/item/stack/tile/fairygrass
 	light_range = 2
 	light_power = 0.80
-	light_color = "#33CCFF"
+	light_color = COLOR_BLUE_LIGHT
 
 /turf/open/floor/grass/snow
 	gender = PLURAL
@@ -178,7 +177,7 @@
 	icon_state = "carpet"
 	floor_tile = /obj/item/stack/tile/carpet
 	broken_states = list("damaged")
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 	canSmoothWith = list(/turf/open/floor/carpet, /turf/open/floor/carpet/airless)
 	flags_1 = NONE
 	bullet_bounce_sound = null
@@ -200,12 +199,12 @@
 	if(!..())
 		return 0
 	if(!broken && !burnt)
-		if(smooth)
-			queue_smooth(src)
+		if(smoothing_flags)
+			QUEUE_SMOOTH(src)
 	else
 		make_plating()
-		if(smooth)
-			queue_smooth_neighbors(src)
+		if(smoothing_flags)
+			QUEUE_SMOOTH_NEIGHBORS(src)
 
 /turf/open/floor/carpet/black
 	icon = 'icons/turf/floors/carpet_black.dmi'
@@ -306,7 +305,7 @@
 
 /turf/open/floor/fakepit
 	desc = "Умная иллюзия, созданная, чтобы выглядеть как бездонная яма."
-	smooth = SMOOTH_TRUE | SMOOTH_BORDER | SMOOTH_MORE
+	smoothing_flags = SMOOTH_TRUE | SMOOTH_BORDER | SMOOTH_MORE
 	canSmoothWith = list(/turf/open/floor/fakepit)
 	icon = 'icons/turf/floors/Chasms.dmi'
 	icon_state = "smooth"

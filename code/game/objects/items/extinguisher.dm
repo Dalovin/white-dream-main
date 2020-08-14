@@ -3,7 +3,7 @@
 	desc = "Классический красный огнетушитель. Может оказаться в жопе при неправильном обращении."
 	icon = 'icons/obj/items_and_weapons.dmi'
 	icon_state = "fire_extinguisher0"
-	item_state = "fire_extinguisher"
+	inhand_icon_state = "fire_extinguisher"
 	hitsound = 'sound/weapons/smash.ogg'
 	flags_1 = CONDUCT_1
 	throwforce = 10
@@ -31,7 +31,7 @@
 	name = "карманный огнетушитель"
 	desc = "Лёгкий и компактный, рамка из оптоволокна, что ещё нужно?"
 	icon_state = "miniFE0"
-	item_state = "miniFE"
+	inhand_icon_state = "miniFE"
 	hitsound = null	//it is much lighter, after all.
 	flags_1 = null //doesn't CONDUCT_1
 	throwforce = 2
@@ -43,6 +43,8 @@
 	dog_fashion = null
 
 /obj/item/extinguisher/proc/refill()
+	if(!chem)
+		return
 	create_reagents(max_water, AMOUNT_VISIBLE)
 	reagents.add_reagent(chem, max_water)
 
@@ -54,7 +56,7 @@
 	name = "продвинутый огнетушитель"
 	desc = "Используется для остановки распространения термоядерных пожаров внутри двигателя."
 	icon_state = "foam_extinguisher0"
-	//item_state = "foam_extinguisher" needs sprite
+	//inhand_icon_state = "foam_extinguisher" needs sprite
 	dog_fashion = null
 	chem = /datum/reagent/firefighting_foam
 	tanktype = /obj/structure/reagent_dispensers/foamtank
@@ -74,6 +76,9 @@
 		return SHAME
 
 /obj/item/extinguisher/attack_self(mob/user)
+	if(broken)
+		to_chat(user, "<span class='warning'>Не хочет переключаться!</span>")
+		return
 	safety = !safety
 	src.icon_state = "[sprite_name][!safety]"
 	to_chat(user, "Предохранитель [safety ? "включен" : "отключен"].")
@@ -85,7 +90,7 @@
 	else
 		if(prob(5) && !broken)
 			to_chat(user, "<span class='userdanger'>Щас ебанёт кажись...</span>")
-			playsound(get_turf(src), 'code/shitcode/valtos/sounds/pshsh.ogg', 80, TRUE, 5)
+			playsound(get_turf(src), 'white/valtos/sounds/pshsh.ogg', 80, TRUE, 5)
 			spawn(rand(10, 50))
 				babah(user)
 			broken = TRUE
@@ -93,21 +98,32 @@
 		return ..()
 
 /obj/item/extinguisher/proc/babah(mob/living/H)
-	var/bang_turf = get_turf(src)
+	var/turf/bang_turf = get_turf(src)
 	if(!bang_turf)
 		return
 
-	new /obj/effect/particle_effect/foam(bang_turf)
+	for(var/turf/T in bang_turf.reachableAdjacentTurfs())
+		if(isopenturf(T))
+			var/turf/open/theturf = T
+			theturf.MakeSlippery(TURF_WET_WATER, min_wet_time = 10 SECONDS, wet_time_to_add = 5 SECONDS)
 
 	if(prob(75))
 		force = 8 // как вы вообще этим бить собрались
+		icon = 'white/valtos/icons/balon.dmi'
+		icon_state = inhand_icon_state
+		reagents.clear_reagents()
+		max_water = 0
 		for(var/mob/living/M in get_hearers_in_view(5, bang_turf))
-			M.visible_message("<span class='warning'>Похоже пронесло...</span>")
+			to_chat(M, "<span class='warning'>Похоже пронесло...</span>")
 		return
 
 	playsound(bang_turf, 'sound/weapons/flashbang.ogg', 100, TRUE, 8, 0.9)
 
-	new /obj/effect/dummy/lighting_obj (bang_turf, LIGHT_COLOR_WHITE, (5), 4, 2)
+	new /obj/effect/dummy/lighting_obj (bang_turf, COLOR_WHITE, (5), 4, 2)
+
+	AddComponent(/datum/component/pellet_cloud, projectile_type=/obj/projectile/bullet/pellet/shotgun_rubbershot, magnitude=5)
+	// в петушителях находятся шарики для тактического вспенивания содержимого внутри (а также для использования в качестве ручной гранаты при окопных войнах)
+	SEND_SIGNAL(src, COMSIG_EXTINGUISHER_BOOM)
 
 	explosion(bang_turf, 0, 0, 2, 0)
 
@@ -137,7 +153,8 @@
 	else
 		if(prob(10) && !broken)
 			to_chat(user, "<span class='userdanger'>Щас ебанёт кажись...</span>")
-			playsound(get_turf(src), 'code/shitcode/valtos/sounds/pshsh.ogg', 80, TRUE, 5)
+			playsound(get_turf(src), 'white/valtos/sounds/pshsh.ogg', 80, TRUE, 5)
+			new /obj/effect/particle_effect/smoke(get_turf(src))
 			spawn(rand(10, 50))
 				babah(user)
 			broken = TRUE
@@ -245,9 +262,9 @@
 		step_towards(W,my_target)
 		if(!W.reagents)
 			continue
-		W.reagents.reaction(get_turf(W))
+		W.reagents.expose(get_turf(W))
 		for(var/A in get_turf(W))
-			W.reagents.reaction(A)
+			W.reagents.expose(A)
 		if(W.loc == my_target)
 			particles -= W
 	if(repetition < power)
@@ -280,7 +297,7 @@
 		return
 	EmptyExtinguisher(user)
 
-/obj/item/extinguisher/proc/EmptyExtinguisher(var/mob/user)
+/obj/item/extinguisher/proc/EmptyExtinguisher(mob/user)
 	if(loc == user && reagents.total_volume)
 		reagents.clear_reagents()
 

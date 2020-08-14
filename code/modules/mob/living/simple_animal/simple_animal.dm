@@ -35,17 +35,17 @@
 
 	///When someone interacts with the simple animal.
 	///Help-intent verb in present continuous tense.
-	var/response_help_continuous = "pokes"
+	var/response_help_continuous = "трогает"
 	///Help-intent verb in present simple tense.
-	var/response_help_simple = "poke"
+	var/response_help_simple = "трогает"
 	///Disarm-intent verb in present continuous tense.
-	var/response_disarm_continuous = "shoves"
+	var/response_disarm_continuous = "толкает"
 	///Disarm-intent verb in present simple tense.
-	var/response_disarm_simple = "shove"
+	var/response_disarm_simple = "толкает"
 	///Harm-intent verb in present continuous tense.
-	var/response_harm_continuous = "hits"
+	var/response_harm_continuous = "бьёт"
 	///Harm-intent verb in present simple tense.
-	var/response_harm_simple = "hit"
+	var/response_harm_simple = "бьёт"
 	var/harm_intent_damage = 3
 	///Minimum force required to deal any damage.
 	var/force_threshold = 0
@@ -75,14 +75,14 @@
 	/// 1 for full damage , 0 for none , -1 for 1:1 heal from that source.
 	var/list/damage_coeff = list(BRUTE = 1, BURN = 1, TOX = 1, CLONE = 1, STAMINA = 0, OXY = 1)
 	///Attacking verb in present continuous tense.
-	var/attack_verb_continuous = "attacks"
+	var/attack_verb_continuous = "атакует"
 	///Attacking verb in present simple tense.
-	var/attack_verb_simple = "attack"
+	var/attack_verb_simple = "атакует"
 	var/attack_sound = null
 	///Attacking, but without damage, verb in present continuous tense.
-	var/friendly_verb_continuous = "nuzzles"
+	var/friendly_verb_continuous = "трётся"
 	///Attacking, but without damage, verb in present simple tense.
-	var/friendly_verb_simple = "nuzzle"
+	var/friendly_verb_simple = "трётся"
 	///Set to 1 to allow breaking of crates,lockers,racks,tables; 2 for walls; 3 for Rwalls.
 	var/environment_smash = ENVIRONMENT_SMASH_NONE
 
@@ -145,6 +145,21 @@
 	///What kind of footstep this mob should have. Null if it shouldn't have any.
 	var/footstep_type
 
+	///How much wounding power it has
+	var/wound_bonus = CANT_WOUND
+	///How much bare wounding power it has
+	var/bare_wound_bonus = 0
+	///If the attacks from this are sharp
+	var/sharpness = SHARP_NONE
+	///Generic flags
+	var/simple_mob_flags = NONE
+
+	/// Used for making mobs show a heart emoji and give a mood boost when pet.
+	var/pet_bonus = FALSE
+	/// A string for an emote used when pet_bonus == true for the mob being pet.
+	var/pet_bonus_emote = ""
+
+
 /mob/living/simple_animal/Initialize()
 	. = ..()
 	GLOB.simple_animals[AIStatus] += src
@@ -197,9 +212,6 @@
 	if(stat == DEAD)
 		. += "<span class='deadsay'>Upon closer examination, [p_they()] appear[p_s()] to be dead.</span>"
 
-/mob/living/simple_animal/updatehealth()
-	..()
-	health = clamp(health, 0, maxHealth)
 
 /mob/living/simple_animal/update_stat()
 	if(status_flags & GODMODE)
@@ -224,18 +236,25 @@
 
 /mob/living/simple_animal/proc/handle_automated_movement()
 	set waitfor = FALSE
-	if(!stop_automated_movement && wander)
-		if((isturf(loc) || allow_movement_on_non_turfs) && (mobility_flags & MOBILITY_MOVE))		//This is so it only moves if it's not inside a closet, gentics machine, etc.
-			turns_since_move++
-			if(turns_since_move >= turns_per_move)
-				if(!(stop_automated_movement_when_pulled && pulledby)) //Some animals don't move when pulled
-					var/anydir = pick(GLOB.cardinals)
-					if(Process_Spacemove(anydir))
-						Move(get_step(src, anydir), anydir)
-						turns_since_move = 0
-			return 1
+	if(stop_automated_movement || !wander)
+		return
+	if(!isturf(loc) && !allow_movement_on_non_turfs)
+		return
+	if(!(mobility_flags & MOBILITY_MOVE))
+		return
+	. = TRUE
+	turns_since_move++
+	if(turns_since_move < turns_per_move)
+		return
+	if(stop_automated_movement_when_pulled && pulledby)
+		return
+	var/anydir = pick(GLOB.alldirs)
+	if(!Process_Spacemove(anydir))
+		return
+	walk_for(src, anydir, until=0.5 SECONDS)
+	turns_since_move = 0
 
-/mob/living/simple_animal/proc/handle_automated_speech(var/override)
+/mob/living/simple_animal/proc/handle_automated_speech(override)
 	set waitfor = FALSE
 	if(speak_chance)
 		if(prob(speak_chance) || override)
@@ -252,23 +271,23 @@
 					else
 						randomValue -= speak.len
 						if(emote_see && randomValue <= emote_see.len)
-							emote("me [pick(emote_see)]", 1)
+							manual_emote(pick(emote_see))
 						else
-							emote("me [pick(emote_hear)]", 2)
+							manual_emote(pick(emote_hear))
 				else
 					say(pick(speak), forced = "poly")
 			else
 				if(!(emote_hear && emote_hear.len) && (emote_see && emote_see.len))
-					emote("me", 1, pick(emote_see))
+					manual_emote(pick(emote_see))
 				if((emote_hear && emote_hear.len) && !(emote_see && emote_see.len))
-					emote("me", 2, pick(emote_hear))
+					manual_emote(pick(emote_hear))
 				if((emote_hear && emote_hear.len) && (emote_see && emote_see.len))
 					var/length = emote_hear.len + emote_see.len
 					var/pick = rand(1,length)
 					if(pick <= emote_see.len)
-						emote("me", 1, pick(emote_see))
+						manual_emote(pick(emote_see))
 					else
-						emote("me", 2, pick(emote_hear))
+						manual_emote(pick(emote_hear))
 
 /mob/living/simple_animal/proc/environment_air_is_safe()
 	. = TRUE
@@ -279,15 +298,10 @@
 	if(isturf(loc) && isopenturf(loc))
 		var/turf/open/ST = loc
 		if(ST.air)
-			var/ST_gases = ST.air.gases
-			ST.air.assert_gases(arglist(GLOB.hardcoded_gases))
-
-			var/tox = ST_gases[/datum/gas/plasma][MOLES]
-			var/oxy = ST_gases[/datum/gas/oxygen][MOLES]
-			var/n2  = ST_gases[/datum/gas/nitrogen][MOLES]
-			var/co2 = ST_gases[/datum/gas/carbon_dioxide][MOLES]
-
-			ST.air.garbage_collect()
+			var/tox = ST.air.get_moles(/datum/gas/plasma)
+			var/oxy = ST.air.get_moles(/datum/gas/oxygen)
+			var/n2  = ST.air.get_moles(/datum/gas/nitrogen)
+			var/co2 = ST.air.get_moles(/datum/gas/carbon_dioxide)
 
 			if(atmos_requirements["min_oxy"] && oxy < atmos_requirements["min_oxy"])
 				. = FALSE
@@ -362,7 +376,7 @@
 			butcher += butcher_results
 		if(guaranteed_butcher_results)
 			butcher += guaranteed_butcher_results
-		var/atom/Tsec = drop_location()
+		var/atom/Tsec = drop_location()[1]
 		for(var/path in butcher)
 			for(var/i in 1 to butcher[path])
 				new path(Tsec)
@@ -372,7 +386,7 @@
 	if(icon_gib)
 		new /obj/effect/temp_visual/gib_animation/animal(loc, icon_gib)
 
-/mob/living/simple_animal/say_mod(input, message_mode)
+/mob/living/simple_animal/say_mod(input, list/message_mods = list())
 	if(speak_emote && speak_emote.len)
 		verb_say = pick(speak_emote)
 	. = ..()
@@ -393,7 +407,7 @@
 
 /mob/living/simple_animal/Stat()
 	..()
-	if(statpanel("ИГРА"))
+	if(statpanel("Игра"))
 		stat(null, "Health: [round((health / maxHealth) * 100)]%")
 		return 1
 
@@ -473,12 +487,13 @@
 	for(var/mob/M in view(7, src))
 		if(M.stat != CONSCIOUS) //Check if it's conscious FIRST.
 			continue
-		else if(istype(M, childtype)) //Check for children SECOND.
+		var/is_child = is_type_in_list(M, childtype)
+		if(is_child) //Check for children SECOND.
 			children++
 		else if(istype(M, animal_species))
 			if(M.ckey)
 				continue
-			else if(!istype(M, childtype) && M.gender == MALE && !(M.flags_1 & HOLOGRAM_1)) //Better safe than sorry ;_;
+			else if(!is_child && M.gender == MALE && !(M.flags_1 & HOLOGRAM_1)) //Better safe than sorry ;_;
 				partner = M
 
 		else if(isliving(M) && !faction_check_mob(M)) //shyness check. we're not shy in front of things that share a faction with us.
@@ -514,8 +529,17 @@
 	else
 		..()
 
+
+/mob/living/simple_animal/update_resting()
+	if(resting)
+		ADD_TRAIT(src, TRAIT_IMMOBILIZED, RESTING_TRAIT)
+	else
+		REMOVE_TRAIT(src, TRAIT_IMMOBILIZED, RESTING_TRAIT)
+	return ..()
+
+
 /mob/living/simple_animal/update_mobility(value_otherwise = TRUE)
-	if(IsUnconscious() || IsParalyzed() || IsStun() || IsKnockdown() || IsParalyzed() || stat || resting)
+	if(HAS_TRAIT_NOT_FROM(src, TRAIT_IMMOBILIZED, BUCKLED_TRAIT))
 		drop_all_held_items()
 		mobility_flags = NONE
 	else if(buckled)

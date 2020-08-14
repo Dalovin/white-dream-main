@@ -15,8 +15,8 @@
 	harm_intent_damage = 5
 	melee_damage_lower = 15
 	melee_damage_upper = 15
-	attack_verb_continuous = "punches"
-	attack_verb_simple = "punch"
+	attack_verb_continuous = "бьёт"
+	attack_verb_simple = "бьёт"
 	attack_sound = 'sound/weapons/punch1.ogg'
 	a_intent = INTENT_HARM
 	loot = list(/obj/effect/mob_spawn/human/corpse/russian,
@@ -62,7 +62,8 @@
 	rapid = 3
 	casingtype = /obj/item/ammo_casing/c9mm
 	loot = list(/obj/effect/mob_spawn/human/corpse/russian/ranged/officer,
-				/obj/item/gun/ballistic/automatic/pistol/APS)
+				/obj/item/gun/ballistic/automatic/pistol/aps)
+
 
 /mob/living/simple_animal/hostile/russian/ranged/officer/Aggro()
 	..()

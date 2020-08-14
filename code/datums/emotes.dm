@@ -58,9 +58,10 @@
 		return
 
 	user.log_message(msg, LOG_EMOTE)
-	msg = "<b>[user]</b> " + pointization(r_antidaunize(msg))
 
 	proverka_na_detey(msg, user)
+
+	var/dchatmsg = "<b>[user]</b> [pointization(r_antidaunize(msg))]"
 
 	var/tmp_sound = get_sound(user)
 	if(tmp_sound && (!only_forced_audio || !intentional))
@@ -71,12 +72,12 @@
 			continue
 		var/T = get_turf(user)
 		if(M.stat == DEAD && M.client && (M.client.prefs.chat_toggles & CHAT_GHOSTSIGHT) && !(M in viewers(T, null)))
-			M.show_message(msg)
+			M.show_message("[FOLLOW_LINK(M, user)] [dchatmsg]")
 
 	if(emote_type == EMOTE_AUDIBLE)
-		user.audible_message(msg)
+		user.audible_message(msg, audible_message_flags = EMOTE_MESSAGE)
 	else
-		user.visible_message(msg)
+		user.visible_message(msg, visible_message_flags = EMOTE_MESSAGE)
 
 /// For handling emote cooldown, return true to allow the emote to happen
 /datum/emote/proc/check_cooldown(mob/user, intentional)
@@ -104,7 +105,7 @@
 /datum/emote/proc/select_message_type(mob/user, intentional)
 	. = message
 	if(!muzzle_ignore && user.is_muzzled() && emote_type == EMOTE_AUDIBLE)
-		return "makes a [pick("strong ", "weak ", "")]noise."
+		return "издаёт [pick("сильный ", "слабый ", "")]звук."
 	if(user.mind && user.mind.miming && message_mime)
 		. = message_mime
 	if(isalienadult(user) && message_alien)
@@ -135,11 +136,11 @@
 				return FALSE
 			switch(user.stat)
 				if(SOFT_CRIT)
-					to_chat(user, "<span class='warning'>You cannot [key] while in a critical condition!</span>")
+					to_chat(user, "<span class='warning'>Не могу сделать [key] в критическом состоянии!</span>")
 				if(UNCONSCIOUS)
-					to_chat(user, "<span class='warning'>You cannot [key] while unconscious!</span>")
+					to_chat(user, "<span class='warning'>Не могу сделать [key] без сознания!</span>")
 				if(DEAD)
-					to_chat(user, "<span class='warning'>You cannot [key] while dead!</span>")
+					to_chat(user, "<span class='warning'>Не могу сделать [key] в мёртвом состоянии!</span>")
 			return FALSE
 		if(restraint_check)
 			if(isliving(user))
@@ -147,15 +148,49 @@
 				if(L.IsParalyzed() || L.IsStun())
 					if(!intentional)
 						return FALSE
-					to_chat(user, "<span class='warning'>You cannot [key] while stunned!</span>")
+					to_chat(user, "<span class='warning'>Не могу сделать [key]. Меня оглушили!</span>")
 					return FALSE
 		if(restraint_check && user.restrained())
 			if(!intentional)
 				return FALSE
-			to_chat(user, "<span class='warning'>You cannot [key] while restrained!</span>")
+			to_chat(user, "<span class='warning'>Не могу сделать [key] в наручниках!</span>")
 			return FALSE
 
 	if(isliving(user))
 		var/mob/living/L = user
 		if(HAS_TRAIT(L, TRAIT_EMOTEMUTE))
 			return FALSE
+/**
+* Allows the intrepid coder to send a basic emote
+* Takes text as input, sends it out to those who need to know after some light parsing
+* If you need something more complex, make it into a datum emote
+* Arguments:
+* * text - The text to send out
+*/
+/mob/proc/manual_emote(text) //Just override the song and dance
+	. = TRUE
+	if(findtext(text, "their"))
+		text = replacetext(text, "their", p_their())
+	if(findtext(text, "them"))
+		text = replacetext(text, "them", p_them())
+	if(findtext(text, "%s"))
+		text = replacetext(text, "%s", p_s())
+
+	if(stat != CONSCIOUS)
+		return
+
+	if(!text)
+		CRASH("Someone passed nothing to manual_emote(), fix it")
+
+	log_message(text, LOG_EMOTE)
+
+	var/ghost_text = "<b>[src]</b> " + text //Sin I know
+
+	for(var/mob/M in GLOB.dead_mob_list)
+		if(!M.client || isnewplayer(M))
+			continue
+		var/T = get_turf(src)
+		if(M.stat == DEAD && M.client && (M.client.prefs.chat_toggles & CHAT_GHOSTSIGHT) && !(M in viewers(T, null)))
+			M.show_message("[FOLLOW_LINK(M, src)] [ghost_text]")
+
+	visible_message(text, visible_message_flags = EMOTE_MESSAGE)

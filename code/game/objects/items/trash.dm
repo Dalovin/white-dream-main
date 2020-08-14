@@ -6,6 +6,7 @@
 	desc = "This is rubbish."
 	w_class = WEIGHT_CLASS_TINY
 	resistance_flags = FLAMMABLE
+	item_flags = NOBLUDGEON
 
 /obj/item/trash/Initialize(mapload)
 	var/turf/T = get_turf(src)
@@ -105,8 +106,5 @@
 
 /obj/item/trash/can/Initialize()
 	. = ..()
-	pixel_x = rand(-4,4)
-	pixel_y = rand(-4,4)
-
-/obj/item/trash/attack(mob/M, mob/living/user)
-	return
+	if(loc)
+		forceMove(loc, rand(-4,4), rand(-4,4))

@@ -15,11 +15,12 @@ SUBSYSTEM_DEF(atoms)
 	var/list/BadInitializeCalls = list()
 
 /datum/controller/subsystem/atoms/Initialize(timeofday)
-	SStitle.set_image_state("atoms")
+	SStitle.set_load_state("atoms1")
 	GLOB.fire_overlay.appearance_flags = RESET_COLOR
 	setupGenetics() //to set the mutations' sequence
 	initialized = INITIALIZATION_INNEW_MAPLOAD
 	InitializeAtoms()
+	SStitle.set_load_state("atoms2")
 	return ..()
 
 /datum/controller/subsystem/atoms/proc/InitializeAtoms(list/atoms)
@@ -90,6 +91,8 @@ SUBSYSTEM_DEF(atoms)
 		qdeleted = TRUE
 	else if(!(A.flags_1 & INITIALIZED_1))
 		BadInitializeCalls[the_type] |= BAD_INIT_DIDNT_INIT
+	else
+		SEND_SIGNAL(A,COMSIG_ATOM_AFTER_SUCCESSFUL_INITIALIZE)
 
 	return qdeleted || QDELING(A)
 

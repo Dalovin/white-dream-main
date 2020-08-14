@@ -1,5 +1,5 @@
 /client/proc/cmd_mass_modify_object_variables(atom/A, var_name)
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Mass Edit Variables"
 	set desc="(target) Edit all instances of a target item's variables"
 
@@ -198,7 +198,7 @@
 	message_admins("[key_name_admin(src)] mass modified [original_name]'s [variable] to [O.vars[variable]] ([accepted] objects modified)")
 
 //not using global lists as vv is a debug function and debug functions should rely on as less things as possible.
-/proc/get_all_of_type(var/T, subtypes = TRUE)
+/proc/get_all_of_type(T, subtypes = TRUE)
 	var/list/typecache = list()
 	typecache[T] = 1
 	if (subtypes)

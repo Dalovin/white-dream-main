@@ -125,7 +125,7 @@
 		if(SLIME_ACTIVATE_MINOR)
 			user.visible_message("<span class='warning'>[user] starts shaking!</span>","<span class='notice'>Your [name] starts pulsing gently...</span>")
 			if(do_after(user, 40, target = user))
-				var/mob/living/simple_animal/S = create_random_mob(user.drop_location(), FRIENDLY_SPAWN)
+				var/mob/living/simple_animal/S = create_random_mob(user.drop_location()[1], FRIENDLY_SPAWN)
 				S.faction |= "neutral"
 				playsound(user, 'sound/effects/splat.ogg', 50, TRUE)
 				user.visible_message("<span class='warning'>[user] spits out [S]!</span>", "<span class='notice'>You spit out [S]!</span>")
@@ -134,7 +134,7 @@
 		if(SLIME_ACTIVATE_MAJOR)
 			user.visible_message("<span class='warning'>[user] starts shaking violently!</span>","<span class='warning'>Your [name] starts pulsing violently...</span>")
 			if(do_after(user, 50, target = user))
-				var/mob/living/simple_animal/S = create_random_mob(user.drop_location(), HOSTILE_SPAWN)
+				var/mob/living/simple_animal/S = create_random_mob(user.drop_location()[1], HOSTILE_SPAWN)
 				if(user.a_intent != INTENT_HARM)
 					S.faction |= "neutral"
 				else
@@ -154,7 +154,8 @@
 	switch(activation_type)
 		if(SLIME_ACTIVATE_MINOR)
 			var/food_type = get_random_food()
-			var/obj/O = new food_type
+			var/obj/item/reagent_containers/food/snacks/O = new food_type
+			O.silver_spawned = TRUE
 			if(!user.put_in_active_hand(O))
 				O.forceMove(user.drop_location())
 			playsound(user, 'sound/effects/splat.ogg', 50, TRUE)
@@ -1030,7 +1031,7 @@
 	singular_name = "floor tile"
 	desc = "Through a series of micro-teleports these tiles let people move at incredible speeds."
 	icon_state = "tile-bluespace"
-	item_state = "tile-bluespace"
+	inhand_icon_state = "tile-bluespace"
 	w_class = WEIGHT_CLASS_NORMAL
 	force = 6
 	custom_materials = list(/datum/material/iron=500)
@@ -1047,7 +1048,7 @@
 	singular_name = "floor tile"
 	desc = "Time seems to flow very slowly around these tiles."
 	icon_state = "tile-sepia"
-	item_state = "tile-sepia"
+	inhand_icon_state = "tile-sepia"
 	w_class = WEIGHT_CLASS_NORMAL
 	force = 6
 	custom_materials = list(/datum/material/iron=500)
@@ -1071,5 +1072,5 @@
 	for(var/turf/T in A)
 		T.remove_atom_colour(WASHABLE_COLOUR_PRIORITY)
 		T.add_atom_colour("#2956B2", FIXED_COLOUR_PRIORITY)
-	A.xenobiology_compatible = TRUE
+	A.area_flags |= XENOBIOLOGY_COMPATIBLE
 	qdel(src)

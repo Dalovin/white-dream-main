@@ -6,6 +6,7 @@
 	density = TRUE
 	circuit = /obj/item/circuitboard/machine/plantgenes
 	pass_flags = PASSTABLE
+	anchored = FALSE
 
 	var/obj/item/seeds/seed
 	var/obj/item/disk/plantgene/disk
@@ -44,14 +45,15 @@
 		var/wratemod = ML.rating * 2.5
 		min_wrate = FLOOR(10-wratemod,1) // 7,5,2,0	Clamps at 0 and 10	You want this low
 		min_wchance = 67-(ML.rating*16) // 48,35,19,3 	Clamps at 0 and 67	You want this low
-	for(var/obj/item/circuitboard/machine/plantgenes/vaultcheck in component_parts)
-		if(istype(vaultcheck, /obj/item/circuitboard/machine/plantgenes/vault)) // TRAIT_DUMB BOTANY TUTS
-			max_potency = 100
-			max_yield = 10
-			min_production = 1
-			max_endurance = 100
-			min_wchance = 0
-			min_wrate = 0
+
+//	for(var/obj/item/circuitboard/machine/plantgenes/vaultcheck in component_parts)
+//		if(istype(vaultcheck, /obj/item/circuitboard/machine/plantgenes/vault)) // TRAIT_DUMB BOTANY TUTS
+//			max_potency = 100
+//			max_yield = 10
+//			min_production = 1
+//			max_endurance = 100
+//			min_wchance = 0
+//			min_wrate = 0
 
 /obj/machinery/plantgenes/update_icon_state()
 	if((machine_stat & (BROKEN|NOPOWER)))
@@ -414,8 +416,8 @@
 	seed.icon_state = "seed-x"
 
 // Gene modder for seed vault ship, built with high tech alien parts.
-/obj/machinery/plantgenes/seedvault
-	circuit = /obj/item/circuitboard/machine/plantgenes/vault
+///obj/machinery/plantgenes/seedvault
+//	circuit = /obj/item/circuitboard/machine/plantgenes/vault
 
 /*
  *  Plant DNA disk

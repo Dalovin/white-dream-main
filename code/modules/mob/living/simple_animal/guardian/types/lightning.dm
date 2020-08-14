@@ -6,8 +6,8 @@
 /mob/living/simple_animal/hostile/guardian/beam
 	melee_damage_lower = 7
 	melee_damage_upper = 7
-	attack_verb_continuous = "shocks"
-	attack_verb_simple = "shock"
+	attack_verb_continuous = "шокирует"
+	attack_verb_simple = "шокирует"
 	melee_damage_type = BURN
 	attack_sound = 'sound/machines/defib_zap.ogg'
 	damage_coeff = list(BRUTE = 0.7, BURN = 0.7, TOX = 0.7, CLONE = 0.7, STAMINA = 0, OXY = 0.7)
@@ -33,7 +33,7 @@
 			var/datum/beam/C = pick(enemychains)
 			qdel(C)
 			enemychains -= C
-		enemychains += Beam(target, "lightning[rand(1,12)]", time=70, maxdistance=7, beam_type=/obj/effect/ebeam/chain)
+		enemychains += Beam(target, "lightning[rand(1,12)]", time=70, beam_type=/obj/effect/ebeam/chain)
 
 /mob/living/simple_animal/hostile/guardian/beam/Destroy()
 	removechains()
@@ -43,7 +43,7 @@
 	. = ..()
 	if(.)
 		if(summoner)
-			summonerchain = Beam(summoner, "lightning[rand(1,12)]", time=INFINITY, maxdistance=INFINITY, beam_type=/obj/effect/ebeam/chain)
+			summonerchain = Beam(summoner, "lightning[rand(1,12)]", time=INFINITY, beam_type=/obj/effect/ebeam/chain)
 		while(loc != summoner)
 			if(successfulshocks > 5)
 				successfulshocks = 0
@@ -70,7 +70,7 @@
 	cleardeletedchains()
 	if(summoner)
 		if(!summonerchain)
-			summonerchain = Beam(summoner, "lightning[rand(1,12)]", time=INFINITY, maxdistance=INFINITY, beam_type=/obj/effect/ebeam/chain)
+			summonerchain = Beam(summoner, "lightning[rand(1,12)]", time=INFINITY, beam_type=/obj/effect/ebeam/chain)
 		. += chainshock(summonerchain)
 	if(enemychains.len)
 		for(var/chain in enemychains)

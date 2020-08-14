@@ -77,7 +77,7 @@
 				if(Adjacent(target) && isturf(target.loc))	// if right next to perp
 					target_lastloc = target.loc //stun_attack() can clear the target if they're dead, so this needs to be set first
 					stun_attack(target)
-					anchored = TRUE
+					set_anchored(TRUE)
 					return
 				else								// not next to perp
 					var/turf/olddist = get_dist(src, target)
@@ -116,11 +116,12 @@
 			target = C
 			oldtarget_name = C.name
 			speak("Level [threatlevel] infraction alert!")
-			playsound(src, pick('sound/voice/beepsky/criminal.ogg', 'sound/voice/beepsky/justice.ogg', 'sound/voice/beepsky/freeze.ogg'), 50, FALSE)
+			//playsound(src, pick('sound/voice/beepsky/criminal.ogg', 'sound/voice/beepsky/justice.ogg', 'sound/voice/beepsky/freeze.ogg'), 50, FALSE)
+			playsound(loc, pick('white/valtos/sounds/beepsky_russian/criminal.ogg', 'white/valtos/sounds/beepsky_russian/justice.ogg', 'white/valtos/sounds/beepsky_russian/freeze.ogg'), 50, FALSE)
 			playsound(src,'sound/weapons/saberon.ogg',50,TRUE,-1)
 			visible_message("<span class='warning'>[src] ignites his energy swords!</span>")
 			icon_state = "grievous-c"
-			visible_message("<b>[src]</b> points at [C.name]!")
+			visible_message("<b>[capitalize(src)]</b> points at [C.name]!")
 			mode = BOT_HUNT
 			INVOKE_ASYNC(src, .proc/handle_automated_action)
 			break
@@ -132,7 +133,7 @@
 
 	walk_to(src,0)
 	visible_message("<span class='boldannounce'>[src] lets out a huge cough as it blows apart!</span>")
-	var/atom/Tsec = drop_location()
+	var/atom/Tsec = drop_location()[1]
 
 	var/obj/item/bot_assembly/secbot/Sa = new (Tsec)
 	Sa.build_step = 1

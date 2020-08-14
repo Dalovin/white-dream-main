@@ -10,7 +10,7 @@
 	icon_gib = "syndicate_gib"
 	mob_biotypes = MOB_ORGANIC|MOB_BEAST
 	mouse_opacity = MOUSE_OPACITY_ICON
-	move_to_delay = 40
+	move_to_delay = 0.4
 	ranged = 1
 	ranged_cooldown_time = 120
 	friendly_verb_continuous = "wails at"
@@ -23,12 +23,12 @@
 	obj_damage = 100
 	melee_damage_lower = 25
 	melee_damage_upper = 25
-	attack_verb_continuous = "pulverizes"
-	attack_verb_simple = "pulverize"
+	attack_verb_continuous = "измельчает"
+	attack_verb_simple = "измельчает"
 	attack_sound = 'sound/weapons/punch1.ogg'
 	throw_message = "does nothing to the rocky hide of the"
-	vision_range = 5
-	aggro_vision_range = 9
+	vision_range = 160
+	aggro_vision_range = 288
 	move_force = MOVE_FORCE_VERY_STRONG
 	move_resist = MOVE_FORCE_VERY_STRONG
 	pull_force = MOVE_FORCE_VERY_STRONG
@@ -235,5 +235,5 @@
 /obj/item/saddle
 	name = "saddle"
 	desc = "This saddle will solve all your problems with being killed by lava beasts!"
-	icon = 'icons/obj/items_and_weapons.dmi'
-	icon_state = "saddle"
+	icon = 'icons/obj/mining.dmi'
+	icon_state = "goliath_saddle"

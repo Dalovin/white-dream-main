@@ -32,6 +32,11 @@
 	mood_change = -2
 	timeout = 3 MINUTES
 
+/datum/mood_event/pooed
+	description = "<span class='warning'>Меня обмазали говном. На вкус как говно.</span>\n"
+	mood_change = -10
+	timeout = 10 MINUTES
+
 /datum/mood_event/slipped
 	description = "<span class='warning'>Опять подскальзываюсь. Надо быть аккуратней.</span>\n"
 	mood_change = -2
@@ -99,10 +104,14 @@
 		description =  "<span class='nicegreen'>Со мной хотят поиграться на столе!</span>\n"
 		mood_change = 2
 
-/datum/mood_event/table_headsmash
-	description = "<span class='warning'>Моя голова... Больно блять...</span>"
+/datum/mood_event/table_limbsmash
+	description = "<span class='warning'>Моя голова... Больно блять...</span>\n"
 	mood_change = -3
 	timeout = 3 MINUTES
+
+/datum/mood_event/table_limbsmash/add_effects(obj/item/bodypart/banged_limb)
+	if(banged_limb)
+		description = "<span class='warning'>My fucking [banged_limb.name], man that hurts...</span>\n"
 
 /datum/mood_event/brain_damage
   mood_change = -3
@@ -191,7 +200,7 @@
 
 /datum/mood_event/sad_empath
 	description = "<span class='warning'>Кто-то видимо грустит...</span>\n"
-	mood_change = -2
+	mood_change = -1
 	timeout = 60 SECONDS
 
 /datum/mood_event/sad_empath/add_effects(mob/sadtarget)
@@ -229,6 +238,11 @@
 	description = "<span class='boldwarning'>I hate when my shoes come untied!</span>\n"
 	mood_change = -5
 	timeout = 1 MINUTES
+
+/datum/mood_event/gates_of_mansus
+	description = "<span class='boldwarning'>LIVING IN A PERFORMANCE IS WORSE THAN DEATH</span>\n"
+	mood_change = -25
+	timeout = 4 MINUTES
 
 //These are unused so far but I want to remember them to use them later
 /datum/mood_event/surgery

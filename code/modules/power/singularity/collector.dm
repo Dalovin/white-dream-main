@@ -14,7 +14,6 @@
 	anchored = FALSE
 	density = TRUE
 	req_access = list(ACCESS_ENGINE_EQUIP)
-//	use_power = NO_POWER_USE
 	max_integrity = 350
 	integrity_failure = 0.2
 	circuit = /obj/item/circuitboard/machine/rad_collector
@@ -25,14 +24,14 @@
 	var/locked = FALSE
 	var/drainratio = 1
 	var/powerproduction_drain = 0.001
-
 	var/bitcoinproduction_drain = 0.15
 	var/bitcoinmining = FALSE
 	///research points stored
 	var/stored_research = 0
 
-/obj/machinery/power/rad_collector/anchored
-	anchored = TRUE
+/obj/machinery/power/rad_collector/anchored/Initialize()
+	. = ..()
+	set_anchored(TRUE)
 
 /obj/machinery/power/rad_collector/anchored/delta //Deltastation's engine is shared by engineers and atmos techs
 	desc = "Устройство, которое использует излучение Хокинга и плазму для производства энергии. Эта модель даёт доступ атмосферным техникам."
@@ -48,31 +47,27 @@
 	if(!loaded_tank)
 		return
 	if(!bitcoinmining)
-		if(!loaded_tank.air_contents.gases[/datum/gas/plasma])
+		if(loaded_tank.air_contents.get_moles(/datum/gas/plasma) < 0.0001)
 			investigate_log("<font color='red'>out of fuel</font>.", INVESTIGATE_SINGULO)
 			playsound(src, 'sound/machines/ding.ogg', 50, TRUE)
 			eject()
 		else
-			var/gasdrained = min(powerproduction_drain*drainratio,loaded_tank.air_contents.gases[/datum/gas/plasma][MOLES])
-			loaded_tank.air_contents.gases[/datum/gas/plasma][MOLES] -= gasdrained
-			loaded_tank.air_contents.assert_gas(/datum/gas/tritium)
-			loaded_tank.air_contents.gases[/datum/gas/tritium][MOLES] += gasdrained
-			loaded_tank.air_contents.garbage_collect()
+			var/gasdrained = min(powerproduction_drain*drainratio,loaded_tank.air_contents.get_moles(/datum/gas/plasma))
+			loaded_tank.air_contents.adjust_moles(/datum/gas/plasma, -gasdrained)
+			loaded_tank.air_contents.adjust_moles(/datum/gas/tritium, gasdrained)
 
 			var/power_produced = RAD_COLLECTOR_OUTPUT
 			add_avail(power_produced)
 			stored_energy-=power_produced
 	else if(is_station_level(z) && SSresearch.science_tech)
-		if(!loaded_tank.air_contents.gases[/datum/gas/tritium] || !loaded_tank.air_contents.gases[/datum/gas/oxygen])
+		if(!loaded_tank.air_contents.get_moles(/datum/gas/tritium) || !loaded_tank.air_contents.get_moles(/datum/gas/oxygen))
 			playsound(src, 'sound/machines/ding.ogg', 50, TRUE)
 			eject()
 		else
 			var/gasdrained = bitcoinproduction_drain*drainratio
-			loaded_tank.air_contents.gases[/datum/gas/tritium][MOLES] -= gasdrained
-			loaded_tank.air_contents.gases[/datum/gas/oxygen][MOLES] -= gasdrained
-			loaded_tank.air_contents.assert_gas(/datum/gas/carbon_dioxide)
-			loaded_tank.air_contents.gases[/datum/gas/carbon_dioxide][MOLES] += gasdrained*2
-			loaded_tank.air_contents.garbage_collect()
+			loaded_tank.air_contents.adjust_moles(/datum/gas/tritium, -gasdrained)
+			loaded_tank.air_contents.adjust_moles(/datum/gas/oxygen, -gasdrained)
+			loaded_tank.air_contents.adjust_moles(/datum/gas/carbon_dioxide, gasdrained*2)
 			var/bitcoins_mined = RAD_COLLECTOR_OUTPUT
 			var/datum/bank_account/D = SSeconomy.get_dep_account(ACCOUNT_ENG)
 			if(D)
@@ -87,10 +82,7 @@
 			toggle_power()
 			user.visible_message("<span class='notice'><b>[user.name]</b> [active? "включает":"выключает"] <b>[src.name]</b>.</span>", \
 			"<span class='notice'>[active? "Включаю":"Выключаю"] <b>[src.name]</b>.</span>")
-			var/fuel
-			if(loaded_tank)
-				fuel = loaded_tank.air_contents.gases[/datum/gas/plasma]
-			fuel = fuel ? fuel[MOLES] : 0
+			var/fuel = loaded_tank.air_contents.get_moles(/datum/gas/plasma)
 			investigate_log("turned [active?"<font color='green'>on</font>":"<font color='red'>off</font>"] by [key_name(user)]. [loaded_tank?"Fuel: [round(fuel/0.29)]%":"<font color='red'>It is empty</font>"].", INVESTIGATE_SINGULO)
 			return
 		else
@@ -104,13 +96,14 @@
 		return FAILED_UNFASTEN
 	return ..()
 
-/obj/machinery/power/rad_collector/default_unfasten_wrench(mob/user, obj/item/I, time = 20)
+/obj/machinery/power/rad_collector/set_anchored(anchorvalue)
 	. = ..()
-	if(. == SUCCESSFUL_UNFASTEN)
-		if(anchored)
-			connect_to_network()
-		else
-			disconnect_from_network()
+	if(isnull(.))
+		return //no need to process if we didn't change anything.
+	if(anchorvalue)
+		connect_to_network()
+	else
+		disconnect_from_network()
 
 /obj/machinery/power/rad_collector/attackby(obj/item/W, mob/user, params)
 	if(istype(W, /obj/item/tank/internals/plasma))
@@ -139,6 +132,7 @@
 			return TRUE
 	else
 		return ..()
+
 /obj/machinery/power/rad_collector/analyzer_act(mob/living/user, obj/item/I)
 	if(stored_research >= 1)
 		new /obj/item/research_notes(user.loc, stored_research, "engineering")
@@ -241,7 +235,6 @@
 		return
 	if(active)
 		. += "on"
-
 
 /obj/machinery/power/rad_collector/proc/toggle_power()
 	active = !active

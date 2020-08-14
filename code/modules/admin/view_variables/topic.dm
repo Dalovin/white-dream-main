@@ -58,8 +58,8 @@
 			if(!check_rights(R_SPAWN))
 				return
 
-			if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-				return
+			//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+			//	return
 
 			var/mob/living/carbon/monkey/Mo = locate(href_list["makehuman"]) in GLOB.mob_list
 			if(!istype(Mo))
@@ -130,6 +130,6 @@
 	//Finally, refresh if something modified the list.
 	if(href_list["datumrefresh"])
 		var/datum/DAT = locate(href_list["datumrefresh"])
-		if(istype(DAT, /datum) || istype(DAT, /client))
+		if(istype(DAT, /datum) || istype(DAT, /client) || islist(DAT))
 			debug_variables(DAT)
 

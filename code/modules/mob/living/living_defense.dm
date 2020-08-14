@@ -1,9 +1,14 @@
 
-/mob/living/proc/run_armor_check(def_zone = null, attack_flag = "melee", absorb_text = null, soften_text = null, armour_penetration, penetrated_text)
+/mob/living/proc/run_armor_check(def_zone = null, attack_flag = "melee", absorb_text = null, soften_text = null, armour_penetration, penetrated_text, silent=FALSE)
 	var/armor = getarmor(def_zone, attack_flag)
 
+	if(armor <= 0)
+		return armor
+	if(silent)
+		return max(0, armor - armour_penetration)
+
 	//the if "armor" check is because this is used for everything on /living, including humans
-	if(armor > 0 && armour_penetration)
+	if(armour_penetration)
 		armor = max(0, armor - armour_penetration)
 		if(penetrated_text)
 			to_chat(src, "<span class='userdanger'>[penetrated_text]</span>")
@@ -14,13 +19,12 @@
 			to_chat(src, "<span class='notice'>[absorb_text]</span>")
 		else
 			to_chat(src, "<span class='notice'>Моя броня поглотила удар!</span>")
-	else if(armor > 0)
+	else
 		if(soften_text)
 			to_chat(src, "<span class='warning'>[soften_text]</span>")
 		else
 			to_chat(src, "<span class='warning'>Моя броня смягчает удар!</span>")
 	return armor
-
 
 /mob/living/proc/getarmor(def_zone, type)
 	return 0
@@ -56,8 +60,7 @@
 			lastattackerckey = L.ckey
 
 	if(!P.nodamage && on_hit_state != BULLET_ACT_BLOCK)
-		apply_damage(P.damage, P.damage_type, def_zone, armor)
-
+		apply_damage(P.damage, P.damage_type, def_zone, armor, wound_bonus=P.wound_bonus, bare_wound_bonus=P.bare_wound_bonus, sharpness = P.sharpness)
 		apply_effects(P.stun, P.knockdown, P.unconscious, P.irradiate, P.slur, P.stutter, P.eyeblur, P.drowsy, armor, P.stamina, P.jitter, P.paralyze, P.immobilize)
 		if(P.dismemberment)
 			check_projectile_dismemberment(P, def_zone)
@@ -86,15 +89,15 @@
 
 		dtype = I.damtype
 		if(!blocked)
-			visible_message("<span class='danger'>В <b>[src]</b> попадает <b>[I.name]</b>!</span>", \
-							"<span class='userdanger'>В <b>меня</b> попадает [I.name]!</span>")
-			if(!I.throwforce)
-				return
-			var/armor = run_armor_check(zone, "melee", "Моя броня отражает попадание в [ru_parse_zone(parse_zone(zone))].", "Моя броня смягчает попадание в [ru_parse_zone(parse_zone(zone))].",I.armour_penetration)
-			apply_damage(I.throwforce, dtype, zone, armor)
-
 			if(I.thrownby)
 				log_combat(I.thrownby, src, "threw and hit", I)
+			if(!nosell_hit)
+				visible_message("<span class='danger'>В <b>[src]</b> попадает <b>[I.name]</b>!</span>", \
+								"<span class='userdanger'>В <b>меня</b> попадает [I.name]!</span>")
+				if(!I.throwforce)
+					return
+				var/armor = run_armor_check(zone, "melee", "Моя броня отражает попадание в [ru_parse_zone(parse_zone(zone))].", "Моя броня смягчает попадание в [ru_parse_zone(parse_zone(zone))].",I.armour_penetration)
+				apply_damage(I.throwforce, dtype, zone, armor, sharpness=I.get_sharpness(), wound_bonus=(nosell_hit * CANT_WOUND))
 
 		else
 			return 1
@@ -208,7 +211,7 @@
 				to_chat(user, "<span class='danger'>Хватаю [src] за шею!</span>")
 				update_mobility() //we fall down
 				if(!buckled && !density)
-					Move(user.loc)
+					Move(user.loc, NONE, user.step_x, user.step_y)
 			if(GRAB_KILL)
 				log_combat(user, src, "strangled", addition="kill grab")
 				visible_message("<span class='danger'><b>[user]</b> душит <b>[src]</b>!</span>", \
@@ -216,7 +219,7 @@
 				to_chat(user, "<span class='danger'>Душу [src]!</span>")
 				update_mobility() //we fall down
 				if(!buckled && !density)
-					Move(user.loc)
+					Move(user.loc, NONE, user.step_x, user.step_y)
 		user.set_pull_offsets(src, grab_state)
 		return 1
 
@@ -376,7 +379,7 @@
 		adjustStaminaLoss(shock_damage)
 	visible_message(
 		"<span class='danger'><b>[src]</b> ловит разряд тока от <b>[source]</b>!</span>", \
-		"<span class='userdanger'>меня ударило током! <b>ЭТО ОЧЕНЬ БОЛЬНО!</b></span>", \
+		"<span class='userdanger'>Меня ударило током! <b>ЭТО ОЧЕНЬ БОЛЬНО!</b></span>", \
 		"<span class='italics'>Слышу щёлканье электрических разрядов.</span>" \
 	)
 	return shock_damage
@@ -409,13 +412,15 @@
 	if(client)
 		makeNewConstruct(/mob/living/simple_animal/hostile/construct/harvester, src, cultoverride = TRUE)
 	else
-		switch(rand(1, 6))
+		switch(rand(1, 4))
 			if(1)
-				new /mob/living/simple_animal/hostile/construct/armored/hostile(get_turf(src))
+				new /mob/living/simple_animal/hostile/construct/juggernaut/hostile(get_turf(src))
 			if(2)
 				new /mob/living/simple_animal/hostile/construct/wraith/hostile(get_turf(src))
-			if(3 to 6)
-				new /mob/living/simple_animal/hostile/construct/builder/hostile(get_turf(src))
+			if(3)
+				new /mob/living/simple_animal/hostile/construct/artificer/hostile(get_turf(src))
+			if(4)
+				new /mob/living/simple_animal/hostile/construct/proteon/hostile(get_turf(src))
 	spawn_dust()
 	gib()
 	return TRUE
@@ -444,3 +449,20 @@
 		used_item = get_active_held_item()
 	..()
 	setMovetype(movement_type & ~FLOATING) // If we were without gravity, the bouncing animation got stopped, so we make sure we restart the bouncing after the next movement.
+
+/** Handles exposing a mob to reagents.
+  *
+  * If the method is INGEST the mob tastes the reagents.
+  * If the method is VAPOR it incorporates permiability protection.
+  */
+/mob/living/expose_reagents(list/reagents, datum/reagents/source, method=TOUCH, volume_modifier=1, show_message=TRUE)
+	if((. = ..()) & COMPONENT_NO_EXPOSE_REAGENTS)
+		return
+
+	if(method == INGEST)
+		taste(source)
+
+	var/touch_protection = (method == VAPOR) ? get_permeability_protection() : 0
+	for(var/reagent in reagents)
+		var/datum/reagent/R = reagent
+		. |= R.expose_mob(src, method, reagents[R], show_message, touch_protection)

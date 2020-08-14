@@ -1,3 +1,4 @@
+#define DOOR_CLOSE_WAIT 60 ///Default wait until doors autoclose
 /obj/machinery/door
 	name = "door"
 	desc = "Он открывается и закрывается. Удивительно."
@@ -7,14 +8,17 @@
 	density = TRUE
 	move_resist = MOVE_FORCE_VERY_STRONG
 	layer = OPEN_DOOR_LAYER
-	power_channel = ENVIRON
+	power_channel = AREA_USAGE_ENVIRON
 	max_integrity = 350
 	armor = list("melee" = 30, "bullet" = 30, "laser" = 20, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 100, "fire" = 80, "acid" = 70)
 	CanAtmosPass = ATMOS_PASS_DENSITY
 	flags_1 = PREVENT_CLICK_UNDER_1
+	ricochet_chance_mod = 0.8
 	damage_deflection = 10
 
 	interaction_flags_atom = INTERACT_ATOM_UI_INTERACT
+
+	var/air_tight = FALSE	//TRUE means density will be set as soon as the door begins to close
 
 	var/secondsElectrified = MACHINE_NOT_ELECTRIFIED
 	var/shockedby
@@ -38,6 +42,7 @@
 	var/unres_sides = 0 //Unrestricted sides. A bitflag for which direction (if any) can open the door with no access
 	var/safety_mode = FALSE ///Whether or not the airlock can be opened with bare hands while unpowered
 	var/can_crush = TRUE /// Whether or not the door can crush mobs.
+	COOLDOWN_DECLARE(next_deny) // Keeps track of the cooldown for the bump deny animation so it isnt spammed
 
 /obj/machinery/door/examine(mob/user)
 	. = ..()
@@ -95,6 +100,31 @@
 			return TRUE
 	return FALSE
 
+/obj/machinery/door/proc/is_holding_pressure()
+	var/turf/open/T = loc
+	if(!T)
+		return FALSE
+	if(!density)
+		return FALSE
+	// alrighty now we check for how much pressure we're holding back
+	var/min_moles = T.air.total_moles()
+	var/max_moles = min_moles
+	// okay this is a bit hacky. First, we set density to 0 and recalculate our adjacent turfs
+	density = FALSE
+	T.ImmediateCalculateAdjacentTurfs()
+	// then we use those adjacent turfs to figure out what the difference between the lowest and highest pressures we'd be holding is
+	for(var/turf/open/T2 in T.atmos_adjacent_turfs)
+		if((flags_1 & ON_BORDER_1) && get_dir(src, T2) != dir)
+			continue
+		var/moles = T2.air.total_moles()
+		if(moles < min_moles)
+			min_moles = moles
+		if(moles > max_moles)
+			max_moles = moles
+	density = TRUE
+	T.ImmediateCalculateAdjacentTurfs() // alright lets put it back
+	return max_moles - min_moles > 20
+
 /obj/machinery/door/Bumped(atom/movable/AM)
 	. = ..()
 	if(operating || (obj_flags & EMAGGED))
@@ -105,9 +135,6 @@
 			return
 		if(isliving(AM))
 			var/mob/living/M = AM
-			if(world.time - M.last_bumped <= 10)
-				return	//Can bump-open one airlock per second. This is to prevent shock spam.
-			M.last_bumped = world.time
 			if(M.restrained() && !check_access(null))
 				return
 			if(try_safety_unlock(M))
@@ -118,10 +145,6 @@
 	if(ismecha(AM))
 		var/obj/mecha/mecha = AM
 		if(density)
-			if(mecha.occupant)
-				if(world.time - mecha.occupant.last_bumped <= 10)
-					return
-				mecha.occupant.last_bumped = world.time
 			if(mecha.occupant && (src.allowed(mecha.occupant) || src.check_access_list(mecha.operation_req_access)))
 				open()
 			else
@@ -145,6 +168,9 @@
 
 /obj/machinery/door/CanAllowThrough(atom/movable/mover, turf/target)
 	. = ..()
+	if(.)
+		return
+
 	if(istype(mover) && (mover.pass_flags & PASSGLASS))
 		return !opacity
 
@@ -274,6 +300,9 @@
 			else
 				flick("doorc1", src)
 		if("deny")
+			if(!COOLDOWN_FINISHED(src, next_deny))
+				return
+			COOLDOWN_START(src, next_deny, 0.5 SECONDS)
 			if(!machine_stat)
 				flick("door_deny", src)
 
@@ -297,7 +326,7 @@
 	air_update_turf(1)
 	update_freelook_sight()
 	if(autoclose)
-		addtimer(CALLBACK(src, .proc/close), autoclose)
+		autoclose_in(DOOR_CLOSE_WAIT)
 	return 1
 
 /obj/machinery/door/proc/close()
@@ -309,13 +338,15 @@
 		for(var/atom/movable/M in get_turf(src))
 			if(M.density && M != src) //something is blocking the door
 				if(autoclose)
-					autoclose_in(60)
+					autoclose_in(DOOR_CLOSE_WAIT)
 				return
 
 	operating = TRUE
 
 	do_animate("closing")
 	layer = closingLayer
+	if(air_tight)
+		density = TRUE
 	sleep(5)
 	density = TRUE
 	flags_1 |= PREVENT_CLICK_UNDER_1
@@ -342,8 +373,13 @@
 		open()
 
 /obj/machinery/door/proc/crush()
-	for(var/mob/living/L in get_turf(src))
+	for(var/mob/living/L in obounds(src))
 		L.visible_message("<span class='warning'>[src] closes on [L], crushing [L.p_them()]!</span>", "<span class='userdanger'>[src] closes on you and crushes you!</span>")
+		if(iscarbon(L))
+			var/mob/living/carbon/C = L
+			for(var/i in C.all_wounds) // should probably replace with signal
+				var/datum/wound/W = i
+				W.crush(DOOR_CRUSH_DAMAGE)
 		if(isalien(L))  //For xenos
 			L.adjustBruteLoss(DOOR_CRUSH_DAMAGE * 1.5) //Xenos go into crit after aproximately the same amount of crushes as humans.
 			L.emote("roar")
@@ -416,4 +452,6 @@
 /obj/machinery/door/power_change()
 	. = ..()
 	if(. && !(machine_stat & NOPOWER))
-		autoclose_in(rand(0.5 SECONDS, 3 SECONDS))
+		autoclose_in(DOOR_CLOSE_WAIT)
+
+#undef DOOR_CLOSE_WAIT

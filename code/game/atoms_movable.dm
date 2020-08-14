@@ -1,11 +1,29 @@
 /atom/movable
 	layer = OBJ_LAYER
-	var/last_move = null
-	var/last_move_time = 0
-	var/anchored = FALSE
+	appearance_flags = TILE_BOUND | PIXEL_SCALE
+	// Movement related vars
+	step_size = 8
+	//PIXEL MOVEMENT VARS
+	/// stores fractional pixel movement in the x
+	var/fx
+	/// stores fractional pixel movement in the y
+	var/fy
+	var/walking = NONE
 	var/move_resist = MOVE_RESIST_DEFAULT
 	var/move_force = MOVE_FORCE_DEFAULT
 	var/pull_force = PULL_FORCE_DEFAULT
+	///whether we are already sidestepping or not
+	var/sidestep = FALSE
+
+	///whether or not we can sidestep
+	var/can_sidestep = FALSE
+
+	/// collider object
+	var/atom/movable/collider/slider/slider
+	//Misc
+	var/last_move = null
+	var/last_move_time = 0
+	var/anchored = FALSE
 	var/datum/thrownthing/throwing = null
 	var/throw_speed = 2 //How many tiles to move per ds when being thrown. Float values are fully supported
 	var/throw_range = 7
@@ -21,18 +39,13 @@
 	var/speech_span
 	var/inertia_dir = 0
 	var/atom/inertia_last_loc
-	var/inertia_moving = 0
-	var/inertia_next_move = 0
-	var/inertia_move_delay = 5
+	var/inertia_moving = FALSE
 	var/pass_flags = NONE
 	/// If false makes [CanPass][/atom/proc/CanPass] call [CanPassThrough][/atom/movable/proc/CanPassThrough] on this type instead of using default behaviour
 	var/generic_canpass = TRUE
-	var/moving_diagonally = 0 //0: not doing a diagonal move. 1 and 2: doing the first/second step of the diagonal move
 	var/atom/movable/moving_from_pull		//attempt to resume grab after moving instead of before.
 	var/list/client_mobs_in_contents // This contains all the client mobs within this container
 	var/list/acted_explosions	//for explosion dodging
-	glide_size = 5.66
-	appearance_flags = TILE_BOUND|PIXEL_SCALE
 	var/datum/forced_movement/force_moving = null	//handled soley by forced_movement.dm
 	var/movement_type = GROUND		//Incase you have multiple types, you automatically use the most useful one. IE: Skating on ice, flippers on water, flying over chasm/space, etc.
 	var/atom/movable/pulling
@@ -49,10 +62,18 @@
 	var/blocks_emissive = FALSE
 	///Internal holder for emissive blocker object, do not use directly use blocks_emissive
 	var/atom/movable/emissive_blocker/em_block
+	///how bounds handle rotation
+	var/brotation = BOUNDS_SIMPLE_ROTATE
 
+	///Used for the calculate_adjacencies proc for icon smoothing.
+	var/can_be_unanchored = FALSE
 
 /atom/movable/Initialize(mapload)
 	. = ..()
+	set_sidestep(can_sidestep) // creates slider if there isn't one already
+	update_bounds(olddir=NORTH, newdir=dir) // bounds assume north but some things arent north by default for some god knows reason
+	if(opacity) // makes opaque objects not block entire tiles
+		appearance_flags &= ~TILE_BOUND
 	switch(blocks_emissive)
 		if(EMISSIVE_BLOCK_GENERIC)
 			update_emissive_block()
@@ -61,9 +82,47 @@
 			em_block = new(src, render_target)
 			vis_contents += em_block
 
-/atom/movable/Destroy()
+
+/atom/movable/Destroy(force)
+	QDEL_NULL(proximity_monitor)
+	QDEL_NULL(language_holder)
 	QDEL_NULL(em_block)
-	return ..()
+
+	unbuckle_all_mobs(force = TRUE)
+
+	if(loc)
+		//Restore air flow if we were blocking it (movables with ATMOS_PASS_PROC will need to do this manually if necessary)
+		if(((CanAtmosPass == ATMOS_PASS_DENSITY && density) || CanAtmosPass == ATMOS_PASS_NO) && isturf(loc))
+			CanAtmosPass = ATMOS_PASS_YES
+			air_update_turf(TRUE)
+		loc.handle_atom_del(src)
+
+		// If we have opacity, make sure to tell (potentially) affected light sources.
+		if(opacity && isturf(loc))
+			var/turf/turf_loc = loc
+			var/old_has_opaque_atom = turf_loc.has_opaque_atom
+			turf_loc.recalc_atom_opacity()
+			if(old_has_opaque_atom != turf_loc.has_opaque_atom)
+				turf_loc.reconsider_lights()
+
+	invisibility = INVISIBILITY_ABSTRACT
+
+	if(pulledby)
+		pulledby.stop_pulling()
+
+	if(orbiting)
+		orbiting.end_orbit(src)
+		orbiting = null
+
+	. = ..()
+
+	for(var/movable_content in contents)
+		qdel(movable_content)
+
+	LAZYCLEARLIST(client_mobs_in_contents)
+
+	moveToNullspace()
+
 
 /atom/movable/proc/update_emissive_block()
 	if(blocks_emissive != EMISSIVE_BLOCK_GENERIC)
@@ -75,6 +134,14 @@
 				SSvis_overlays.remove_vis_overlay(src, list(vs))
 				break
 	SSvis_overlays.add_vis_overlay(src, icon, icon_state, EMISSIVE_BLOCKER_LAYER, EMISSIVE_BLOCKER_PLANE, dir)
+
+/atom/movable/proc/set_sidestep(val = 0)
+	can_sidestep = val
+	if(can_sidestep && !slider)
+		slider = new()
+	else if(!can_sidestep && slider)
+		qdel(slider)
+	return can_sidestep
 
 /atom/movable/proc/can_zFall(turf/source, levels = 1, turf/target, direction)
 	if(!direction)
@@ -99,7 +166,6 @@
 			if(A.layer > highest.layer)
 				highest = A
 	INVOKE_ASYNC(src, .proc/SpinAnimation, 5, 2)
-	throw_impact(highest)
 	return TRUE
 
 //For physical constraints to travelling up/down.
@@ -120,32 +186,29 @@
 	return T.zPassOut(src, direction, destination) && destination.zPassIn(src, direction, T)
 
 /atom/movable/vv_edit_var(var_name, var_value)
-	var/static/list/banned_edits = list("step_x", "step_y", "step_size", "bounds")
-	var/static/list/careful_edits = list("bound_x", "bound_y", "bound_width", "bound_height")
-	if(var_name in banned_edits)
-		return FALSE	//PLEASE no.
-	if((var_name in careful_edits) && (var_value % world.icon_size) != 0)
-		return FALSE
 	switch(var_name)
-		if("x")
+		if(NAMEOF(src, anchored))
+			set_anchored(var_value)
+			return TRUE
+		if(NAMEOF(src, x))
 			var/turf/T = locate(var_value, y, z)
 			if(T)
 				forceMove(T)
 				return TRUE
 			return FALSE
-		if("y")
+		if(NAMEOF(src, y))
 			var/turf/T = locate(x, var_value, z)
 			if(T)
 				forceMove(T)
 				return TRUE
 			return FALSE
-		if("z")
+		if(NAMEOF(src, z))
 			var/turf/T = locate(x, y, var_value)
 			if(T)
 				forceMove(T)
 				return TRUE
 			return FALSE
-		if("loc")
+		if(NAMEOF(src, loc))
 			if(istype(var_value, /atom))
 				forceMove(var_value)
 				return TRUE
@@ -181,45 +244,50 @@
 		log_combat(AM, AM.pulledby, "pulled from", src)
 		AM.pulledby.stop_pulling() //an object can't be pulled by two mobs at once.
 	pulling = AM
-	AM.pulledby = src
+	AM.set_pulledby(src)
 	setGrabState(state)
+	if(!isliving(pulling))
+		pulling.set_sidestep(TRUE)
 	if(ismob(AM))
 		var/mob/M = AM
+		M.update_movespeed() // set the proper step_size
 		log_combat(src, M, "grabbed", addition="passive grab")
 		if(!supress_message)
-			M.visible_message("<span class='warning'>[src] grabs [M] passively.</span>", \
-				"<span class='danger'>[src] grabs you passively.</span>")
+			M.visible_message("<span class='warning'><b>[src]</b> хватает <b>[M]</b>.</span>", \
+				"<span class='danger'><b>[src]</b> хватает меня.</span>")
 	return TRUE
 
 /atom/movable/proc/stop_pulling()
 	if(pulling)
-		pulling.pulledby = null
-		var/mob/living/ex_pulled = pulling
+		pulling.set_pulledby(null)
+		if(!isliving(pulling))
+			pulling.set_sidestep(initial(pulling.can_sidestep))
+		var/atom/movable/ex_pulled = pulling
+		setGrabState(GRAB_PASSIVE)
 		pulling = null
-		setGrabState(0)
 		if(isliving(ex_pulled))
 			var/mob/living/L = ex_pulled
 			L.update_mobility()// mob gets up if it was lyng down in a chokehold
+			L.update_movespeed() // set their movespeed to the usual
 
-/atom/movable/proc/Move_Pulled(atom/A)
-	if(!pulling)
+///Reports the event of the change in value of the pulledby variable.
+/atom/movable/proc/set_pulledby(new_pulledby)
+	if(new_pulledby == pulledby)
+		return FALSE //null signals there was a change, be sure to return FALSE if none happened here.
+	. = pulledby
+	pulledby = new_pulledby
+
+/atom/movable/proc/Move_Pulled(atom/A, params)
+	if(!check_pulling())
 		return
-	if(pulling.anchored || pulling.move_resist > move_force || !pulling.Adjacent(src))
-		stop_pulling()
+	if(!Adjacent(A))
+		to_chat(src, "<span class='warning'>Не могу передвинуть [pulling] так далеко!</span>")
 		return
-	if(isliving(pulling))
-		var/mob/living/L = pulling
-		if(L.buckled && L.buckled.buckle_prevents_pull) //if they're buckled to something that disallows pulling, prevent it
-			stop_pulling()
-			return
-	if(A == loc && pulling.density)
-		return
-	if(!Process_Spacemove(get_dir(pulling.loc, A)))
-		return
-	step(pulling, get_dir(pulling.loc, A))
+	pulling.step_size = 1 + pulling.Move(get_turf(A), get_dir(pulling.loc, A)) // 1 + pixels moved
+	pulling.step_size = step_size
 	return TRUE
 
-/mob/living/Move_Pulled(atom/A)
+/mob/living/Move_Pulled(atom/A, params)
 	. = ..()
 	if(!. || !isliving(A))
 		return
@@ -227,206 +295,121 @@
 	set_pull_offsets(L, grab_state)
 
 /atom/movable/proc/check_pulling()
-	if(pulling)
-		var/atom/movable/pullee = pulling
-		if(pullee && get_dist(src, pullee) > 1)
-			stop_pulling()
-			return
-		if(!isturf(loc))
-			stop_pulling()
-			return
-		if(pullee && !isturf(pullee.loc) && pullee.loc != loc) //to be removed once all code that changes an object's loc uses forceMove().
-			log_game("DEBUG:[src]'s pull on [pullee] wasn't broken despite [pullee] being in [pullee.loc]. Pull stopped manually.")
-			stop_pulling()
-			return
-		if(pulling.anchored || pulling.move_resist > move_force)
-			stop_pulling()
-			return
-	if(pulledby && moving_diagonally != FIRST_DIAG_STEP && get_dist(src, pulledby) > 1)		//separated from our puller and not in the middle of a diagonal move.
-		pulledby.stop_pulling()
-
-////////////////////////////////////////
-// Here's where we rewrite how byond handles movement except slightly different
-// To be removed on step_ conversion
-// All this work to prevent a second bump
-/atom/movable/Move(atom/newloc, direct=0)
 	. = FALSE
-	if(!newloc || newloc == loc)
+	if(!pulling)
+		if(pulledby && bounds_dist(src, pulledby) > 32)
+			pulledby.stop_pulling()
 		return
-
-	if(!direct)
-		direct = get_dir(src, newloc)
-	setDir(direct)
-
-	if(!loc.Exit(src, newloc))
+	if(bounds_dist(src, pulling) > 32)
+		stop_pulling()
 		return
-
-	if(!newloc.Enter(src, src.loc))
+	if(!isturf(loc))
+		stop_pulling()
 		return
-
-	if (SEND_SIGNAL(src, COMSIG_MOVABLE_PRE_MOVE, newloc) & COMPONENT_MOVABLE_BLOCK_PRE_MOVE)
+	if(pulling.anchored || pulling.move_resist > move_force)
+		stop_pulling()
 		return
-
-	// Past this is the point of no return
-	var/atom/oldloc = loc
-	var/area/oldarea = get_area(oldloc)
-	var/area/newarea = get_area(newloc)
-	loc = newloc
-	. = TRUE
-	oldloc.Exited(src, newloc)
-	if(oldarea != newarea)
-		oldarea.Exited(src, newloc)
-
-	for(var/i in oldloc)
-		if(i == src) // Multi tile objects
-			continue
-		var/atom/movable/thing = i
-		thing.Uncrossed(src)
-
-	newloc.Entered(src, oldloc)
-	if(oldarea != newarea)
-		newarea.Entered(src, oldloc)
-
-	for(var/i in loc)
-		if(i == src) // Multi tile objects
-			continue
-		var/atom/movable/thing = i
-		thing.Crossed(src)
-
-////////////////////////////////////////
-
-/atom/movable/Move(atom/newloc, direct)
-	var/atom/movable/pullee = pulling
-	var/turf/T = loc
-	if(!moving_from_pull)
-		check_pulling()
-	if(!loc || !newloc)
-		return FALSE
-	var/atom/oldloc = loc
-
-	if(loc != newloc)
-		if (!(direct & (direct - 1))) //Cardinal move
-			. = ..()
-		else //Diagonal move, split it into cardinal moves
-			moving_diagonally = FIRST_DIAG_STEP
-			var/first_step_dir
-			// The `&& moving_diagonally` checks are so that a forceMove taking
-			// place due to a Crossed, Bumped, etc. call will interrupt
-			// the second half of the diagonal movement, or the second attempt
-			// at a first half if step() fails because we hit something.
-			if (direct & NORTH)
-				if (direct & EAST)
-					if (step(src, NORTH) && moving_diagonally)
-						first_step_dir = NORTH
-						moving_diagonally = SECOND_DIAG_STEP
-						. = step(src, EAST)
-					else if (moving_diagonally && step(src, EAST))
-						first_step_dir = EAST
-						moving_diagonally = SECOND_DIAG_STEP
-						. = step(src, NORTH)
-				else if (direct & WEST)
-					if (step(src, NORTH) && moving_diagonally)
-						first_step_dir = NORTH
-						moving_diagonally = SECOND_DIAG_STEP
-						. = step(src, WEST)
-					else if (moving_diagonally && step(src, WEST))
-						first_step_dir = WEST
-						moving_diagonally = SECOND_DIAG_STEP
-						. = step(src, NORTH)
-			else if (direct & SOUTH)
-				if (direct & EAST)
-					if (step(src, SOUTH) && moving_diagonally)
-						first_step_dir = SOUTH
-						moving_diagonally = SECOND_DIAG_STEP
-						. = step(src, EAST)
-					else if (moving_diagonally && step(src, EAST))
-						first_step_dir = EAST
-						moving_diagonally = SECOND_DIAG_STEP
-						. = step(src, SOUTH)
-				else if (direct & WEST)
-					if (step(src, SOUTH) && moving_diagonally)
-						first_step_dir = SOUTH
-						moving_diagonally = SECOND_DIAG_STEP
-						. = step(src, WEST)
-					else if (moving_diagonally && step(src, WEST))
-						first_step_dir = WEST
-						moving_diagonally = SECOND_DIAG_STEP
-						. = step(src, SOUTH)
-			if(moving_diagonally == SECOND_DIAG_STEP)
-				if(!.)
-					setDir(first_step_dir)
-				else if (!inertia_moving)
-					inertia_next_move = world.time + inertia_move_delay
-					newtonian_move(direct)
-			moving_diagonally = 0
-			return
-
-	if(!loc || (loc == oldloc && oldloc != newloc))
-		last_move = 0
-		return
-
-	if(.)
-		Moved(oldloc, direct)
-	if(. && pulling && pulling == pullee && pulling != moving_from_pull) //we were pulling a thing and didn't lose it during our move.
-		if(pulling.anchored)
+	if(isliving(pulling))
+		var/mob/living/liv = pulling
+		if(liv.buckled?.buckle_prevents_pull) //if they're buckled to something that disallows pulling, prevent it
 			stop_pulling()
-		else
-			var/pull_dir = get_dir(src, pulling)
-			//puller and pullee more than one tile away or in diagonal position
-			if(get_dist(src, pulling) > 1 || (moving_diagonally != SECOND_DIAG_STEP && ((pull_dir - 1) & pull_dir)))
-				pulling.moving_from_pull = src
-				pulling.Move(T, get_dir(pulling, T)) //the pullee tries to reach our previous position
-				pulling.moving_from_pull = null
-			check_pulling()
+			return
+	return TRUE
 
+#define ANGLE_ADJUST 10
+/**
+  * Handles the movement of the object src is pulling
+  *
+  * Tries to correct the pulled object if it's stuck
+  * uses degstep to move the pulled object at an angle
+  */
+/atom/movable/proc/handle_pulled_movement()
+	if(!pulling)
+		return FALSE
+	if(pulling.anchored)
+		return FALSE
+	if(pulling.move_resist > move_force)
+		return FALSE
+	var/distance = bounds_dist(src, pulling)
+	if(distance < 6)
+		return FALSE
+	var/angle = GET_DEG(pulling, src)
+	if((angle % 45) > 1) // We arent directly on a cardinal from the thing
+		var/tempA = WRAP(angle, 0, 45)
+		if(tempA >= 22.5)
+			angle += min(ANGLE_ADJUST, 45-tempA)
+		else
+			angle -= min(ANGLE_ADJUST, tempA)
+	angle = SIMPLIFY_DEGREES(angle)
+	return degstepprojectile(pulling, angle, distance-8)
+
+#undef ANGLE_ADJUST
+/**
+  * Checks the distance between the object we're pulling before moving
+  *
+  * Returns FALSE and prevents movement if the object we're pulling is too far and the direction
+  * src is moving isn't towards the pulled object.
+  * Returns TRUE and allows movement if the object we're pulling is in range.
+  */
+/atom/movable/proc/handle_pulled_premove(atom/newloc, direct, _step_x, _step_y)
+	if((bounds_dist(src, pulling) > 16 + step_size) && !(direct & GET_PIXELDIR(src, pulling)))
+		return FALSE
+	return TRUE
+
+/atom/movable/Move(atom/newloc, direct, _step_x, _step_y)
+	if(SEND_SIGNAL(src, COMSIG_MOVABLE_PRE_MOVE, newloc, direct, _step_x, _step_y) & COMPONENT_MOVABLE_BLOCK_PRE_MOVE)
+		return FALSE
+
+	if(pulling && !handle_pulled_premove(newloc, direct, _step_x, _step_y))
+		handle_pulled_movement()
+		check_pulling()
+		return FALSE
+
+	var/atom/oldloc = loc
+
+	. = ..()
+	if(!. && can_sidestep && !sidestep)
+		//if this mob is able to slide when colliding, and is currently not attempting to slide
+		//mark that we are sliding
+		sidestep = TRUE
+		//call to the global slider object to determine what direction our slide will happen in (if any)
+		. = slider.slide(src, direct, _step_x, _step_y)
+		if(.)
+			//if slider was able to slide, step us in the direction indicated
+			. = step(src,.)
+		//mark that we are no longer sliding
+		sidestep = FALSE
 	last_move = direct
 	setDir(direct)
-	if(. && has_buckled_mobs() && !handle_buckled_mob_movement(loc,direct)) //movement failed due to buckled mob(s)
-		return FALSE
+	if(.)
+		Moved(oldloc, direct)
+		if(pulling) //we were pulling a thing and didn't lose it during our move.
+			handle_pulled_movement()
+			check_pulling()
+		if(has_buckled_mobs() && !handle_buckled_mob_movement(loc, direct, step_x, step_y))
+			return FALSE
+	else // we still didn't move, something is blocking further movement
+		walk(src, NONE)
 
-//Called after a successful Move(). By this point, we've already moved
+/// Called after a successful Move(). By this point, we've already moved
 /atom/movable/proc/Moved(atom/OldLoc, Dir, Forced = FALSE)
 	SHOULD_CALL_PARENT(TRUE)
 	SEND_SIGNAL(src, COMSIG_MOVABLE_MOVED, OldLoc, Dir, Forced)
+	if(OldLoc != loc)
+		SEND_SIGNAL(src, COMSIG_MOVABLE_MOVED_TURF, OldLoc, Dir)
 	if (!inertia_moving)
-		inertia_next_move = world.time + inertia_move_delay
 		newtonian_move(Dir)
 	if (length(client_mobs_in_contents))
 		update_parallax_contents()
 
-	SSdemo.mark_dirty(src)
 	return TRUE
 
-/atom/movable/Destroy(force)
-	QDEL_NULL(proximity_monitor)
-	QDEL_NULL(language_holder)
-
-	unbuckle_all_mobs(force=1)
-
-	. = ..()
-	if(loc)
-		//Restore air flow if we were blocking it (movables with ATMOS_PASS_PROC will need to do this manually if necessary)
-		if(((CanAtmosPass == ATMOS_PASS_DENSITY && density) || CanAtmosPass == ATMOS_PASS_NO) && isturf(loc))
-			CanAtmosPass = ATMOS_PASS_YES
-			air_update_turf(TRUE)
-		loc.handle_atom_del(src)
-	for(var/atom/movable/AM in contents)
-		qdel(AM)
-	moveToNullspace()
-	invisibility = INVISIBILITY_ABSTRACT
-	if(pulledby)
-		pulledby.stop_pulling()
-
-	if(orbiting)
-		orbiting.end_orbit(src)
-		orbiting = null
 
 // Make sure you know what you're doing if you call this, this is intended to only be called by byond directly.
 // You probably want CanPass()
 /atom/movable/Cross(atom/movable/AM)
-	. = TRUE
 	SEND_SIGNAL(src, COMSIG_MOVABLE_CROSS, AM)
-	return CanPass(AM, AM.loc, TRUE)
+	return CanPass(AM, AM.loc)
 
 //oldloc = old location on atom, inserted when forceMove is called and ONLY when forceMove is called!
 /atom/movable/Crossed(atom/movable/AM, oldloc)
@@ -445,8 +428,6 @@
 	SEND_SIGNAL(src, COMSIG_MOVABLE_UNCROSSED, AM)
 
 /atom/movable/Bump(atom/A)
-	if(!A)
-		CRASH("Bump was called with no argument.")
 	SEND_SIGNAL(src, COMSIG_MOVABLE_BUMP, A)
 	. = ..()
 	if(!QDELETED(throwing))
@@ -456,64 +437,149 @@
 			return
 	A.Bumped(src)
 
-/atom/movable/proc/forceMove(atom/destination)
+/atom/movable/setDir(direct)
+	var/old_dir = dir
+	. = ..()
+	update_bounds(olddir=old_dir, newdir=direct)
+
+/atom/movable/true_x()
+	. = ..()
+	. += step_x
+
+/atom/movable/true_y()
+	. = ..()
+	. += step_y
+
+/**
+  * Updates bounds of the object depending on its brotation define
+  *
+  * Called on setDir and updates the bounds accordingly
+  * Unless you have some really weird rotation try to implement a generic version of your rotation here and make a flag for it
+  * Arguments:
+  * * olddir - The old direction
+  * * newdir - The new direction
+  */
+/atom/movable/proc/update_bounds(olddir, newdir)
+	SEND_SIGNAL(src, COMSIG_MOVABLE_UPDATE_BOUNDS, args)
+
+	if(newdir == olddir) // the direction hasn't changed
+		return
+	if(bound_width == bound_height && !bound_x && !bound_y) // We're a square and have no offset
+		return
+
+	if(brotation & BOUNDS_SIMPLE_ROTATE)
+		var/rot = SIMPLIFY_DEGREES(dir2angle(newdir)-dir2angle(olddir))
+		for(var/i in 90 to rot step 90)
+			var/tempwidth = bound_width
+			var/eastgap = CEILING(bound_width, 32) - bound_width - bound_x
+
+			bound_width = bound_height
+			bound_height = tempwidth
+
+			bound_x = bound_y
+			bound_y = eastgap
+
+///Sets the anchored var and returns if it was sucessfully changed or not.
+/atom/movable/proc/set_anchored(anchorvalue)
+	SHOULD_CALL_PARENT(TRUE)
+	if(anchored == anchorvalue)
+		return
+	. = anchored
+	anchored = anchorvalue
+	set_sidestep(!anchored)
+	SEND_SIGNAL(src, COMSIG_MOVABLE_SET_ANCHORED, anchorvalue)
+
+/atom/movable/proc/forceMove(atom/destination, _step_x=0, _step_y=0)
 	. = FALSE
+	if(islist(destination))
+		if(length(destination) > 2)
+			_step_x  = destination[2]
+			_step_y = destination[3]
+		destination = get_turf(destination[1])
 	if(destination)
-		. = doMove(destination)
+		. = doMove(destination, _step_x, _step_y)
 	else
 		CRASH("No valid destination passed into forceMove")
+
+/// sets the step_ offsets to AM, or if AM is null sets the step_ values to the offsets
+/**
+  * sets the step_ offsets to that of AM, or if AM is null sets the step_ values to the offsets
+  *
+  * Pixel counterpart of forceMove
+  * should be used when only wanting to set the step values
+  * can either pass a movable you want to copy step values from
+  * leave AM null and input step_ values manually
+  * Arguments:
+  * * AM - The movable we want to copy step_ values from
+  * * _step_x - Alternative step_x value when AM is null
+  * * _step_y - Alternative step_y value when AM is null
+  */
+/atom/movable/proc/forceStep(atom/movable/AM=null, _step_x=0, _step_y=0)
+	if(!AM)
+		step_x = _step_x
+		step_y = _step_y
+	else
+		step_x = AM.step_x
+		step_y = AM.step_y
 
 /atom/movable/proc/moveToNullspace()
 	return doMove(null)
 
-/atom/movable/proc/doMove(atom/destination)
+/atom/movable/proc/doMove(atom/destination, _step_x=0, _step_y=0)
 	. = FALSE
-	if(destination)
-		if(pulledby)
-			pulledby.stop_pulling()
-		var/atom/oldloc = loc
-		var/same_loc = oldloc == destination
-		var/area/old_area = get_area(oldloc)
-		var/area/destarea = get_area(destination)
 
-		loc = destination
-		moving_diagonally = 0
+	if(destination == loc) // Force move in place?
+		Moved(loc, NONE, TRUE)
+		return TRUE
 
-		if(!same_loc)
-			if(oldloc)
-				oldloc.Exited(src, destination)
-				if(old_area && old_area != destarea)
-					old_area.Exited(src, destination)
-			for(var/atom/movable/AM in oldloc)
-				AM.Uncrossed(src)
-			var/turf/oldturf = get_turf(oldloc)
-			var/turf/destturf = get_turf(destination)
-			var/old_z = (oldturf ? oldturf.z : null)
-			var/dest_z = (destturf ? destturf.z : null)
-			if (old_z != dest_z)
-				onTransitZ(old_z, dest_z)
-			destination.Entered(src, oldloc)
-			if(destarea && old_area != destarea)
-				destarea.Entered(src, oldloc)
+	var/atom/oldloc = loc
+	var/area/oldarea = get_area(oldloc)
+	var/area/destarea = get_area(destination)
+	var/list/old_bounds = obounds()
 
-			for(var/atom/movable/AM in destination)
-				if(AM == src)
-					continue
-				AM.Crossed(src, oldloc)
+	loc = destination
+	step_x = _step_x
+	step_y = _step_y
 
-		Moved(oldloc, NONE, TRUE)
-		. = TRUE
+	if(oldloc && oldloc != loc)
+		oldloc.Exited(src, destination)
+		if(oldarea && oldarea != destarea)
+			oldarea.Exited(src, destination)
 
-	//If no destination, move the atom into nullspace (don't do this unless you know what you're doing)
-	else
-		. = TRUE
-		if (loc)
-			var/atom/oldloc = loc
-			var/area/old_area = get_area(oldloc)
-			oldloc.Exited(src, null)
-			if(old_area)
-				old_area.Exited(src, null)
-		loc = null
+	var/list/new_bounds = obounds()
+
+	for(var/i in old_bounds)
+		if(i in new_bounds)
+			continue
+		var/atom/thing = i
+		thing.Uncrossed(src)
+
+	if(pulledby || pulling)
+		check_pulling()
+
+	if(!loc) // I hope you know what you're doing
+		return TRUE
+
+	var/turf/oldturf = get_turf(oldloc)
+	var/turf/destturf = get_turf(destination)
+	var/oldz = (oldturf ? oldturf.z : null)
+	var/newz = (destturf ? destturf.z : null)
+	if(oldz != newz)
+		onTransitZ(oldz, newz)
+
+	destination.Entered(src, oldloc)
+	if(destarea && oldarea != destarea)
+		destarea.Entered(src, oldloc)
+
+	for(var/i in new_bounds)
+		if(i in old_bounds)
+			continue
+		var/atom/thing = i
+		thing.Crossed(src, oldloc)
+
+	Moved(oldloc, NONE, TRUE)
+	return TRUE
+
 
 /atom/movable/proc/onTransitZ(old_z,new_z)
 	SEND_SIGNAL(src, COMSIG_MOVABLE_Z_CHANGED, old_z, new_z)
@@ -574,22 +640,26 @@
 	if(impact_signal & COMPONENT_MOVABLE_IMPACT_FLIP_HITPUSH)
 		hitpush = FALSE // hacky, tie this to something else or a proper workaround later
 
-	if(impact_signal & ~COMPONENT_MOVABLE_IMPACT_NEVERMIND) // in case a signal interceptor broke or deleted the thing before we could process our hit
+	if(!(impact_signal && (impact_signal & COMPONENT_MOVABLE_IMPACT_NEVERMIND))) // in case a signal interceptor broke or deleted the thing before we could process our hit
 		return hit_atom.hitby(src, throwingdatum=throwingdatum, hitpush=hitpush)
 
 /atom/movable/hitby(atom/movable/AM, skipcatch, hitpush = TRUE, blocked, datum/thrownthing/throwingdatum)
 	if(!anchored && hitpush && (!throwingdatum || (throwingdatum.force >= (move_resist * MOVE_FORCE_PUSH_RATIO))))
-		step(src, AM.dir)
+		step(src, AM.dir, 16)
 	..()
 
-/atom/movable/proc/safe_throw_at(atom/target, range, speed, mob/thrower, spin = TRUE, diagonals_first = FALSE, datum/callback/callback, force = MOVE_FORCE_STRONG, gentle = FALSE)
+/atom/movable/proc/safe_throw_at(atom/target, range, speed, mob/thrower, spin = TRUE, diagonals_first = FALSE, datum/callback/callback, force = MOVE_FORCE_STRONG, gentle = FALSE, params)
 	if((force < (move_resist * MOVE_FORCE_THROW_RATIO)) || (move_resist == INFINITY))
 		return
-	return throw_at(target, range, speed, thrower, spin, diagonals_first, callback, force, gentle)
+	return throw_at(target, range, speed, thrower, spin, diagonals_first, callback, force, gentle, TRUE, params)
 
 ///If this returns FALSE then callback will not be called.
-/atom/movable/proc/throw_at(atom/target, range, speed, mob/thrower, spin = TRUE, diagonals_first = FALSE, datum/callback/callback, force = MOVE_FORCE_STRONG, gentle = FALSE)
+/atom/movable/proc/throw_at(atom/target, range, speed, mob/thrower, spin = TRUE, diagonals_first = FALSE, datum/callback/callback, force = MOVE_FORCE_STRONG, gentle = FALSE, quickstart = TRUE, params)
 	. = FALSE
+
+	if(QDELETED(src))
+		CRASH("Qdeleted thing being thrown around.")
+
 	if (!target || speed <= 0)
 		return
 
@@ -625,21 +695,16 @@
 
 	. = TRUE // No failure conditions past this point.
 
-	var/datum/thrownthing/TT = new()
-	TT.thrownthing = src
-	TT.target = target
-	TT.target_turf = get_turf(target)
-	TT.init_dir = get_dir(src, target)
-	TT.maxrange = range
-	TT.speed = speed
-	TT.thrower = thrower
-	TT.diagonals_first = diagonals_first
-	TT.force = force
-	TT.gentle = gentle
-	TT.callback = callback
-	if(!QDELETED(thrower))
-		TT.target_zone = thrower.zone_selected
+	var/target_zone
+	if(QDELETED(thrower))
+		thrower = null //Let's not pass a qdeleting reference if any.
+	else
+		target_zone = thrower.zone_selected
 
+	var/datum/thrownthing/TT = new(src, target, get_turf(target), get_dir(src, target), range, speed, thrower, diagonals_first, force, gentle, callback, target_zone)
+	if(thrower && params)
+		var/list/calculated = calculate_projectile_angle_and_pixel_offsets(thrower, params)
+		TT.angle = calculated[1]
 	var/dist_x = abs(target.x - src.x)
 	var/dist_y = abs(target.y - src.y)
 	var/dx = (target.x > src.x) ? EAST : WEST
@@ -666,6 +731,10 @@
 		pulledby.stop_pulling()
 
 	throwing = TT
+
+	if(TT.hitcheck())
+		return
+
 	if(spin)
 		SpinAnimation(5, 1)
 
@@ -673,13 +742,14 @@
 	SSthrowing.processing[src] = TT
 	if (SSthrowing.state == SS_PAUSED && length(SSthrowing.currentrun))
 		SSthrowing.currentrun[src] = TT
-	TT.tick()
+	if (quickstart)
+		TT.tick()
 
-/atom/movable/proc/handle_buckled_mob_movement(newloc,direct)
+/atom/movable/proc/handle_buckled_mob_movement(newloc,direct, _step_x, _step_y)
 	for(var/m in buckled_mobs)
 		var/mob/living/buckled_mob = m
-		if(!buckled_mob.Move(newloc, direct))
-			forceMove(buckled_mob.loc)
+		if(!buckled_mob.Move(newloc, direct, _step_x, _step_y))
+			forceMove(buckled_mob.loc, buckled_mob.step_x, buckled_mob.step_y)
 			last_move = buckled_mob.last_move
 			inertia_dir = last_move
 			buckled_mob.inertia_dir = last_move
@@ -714,16 +784,15 @@
 	return blocker_opinion
 
 /// called when this atom is removed from a storage item, which is passed on as S. The loc variable is already set to the new destination before this is called.
-/atom/movable/proc/on_exit_storage(datum/component/storage/concrete/S)
-	return
+/atom/movable/proc/on_exit_storage(datum/component/storage/concrete/master_storage)
+	SEND_SIGNAL(src, CONSIG_STORAGE_EXITED, master_storage)
 
 /// called when this atom is added into a storage item, which is passed on as S. The loc variable is already set to the storage item.
-/atom/movable/proc/on_enter_storage(datum/component/storage/concrete/S)
-	return
+/atom/movable/proc/on_enter_storage(datum/component/storage/concrete/master_storage)
+	SEND_SIGNAL(src, COMISG_STORAGE_ENTERED, master_storage)
 
 /atom/movable/proc/get_spacemove_backup()
-	var/atom/movable/dense_object_backup
-	for(var/A in orange(1, get_turf(src)))
+	for(var/A in obounds(src, 16))
 		if(isarea(A))
 			continue
 		else if(isturf(A))
@@ -734,11 +803,9 @@
 		else
 			var/atom/movable/AM = A
 			if(!AM.CanPass(src) || AM.density)
-				if(AM.anchored)
-					return AM
-				dense_object_backup = AM
-				break
-	. = dense_object_backup
+				if(AM.inertia_dir)
+					continue
+				return AM
 
 ///called when a mob resists while inside a container that is itself inside something.
 /atom/movable/proc/relay_container_resist(mob/living/user, obj/O)
@@ -753,20 +820,26 @@
 		return //don't do an animation if attacking self
 	var/pixel_x_diff = 0
 	var/pixel_y_diff = 0
+	var/turn_dir = 1
 
 	var/direction = get_dir(src, A)
 	if(direction & NORTH)
 		pixel_y_diff = 8
+		turn_dir = rand(50) ? -1 : 1
 	else if(direction & SOUTH)
 		pixel_y_diff = -8
+		turn_dir = rand(50) ? -1 : 1
 
 	if(direction & EAST)
 		pixel_x_diff = 8
 	else if(direction & WEST)
 		pixel_x_diff = -8
+		turn_dir = -1
 
-	animate(src, pixel_x = pixel_x + pixel_x_diff, pixel_y = pixel_y + pixel_y_diff, time = 2)
-	animate(src, pixel_x = pixel_x - pixel_x_diff, pixel_y = pixel_y - pixel_y_diff, time = 2)
+	var/matrix/initial_transform = matrix(transform)
+	var/matrix/rotated_transform = transform.Turn(15 * turn_dir)
+	animate(src, pixel_x = pixel_x + pixel_x_diff, pixel_y = pixel_y + pixel_y_diff, transform=rotated_transform, time = 1, easing=BACK_EASING|EASE_IN)
+	animate(pixel_x = pixel_x - pixel_x_diff, pixel_y = pixel_y - pixel_y_diff, transform=initial_transform, time = 2, easing=SINE_EASING)
 
 /atom/movable/proc/do_item_attack_animation(atom/A, visual_effect_icon, obj/item/used_item)
 	var/image/I
@@ -777,21 +850,21 @@
 		I.plane = GAME_PLANE
 
 		// Scale the icon.
-		I.transform *= 0.75
+		I.transform *= 0.4
 		// The icon should not rotate.
 		I.appearance_flags = APPEARANCE_UI_IGNORE_ALPHA
 
 		// Set the direction of the icon animation.
 		var/direction = get_dir(src, A)
 		if(direction & NORTH)
-			I.pixel_y = -16
+			I.pixel_y = -12
 		else if(direction & SOUTH)
-			I.pixel_y = 16
+			I.pixel_y = 12
 
 		if(direction & EAST)
-			I.pixel_x = -16
+			I.pixel_x = -14
 		else if(direction & WEST)
-			I.pixel_x = 16
+			I.pixel_x = 14
 
 		if(!direction) // Attacked self?!
 			I.pixel_z = 16
@@ -799,10 +872,12 @@
 	if(!I)
 		return
 
-	flick_overlay(I, GLOB.clients, 5) // 5 ticks/half a second
+	flick_overlay(I, GLOB.clients, 10)
 
 	// And animate the attack!
-	animate(I, alpha = 175, pixel_x = 0, pixel_y = 0, pixel_z = 0, time = 3)
+	animate(I, alpha = 175, transform = matrix() * 0.75, pixel_x = 0, pixel_y = 0, pixel_z = 0, time = 3)
+	animate(time = 1)
+	animate(alpha = 0, time = 3, easing = CIRCULAR_EASING|EASE_OUT)
 
 /atom/movable/vv_get_dropdown()
 	. = ..()
@@ -922,7 +997,13 @@
 /atom/movable/proc/ConveyorMove(movedir)
 	set waitfor = FALSE
 	if(!anchored && has_gravity())
-		step(src, movedir)
+		var/old_dir = dir
+		walk_for(src, movedir, 0, 7, until=1 SECONDS)
+		dir = old_dir
+		stoplag()
+
+/atom/movable/drop_location()
+	return list(get_turf(src), step_x, step_y)
 
 //Returns an atom's power cell, if it has one. Overload for individual items.
 /atom/movable/proc/get_cell()
@@ -943,12 +1024,31 @@
   * This exists to act as a hook for behaviour
   */
 /atom/movable/proc/setGrabState(newstate)
+	if(newstate == grab_state)
+		return
+	SEND_SIGNAL(src, COMSIG_MOVABLE_SET_GRAB_STATE, newstate)
+	. = grab_state
 	grab_state = newstate
+	switch(.) //Previous state.
+		if(GRAB_PASSIVE, GRAB_AGGRESSIVE)
+			if(grab_state >= GRAB_NECK)
+				ADD_TRAIT(pulling, TRAIT_IMMOBILIZED, CHOKEHOLD_TRAIT)
+	switch(grab_state) //Current state.
+		if(GRAB_PASSIVE, GRAB_AGGRESSIVE)
+			if(. >= GRAB_NECK)
+				REMOVE_TRAIT(pulling, TRAIT_IMMOBILIZED, CHOKEHOLD_TRAIT)
+
 
 /obj/item/proc/do_pickup_animation(atom/target)
 	set waitfor = FALSE
 	if(!istype(loc, /turf))
 		return
+	var/stepx = 0
+	var/stepy = 0
+	if(ismovable(target))
+		var/atom/movable/AM = target
+		stepx = AM.step_x
+		stepy = AM.step_y
 	var/image/I = image(icon = src, loc = loc, layer = layer + 0.1)
 	I.plane = GAME_PLANE
 	I.transform *= 0.75
@@ -961,15 +1061,19 @@
 	if(!QDELETED(T) && !QDELETED(target))
 		direction = get_dir(T, target)
 	if(direction & NORTH)
-		to_y = 32
+		to_y = 32 + stepy
 	else if(direction & SOUTH)
-		to_y = -32
+		to_y = -32 - stepy
 	if(direction & EAST)
-		to_x = 32
+		to_x = 32 + stepx
 	else if(direction & WEST)
-		to_x = -32
+		to_x = -32 - stepx
 	if(!direction)
-		to_y = 16
+		if(!(stepx || stepy))
+			to_y = 8
+		else
+			to_x = stepx
+			to_y = stepy
 	flick_overlay(I, GLOB.clients, 6)
 	var/matrix/M = new
 	M.Turn(pick(-30, 30))

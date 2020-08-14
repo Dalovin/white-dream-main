@@ -20,8 +20,8 @@
 	melee_damage_lower = 1
 	melee_damage_upper = 1
 	attack_same = 2
-	attack_verb_continuous = "chomps"
-	attack_verb_simple = "chomp"
+	attack_verb_continuous = "кусает"
+	attack_verb_simple = "кусает"
 	attack_sound = 'sound/weapons/bite.ogg'
 	faction = list("mushroom")
 	environment_smash = ENVIRONMENT_SMASH_NONE
@@ -35,7 +35,7 @@
 	deathmessage = "fainted."
 	var/cap_color = "#ffffff"
 	var/powerlevel = 0 //Tracks our general strength level gained from eating other shrooms
-	var/bruised = 0 //If someone tries to cheat the system by attacking a shroom to lower its health, punish them so that it wont award levels to shrooms that eat it
+	var/bruised = 0 //If someone tries to cheat the system by attacking a shroom to lower its health, punish them so that it won't award levels to shrooms that eat it
 	var/recovery_cooldown = 0 //So you can't repeatedly revive it during a fight
 	var/faint_ticker = 0 //If we hit three, another mushroom's gonna eat us
 	var/static/mutable_appearance/cap_living //Where we store our cap icons so we dont generate them constantly to update our icon
@@ -57,7 +57,7 @@
 	melee_damage_lower += rand(3, 5)
 	melee_damage_upper += rand(10,20)
 	maxHealth += rand(40,60)
-	move_to_delay = rand(3,11)
+	move_to_delay = rand(0.3,1.1)
 	cap_living = cap_living || mutable_appearance(icon, "mushroom_cap")
 	cap_dead = cap_dead || mutable_appearance(icon, "mushroom_cap_dead")
 

@@ -87,8 +87,8 @@
 						continue
 				var/expires = "Навсегда."
 				if(i["expiration_time"])
-					expires = "Блокировка на [DisplayTimeText(text2num(i["duration"]) MINUTES)] заканчивается в [i["expiration_time"]]."
-				var/desc = {"Доступ запрещён, ([i["key"]]). \nМетка: [html_decode(i["reason"])]. \nБлокировка #[i["id"]] выдана [i["admin_key"]] в [i["bantime"]] во время раунда [i["round_id"]]. \n[expires]"}
+					expires = "Блокировка на [DisplayTimeText(text2num(i["duration"]) MINUTES)] заканчивается в [i["expiration_time"]] по серверному времени."
+				var/desc = {"Доступ запрещён, ([i["key"]]). \nМетка: [html_decode(i["reason"])]. \nБлокировка #[i["id"]] выдана [i["bantime"]] во время раунда [i["round_id"]]. \n[expires]"}
 				log_access("Failed Login: [key] [computer_id] [address] - Banned (#[i["id"]])")
 				return list("reason"="Banned","desc"="[desc]")
 	if (admin)
@@ -192,9 +192,18 @@
 		if (ban["fromdb"])
 			if(SSdbcore.Connect())
 				INVOKE_ASYNC(SSdbcore, /datum/controller/subsystem/dbcore/proc.QuerySelect, list(
-					SSdbcore.NewQuery("INSERT INTO [format_table_name("stickyban_matched_ckey")] (matched_ckey, stickyban) VALUES ('[sanitizeSQL(ckey)]', '[sanitizeSQL(bannedckey)]') ON DUPLICATE KEY UPDATE last_matched = now()"),
-					SSdbcore.NewQuery("INSERT INTO [format_table_name("stickyban_matched_ip")] (matched_ip, stickyban) VALUES ( INET_ATON('[sanitizeSQL(address)]'), '[sanitizeSQL(bannedckey)]') ON DUPLICATE KEY UPDATE last_matched = now()"),
-					SSdbcore.NewQuery("INSERT INTO [format_table_name("stickyban_matched_cid")] (matched_cid, stickyban) VALUES ('[sanitizeSQL(computer_id)]', '[sanitizeSQL(bannedckey)]') ON DUPLICATE KEY UPDATE last_matched = now()")
+					SSdbcore.NewQuery(
+						"INSERT INTO [format_table_name("stickyban_matched_ckey")] (matched_ckey, stickyban) VALUES (:ckey, :bannedckey) ON DUPLICATE KEY UPDATE last_matched = now()",
+						list("ckey" = ckey, "bannedckey" = bannedckey)
+					),
+					SSdbcore.NewQuery(
+						"INSERT INTO [format_table_name("stickyban_matched_ip")] (matched_ip, stickyban) VALUES (INET_ATON(:address), :bannedckey) ON DUPLICATE KEY UPDATE last_matched = now()",
+						list("address" = address, "bannedckey" = bannedckey)
+					),
+					SSdbcore.NewQuery(
+						"INSERT INTO [format_table_name("stickyban_matched_cid")] (matched_cid, stickyban) VALUES (:computer_id, :bannedckey) ON DUPLICATE KEY UPDATE last_matched = now()",
+						list("computer_id" = computer_id, "bannedckey" = bannedckey)
+					)
 				), FALSE, TRUE)
 
 
@@ -209,7 +218,7 @@
 			return null
 
 		if (C) //user is already connected!.
-			to_chat(C, "Возможно у вас проблемы. Если повторилось, то @Valtos#7828 поможет решить проблему.", confidential = TRUE)
+			to_chat(C, "Возможно у вас проблемы. Если повторилось, то @Valtos#9999 поможет решить проблему.", confidential = TRUE)
 
 		var/desc = "\nПопробуйте лучше, ([bannedckey]). Метка:\n[html_decode(ban["message"])]\nВыдан [ban["admin"]]\n"
 		. = list("reason" = "Stickyban", "desc" = desc)

@@ -36,7 +36,8 @@
 /turf/open/lava/airless
 	initial_gas_mix = AIRLESS_ATMOS
 
-/turf/open/lava/Entered(atom/movable/AM)
+/turf/open/lava/Cross(atom/movable/AM)
+	. = ..()
 	if(burn_stuff(AM))
 		START_PROCESSING(SSobj, src)
 
@@ -44,7 +45,9 @@
 	. = ..()
 	if(isliving(Obj))
 		var/mob/living/L = Obj
-		if(!islava(newloc) && !L.on_fire)
+		if(!islava(newloc))
+			REMOVE_TRAIT(L, TRAIT_PERMANENTLY_ONFIRE, TURF_TRAIT)
+		if(!L.on_fire)
 			L.update_fire()
 
 /turf/open/lava/hitby(atom/movable/AM, skipcatch, hitpush, blocked, datum/thrownthing/throwingdatum)
@@ -156,9 +159,6 @@
 				if("lava" in live.weather_immunities)
 					continue
 
-			if(!L.on_fire)
-				L.update_fire()
-
 			if(iscarbon(L))
 				var/mob/living/carbon/C = L
 				var/obj/item/clothing/S = C.get_item_by_slot(ITEM_SLOT_OCLOTHING)
@@ -170,6 +170,9 @@
 			if("lava" in L.weather_immunities)
 				continue
 
+			ADD_TRAIT(L, TRAIT_PERMANENTLY_ONFIRE,TURF_TRAIT)
+			L.update_fire()
+
 			L.adjustFireLoss(20)
 			if(L) //mobs turning into object corpses could get deleted here.
 				L.adjust_fire_stacks(20)
@@ -180,7 +183,7 @@
 	baseturfs = /turf/open/lava/smooth
 	icon = 'icons/turf/floors/lava.dmi'
 	icon_state = "unsmooth"
-	smooth = SMOOTH_MORE | SMOOTH_BORDER
+	smoothing_flags = SMOOTH_MORE | SMOOTH_BORDER
 	canSmoothWith = list(/turf/open/lava/smooth)
 
 /turf/open/lava/smooth/lava_land_surface

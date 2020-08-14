@@ -1,10 +1,11 @@
 /obj/item/tank
 	name = "tank"
-	icon = 'code/shitcode/valtos/icons/tank.dmi'
+	icon = 'white/valtos/icons/tank.dmi'
 	lefthand_file = 'icons/mob/inhands/equipment/tanks_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/tanks_righthand.dmi'
 	flags_1 = CONDUCT_1
 	slot_flags = ITEM_SLOT_BACK
+	worn_icon = 'icons/mob/clothing/back.dmi' //since these can also get thrown into suit storage slots. if something goes on the belt, set this to null.
 	hitsound = 'sound/weapons/smash.ogg'
 	pressure_resistance = ONE_ATMOSPHERE * 5
 	force = 5
@@ -56,7 +57,7 @@
 	. = ..()
 
 	air_contents = new(volume) //liters
-	air_contents.temperature = T20C
+	air_contents.set_temperature(T20C)
 
 	populate_gas()
 
@@ -67,7 +68,7 @@
 
 /obj/item/tank/Destroy()
 	if(air_contents)
-		qdel(air_contents)
+		QDEL_NULL(air_contents)
 
 	STOP_PROCESSING(SSobj, src)
 	. = ..()
@@ -84,7 +85,7 @@
 
 	. += "<span class='notice'>The pressure gauge reads [round(src.air_contents.return_pressure(),0.01)] kPa.</span>"
 
-	var/celsius_temperature = src.air_contents.temperature-T0C
+	var/celsius_temperature = src.air_contents.return_temperature()-T0C
 	var/descriptive
 
 	if (celsius_temperature < 20)
@@ -141,11 +142,13 @@
 	else
 		. = ..()
 
-/obj/item/tank/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, \
-									datum/tgui/master_ui = null, datum/ui_state/state = GLOB.hands_state)
-	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+/obj/item/tank/ui_state(mob/user)
+	return GLOB.hands_state
+
+/obj/item/tank/ui_interact(mob/user, datum/tgui/ui)
+	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
-		ui = new(user, src, ui_key, "tanks", name, 400, 120, master_ui, state)
+		ui = new(user, src, "Tank", name)
 		ui.open()
 
 /obj/item/tank/ui_data(mob/user)
@@ -210,7 +213,7 @@
 	var/tank_pressure = air_contents.return_pressure()
 	var/actual_distribute_pressure = clamp(tank_pressure, 0, distribute_pressure)
 
-	var/moles_needed = actual_distribute_pressure*volume_to_return/(R_IDEAL_GAS_EQUATION*air_contents.temperature)
+	var/moles_needed = actual_distribute_pressure*volume_to_return/(R_IDEAL_GAS_EQUATION*air_contents.return_temperature())
 
 	return remove_air(moles_needed)
 
@@ -239,7 +242,7 @@
 		var/turf/epicenter = get_turf(loc)
 
 
-		explosion(epicenter, round(range*0.25), round(range*0.5), round(range), round(range*1.5), initiatorckey = fingerprintslast)
+		explosion(epicenter, round(range*0.25), round(range*0.5), round(range), round(range*1.5))
 		if(istype(src.loc, /obj/item/transfer_valve))
 			qdel(src.loc)
 		else

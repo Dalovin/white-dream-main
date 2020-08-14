@@ -3,11 +3,17 @@
 	desc = "It's a basic storage unit."
 	icon = 'icons/obj/closet.dmi'
 	icon_state = "generic"
+	layer = ABOVE_MOB_LAYER
 	density = TRUE
 	drag_slowdown = 1.5		// Same as a prone mob
 	max_integrity = 200
 	integrity_failure = 0.25
 	armor = list("melee" = 20, "bullet" = 10, "laser" = 10, "energy" = 0, "bomb" = 10, "bio" = 0, "rad" = 0, "fire" = 70, "acid" = 60)
+
+	bound_height = 24
+	bound_width = 16
+	bound_x = 10
+	brotation = NONE // We dont want none of that rotation shit
 
 	var/icon_door = null
 	var/icon_door_override = FALSE //override to have open overlay use icon different to its base's
@@ -46,11 +52,6 @@
 	update_icon()
 	PopulateContents()
 
-	RegisterSignal(src, COMSIG_ATOM_CANREACH, .proc/canreach_react)
-
-/obj/structure/closet/proc/canreach_react(datum/source, list/next)
-	return COMPONENT_BLOCK_REACH //closed block, open have nothing inside.
-
 //USE THIS TO FILL IT, NOT INITIALIZE OR NEW
 /obj/structure/closet/proc/PopulateContents()
 	return
@@ -61,8 +62,10 @@
 
 /obj/structure/closet/update_icon()
 	. = ..()
+	if (istype(src, /obj/structure/closet/supplypod))
+		return
 	if(!opened)
-		layer = OBJ_LAYER
+		layer = ABOVE_MOB_LAYER
 	else
 		layer = BELOW_OBJ_LAYER
 
@@ -115,11 +118,12 @@
 	if(wall_mounted)
 		return TRUE
 
-/obj/structure/closet/proc/can_open(mob/living/user)
+/obj/structure/closet/proc/can_open(mob/living/user, force = FALSE)
+	if(force)
+		return TRUE
 	if(welded || locked)
 		return FALSE
-	var/turf/T = get_turf(src)
-	for(var/mob/living/L in T)
+	for(var/mob/living/L in obounds())
 		if(L.anchored || horizontal && L.mob_size > MOB_SIZE_TINY && L.density)
 			if(user)
 				to_chat(user, "<span class='danger'>There's something large on top of [src], preventing it from opening.</span>" )
@@ -127,11 +131,10 @@
 	return TRUE
 
 /obj/structure/closet/proc/can_close(mob/living/user)
-	var/turf/T = get_turf(src)
-	for(var/obj/structure/closet/closet in T)
-		if(closet != src && !closet.wall_mounted)
+	for(var/obj/structure/closet/closet in obounds())
+		if(!closet.wall_mounted)
 			return FALSE
-	for(var/mob/living/L in T)
+	for(var/mob/living/L in obounds())
 		if(L.anchored || horizontal && L.mob_size > MOB_SIZE_TINY && L.density)
 			if(user)
 				to_chat(user, "<span class='danger'>There's something too large in [src], preventing it from closing.</span>")
@@ -139,23 +142,26 @@
 	return TRUE
 
 /obj/structure/closet/dump_contents()
-	var/atom/L = drop_location()
+	var/atom/L = drop_location()[1]
 	for(var/atom/movable/AM in src)
-		AM.forceMove(L)
+		AM.forceMove(L, step_x, step_y)
 		if(throwing) // you keep some momentum when getting out of a thrown closet
 			step(AM, dir)
 	if(throwing)
 		throwing.finalize(FALSE)
 
 /obj/structure/closet/proc/take_contents()
-	var/atom/L = drop_location()
-	for(var/atom/movable/AM in L)
-		if(AM != src && insert(AM) == -1) // limit reached
+	for(var/atom/movable/thing in bounds())
+		if(insert(thing) == -1) // limit reached
 			break
 
-/obj/structure/closet/proc/open(mob/living/user)
-	if(opened || !can_open(user))
+/obj/structure/closet/proc/open(mob/living/user, force = FALSE)
+	if(!can_open(user, force))
 		return
+	if(opened)
+		return
+	welded = FALSE
+	locked = FALSE
 	playsound(loc, open_sound, open_sound_volume, TRUE, -3)
 	opened = TRUE
 	if(!dense_when_open)
@@ -163,7 +169,7 @@
 	climb_time *= 0.5 //it's faster to climb onto an open thing
 	dump_contents()
 	update_icon()
-	return 1
+	return TRUE
 
 /obj/structure/closet/proc/insert(atom/movable/AM)
 	if(contents.len >= storage_capacity)
@@ -240,7 +246,7 @@
 	else
 		return ..()
 
-/obj/structure/closet/proc/tool_interact(obj/item/W, mob/user)//returns TRUE if attackBy call shouldnt be continued (because tool was used/closet was of wrong type), FALSE if otherwise
+/obj/structure/closet/proc/tool_interact(obj/item/W, mob/user)//returns TRUE if attackBy call shouldn't be continued (because tool was used/closet was of wrong type), FALSE if otherwise
 	. = TRUE
 	if(opened)
 		if(istype(W, cutting_tool))
@@ -281,7 +287,7 @@
 	else if(W.tool_behaviour == TOOL_WRENCH && anchorable)
 		if(isinspace() && !anchored)
 			return
-		setAnchored(!anchored)
+		set_anchored(!anchored)
 		W.play_tool_sound(src, 75)
 		user.visible_message("<span class='notice'>[user] [anchored ? "anchored" : "unanchored"] \the [src] [anchored ? "to" : "from"] the ground.</span>", \
 						"<span class='notice'>You [anchored ? "anchored" : "unanchored"] \the [src] [anchored ? "to" : "from"] the ground.</span>", \
@@ -331,8 +337,11 @@
 			var/mob/living/L = O
 			if(!issilicon(L))
 				L.Paralyze(40)
-			O.forceMove(T)
-			close()
+			if(istype(src, /obj/structure/closet/supplypod/extractionpod))
+				O.forceMove(src, step_x, step_y)
+			else
+				O.forceMove(T, step_x, step_y)
+				close()
 	else
 		O.forceMove(T)
 	return 1
@@ -370,7 +379,7 @@
 
 /obj/structure/closet/verb/verb_toggleopen()
 	set src in view(1)
-	set category = "ОБЪЕКТ"
+	set category = "Объект"
 	set name = "Toggle Open"
 
 	if(!usr.canUseTopic(src, BE_CLOSE) || !isturf(loc))
@@ -385,10 +394,13 @@
 // and due to an oversight in turf/Enter() were going through walls.  That
 // should be independently resolved, but this is also an interesting twist.
 /obj/structure/closet/Exit(atom/movable/AM)
-	open()
+	. = ..()
 	if(AM.loc == src)
-		return 0
-	return 1
+		return FALSE
+
+/obj/structure/closet/Exited(atom/movable/AM, atom/newLoc)
+	. = ..()
+	open()
 
 /obj/structure/closet/container_resist(mob/living/user)
 	if(opened)
@@ -491,8 +503,13 @@
 
 /obj/structure/closet/contents_explosion(severity, target)
 	for(var/atom/A in contents)
-		A.ex_act(severity, target)
-		CHECK_TICK
+		switch(severity)
+			if(EXPLODE_DEVASTATE)
+				SSexplosions.highobj += A
+			if(EXPLODE_HEAVY)
+				SSexplosions.medobj += A
+			if(EXPLODE_LIGHT)
+				SSexplosions.lowobj += A
 
 /obj/structure/closet/singularity_act()
 	dump_contents()
@@ -517,11 +534,11 @@
 	step_towards(user, T2)
 	T1 = get_turf(user)
 	if(T1 == T2)
-		user.resting = TRUE //so people can jump into crates without slamming the lid on their head
+		user.set_resting(TRUE) //so people can jump into crates without slamming the lid on their head
 		if(!close(user))
 			to_chat(user, "<span class='warning'>You can't get [src] to close!</span>")
-			user.resting = FALSE
+			user.set_resting(FALSE)
 			return
-		user.resting = FALSE
+		user.set_resting(FALSE)
 		togglelock(user)
 		T1.visible_message("<span class='warning'>[user] dives into [src]!</span>")

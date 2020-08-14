@@ -63,7 +63,7 @@
 
 
 /mob/living/simple_animal/bot/secbot/beepsky/explode()
-	var/atom/Tsec = drop_location()
+	var/atom/Tsec = drop_location()[1]
 	new /obj/item/stock_parts/cell/potato(Tsec)
 	var/obj/item/reagent_containers/food/drinks/drinkingglass/shotglass/S = new(Tsec)
 	S.reagents.add_reagent(/datum/reagent/consumable/ethanol/whiskey, 15)
@@ -133,7 +133,7 @@ Maintenance panel panel is [open ? "opened" : "closed"]"},
 
 "<A href='?src=[REF(src)];power=1'>[on ? "On" : "Off"]</A>" )
 
-	if(!locked || issilicon(user) || IsAdminGhost(user))
+	if(!locked || issilicon(user) || isAdminGhostAI(user))
 		dat += text({"<BR>
 Arrest Unidentifiable Persons: []<BR>
 Arrest for Unauthorized Weapons: []<BR>
@@ -267,7 +267,7 @@ Auto Patrol: []"},
 	if(!C.handcuffed)
 		C.handcuffed = new /obj/item/restraints/handcuffs/cable/zipties/used(C)
 		C.update_handcuffed()
-		playsound(src, "law", 50, FALSE)
+		playsound(src, "law_russian", 50, FALSE)
 		back_to_idle()
 
 /mob/living/simple_animal/bot/secbot/proc/stun_attack(mob/living/carbon/C, harm = FALSE)
@@ -276,6 +276,11 @@ Auto Patrol: []"},
 	icon_state = "[initial(icon_state)]-c"
 	addtimer(CALLBACK(src, /atom/.proc/update_icon), 2)
 	var/threat = 5
+
+	if(prob(15))
+		C.visible_message("<span class='danger'><b>[capitalize(src.name)]</b> промахивается, пытаясь ударить <b>[C]</b>!</span>",\
+								"<span class='userdanger'>[capitalize(src.name)] промахивается пытаясь ударить меня!</span>")
+		return FALSE
 
 	if(harm)
 		weapon.attack(C, src)
@@ -293,8 +298,8 @@ Auto Patrol: []"},
 	if(declare_arrests)
 		var/area/location = get_area(src)
 		speak("[arrest_type ? "Detaining" : "Arresting"] level [threat] scumbag <b>[C]</b> in [location].", radio_channel)
-	C.visible_message("<span class='danger'>[src] stuns [C]!</span>",\
-							"<span class='userdanger'>[src] stuns you!</span>")
+	C.visible_message("<span class='danger'><b>[capitalize(src.name)]</b> бьёт шокером <b>[C]</b>!</span>",\
+							"<span class='userdanger'>[capitalize(src.name)] бьёт меня шокером!</span>")
 
 /mob/living/simple_animal/bot/secbot/handle_automated_action()
 	if(!..())
@@ -325,13 +330,13 @@ Auto Patrol: []"},
 						stun_attack(target)
 
 					mode = BOT_PREP_ARREST
-					anchored = TRUE
+					set_anchored(TRUE)
 					target_lastloc = target.loc
 					return
 
 				else								// not next to perp
 					var/turf/olddist = get_dist(src, target)
-					walk_to(src, target,1,4)
+					walk_to(src, target,1,0.4)
 					if((get_dist(src, target)) >= (olddist))
 						frustration++
 					else
@@ -359,7 +364,7 @@ Auto Patrol: []"},
 
 		if(BOT_ARREST)
 			if(!target)
-				anchored = FALSE
+				set_anchored(FALSE)
 				mode = BOT_IDLE
 				last_found = world.time
 				frustration = 0
@@ -377,7 +382,7 @@ Auto Patrol: []"},
 				return
 			else //Try arresting again if the target escapes.
 				mode = BOT_PREP_ARREST
-				anchored = FALSE
+				set_anchored(FALSE)
 
 		if(BOT_START_PATROL)
 			look_for_perp()
@@ -427,15 +432,16 @@ Auto Patrol: []"},
 			if(ranged)
 				playsound(src, pick('sound/voice/ed209_20sec.ogg', 'sound/voice/edplaceholder.ogg'), 50, FALSE)
 			else
-				playsound(src, pick('sound/voice/beepsky/criminal.ogg', 'sound/voice/beepsky/justice.ogg', 'sound/voice/beepsky/freeze.ogg'), 50, FALSE)
-			visible_message("<b>[src]</b> points at [C.name]!")
+				//playsound(src, pick('sound/voice/beepsky/criminal.ogg', 'sound/voice/beepsky/justice.ogg', 'sound/voice/beepsky/freeze.ogg'), 50, FALSE)
+				playsound(loc, pick('white/valtos/sounds/beepsky_russian/criminal.ogg', 'white/valtos/sounds/beepsky_russian/justice.ogg', 'white/valtos/sounds/beepsky_russian/freeze.ogg'), 50, FALSE)
+			visible_message("<b>[capitalize(src)]</b> points at [C.name]!")
 			mode = BOT_HUNT
 			INVOKE_ASYNC(src, .proc/handle_automated_action)
 			break
 		else
 			continue
 
-/mob/living/simple_animal/bot/secbot/proc/check_for_weapons(var/obj/item/slot_item)
+/mob/living/simple_animal/bot/secbot/proc/check_for_weapons(obj/item/slot_item)
 	if(slot_item && (slot_item.item_flags & NEEDS_PERMIT))
 		return TRUE
 	return FALSE
@@ -444,7 +450,7 @@ Auto Patrol: []"},
 
 	walk_to(src,0)
 	visible_message("<span class='boldannounce'>[src] blows apart!</span>")
-	var/atom/Tsec = drop_location()
+	var/atom/Tsec = drop_location()[1]
 	if(ranged)
 		var/obj/item/bot_assembly/ed209/Sa = new (Tsec)
 		Sa.build_step = 1
@@ -479,7 +485,7 @@ Auto Patrol: []"},
 	new /obj/effect/decal/cleanable/oil(loc)
 	..()
 
-/mob/living/simple_animal/bot/secbot/attack_alien(var/mob/living/carbon/alien/user as mob)
+/mob/living/simple_animal/bot/secbot/attack_alien(mob/living/carbon/alien/user as mob)
 	..()
 	if(!isalien(target))
 		target = user

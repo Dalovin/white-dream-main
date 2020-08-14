@@ -9,14 +9,14 @@
 	icon_dead = "Basilisk_dead"
 	icon_gib = "syndicate_gib"
 	mob_biotypes = MOB_ORGANIC|MOB_BEAST
-	move_to_delay = 20
+	move_to_delay = 0.2
 	projectiletype = /obj/projectile/temp/basilisk
 	projectilesound = 'sound/weapons/pierce.ogg'
 	ranged = 1
 	ranged_message = "stares"
 	ranged_cooldown_time = 30
 	throw_message = "does nothing against the hard shell of"
-	vision_range = 2
+	vision_range = 64
 	speed = 3
 	maxHealth = 200
 	health = 200
@@ -24,11 +24,11 @@
 	obj_damage = 60
 	melee_damage_lower = 12
 	melee_damage_upper = 12
-	attack_verb_continuous = "bites into"
-	attack_verb_simple = "bite into"
+	attack_verb_continuous = "вгрызается в"
+	attack_verb_simple = "вгрызается в"
 	speak_emote = list("chitters")
 	attack_sound = 'sound/weapons/bladeslice.ogg'
-	aggro_vision_range = 9
+	aggro_vision_range = 288
 	turns_per_move = 5
 	gold_core_spawnable = HOSTILE_SPAWN
 	loot = list(/obj/item/stack/ore/diamond{layer = ABOVE_MOB_LAYER},
@@ -81,7 +81,7 @@
 			projectiletype = /obj/projectile/temp/basilisk/heated
 			addtimer(CALLBACK(src, .proc/cool_down), 3000)
 
-mob/living/simple_animal/hostile/asteroid/basilisk/proc/cool_down()
+/mob/living/simple_animal/hostile/asteroid/basilisk/proc/cool_down()
 	visible_message("<span class='warning'>[src] appears to be cooling down...</span>")
 	if(stat != DEAD)
 		icon_state = "Basilisk"
@@ -103,8 +103,8 @@ mob/living/simple_animal/hostile/asteroid/basilisk/proc/cool_down()
 	throw_message = "bounces harmlessly off of"
 	melee_damage_lower = 15
 	melee_damage_upper = 15
-	attack_verb_continuous = "impales"
-	attack_verb_simple = "impale"
+	attack_verb_continuous = "протыкает"
+	attack_verb_simple = "протыкает"
 	a_intent = INTENT_HARM
 	speak_emote = list("telepathically cries")
 	attack_sound = 'sound/weapons/bladeslice.ogg'

@@ -2,8 +2,6 @@
 	if(stat == DEAD)
 		return
 
-	DIRECT_OUTPUT(src, sound(null))
-
 	silent = FALSE
 	losebreath = 0
 
@@ -17,9 +15,6 @@
 		var/datum/brain_trauma/BT = T
 		BT.on_death()
 
-	if(SSticker.mode)
-		SSticker.mode.check_win() //Calls the rounds wincheck, mainly for wizard, malf, and changeling now
-
 /mob/living/carbon/proc/inflate_gib() // Plays an animation that makes mobs appear to inflate before finally gibbing
 	addtimer(CALLBACK(src, .proc/gib, null, null, TRUE, TRUE), 25)
 	var/matrix/M = matrix()
@@ -32,14 +27,14 @@
 			dropItemToGround(W)
 			if(prob(50))
 				step(W, pick(GLOB.alldirs))
-	var/atom/Tsec = drop_location()
+	var/atom/Tsec = drop_location()[1]
 	for(var/mob/M in src)
 		M.forceMove(Tsec)
 		visible_message("<span class='danger'>[M] вырывается из [src]!</span>")
 	. = ..()
 
 /mob/living/carbon/spill_organs(no_brain, no_organs, no_bodyparts)
-	var/atom/Tsec = drop_location()
+	var/atom/Tsec = drop_location()[1]
 	if(!no_bodyparts)
 		if(no_organs)//so the organs don't get transfered inside the bodyparts we'll drop.
 			for(var/X in internal_organs)

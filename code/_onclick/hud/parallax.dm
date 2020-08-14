@@ -1,16 +1,4 @@
 
-/client
-	var/list/parallax_layers
-	var/list/parallax_layers_cached
-	var/atom/movable/movingmob
-	var/turf/previous_turf
-	var/dont_animate_parallax //world.time of when we can state animate()ing parallax again
-	var/last_parallax_shift //world.time of last update
-	var/parallax_throttle = 0 //ds between updates
-	var/parallax_movedir = 0
-	var/parallax_layers_max = 7
-	var/parallax_animate_timer
-
 /datum/hud/proc/create_parallax(mob/viewmob, forced_parallax = FALSE)
 	var/mob/screenmob = viewmob || mymob
 	var/client/C = screenmob.client
@@ -20,6 +8,7 @@
 	if(forced_parallax)
 		C.parallax_layers_cached = list()
 		C.parallax_layers_cached += new /obj/screen/parallax_layer/cyberspess(null, C.view)
+		C.parallax_layers_cached += new /obj/screen/parallax_layer/mazespace(null, C.view)
 	else if(!length(C.parallax_layers_cached))
 		C.parallax_layers_cached = list()
 		C.parallax_layers_cached += new SSparallax.random_space(null, C.view)
@@ -28,6 +17,8 @@
 			C.parallax_layers_cached += new /obj/screen/parallax_layer/planet/high_definition/gensokyo(null, C.view)
 		else if (SSmapping.current_mining == "lavaland")
 			C.parallax_layers_cached += new /obj/screen/parallax_layer/planet/high_definition(null, C.view)
+		else if (SSmapping.current_mining == "icemoon")
+			C.parallax_layers_cached += new /obj/screen/parallax_layer/planet/high_definition/icemoon(null, C.view)
 		if(SSparallax.random_layer)
 			C.parallax_layers_cached += new SSparallax.random_layer
 		C.parallax_layers_cached += new /obj/screen/parallax_layer/layer_3(null, C.view)
@@ -308,6 +299,7 @@
 	icon_state = "layer1"
 	speed = 1
 	layer = 1
+	color = "#aaaaaa"
 
 /obj/screen/parallax_layer/layer_1_2
 	icon_state = "layer1_2"
@@ -361,13 +353,13 @@
 	var/turf/posobj = get_turf(C.eye)
 	if(!posobj)
 		return
-	if((SSmapping.config.map_name == "Unit Station" && posobj.z == 2) || (is_station_level(posobj.z) && SSmapping.config.map_name != "Unit Station"))
+	if((SSmapping.config?.map_name == "Unit Station" && posobj.z == 2) || (is_station_level(posobj.z) && SSmapping.config.map_name != "Unit Station"))
 		invisibility = 0
 	else
 		invisibility = INVISIBILITY_ABSTRACT
 
 /obj/screen/parallax_layer/planet/update_o()
-	if (icon_state == "planet_gensokyo" || icon_state == "planet_lavaland")
+	if (icon_state == "planet_icemoon" || icon_state == "planet_lavaland")
 		return //Shit wont move
 	. = ..()
 
@@ -380,6 +372,9 @@
 /obj/screen/parallax_layer/planet/high_definition/gensokyo
 	icon_state = "planet_gensokyo"
 
+/obj/screen/parallax_layer/planet/high_definition/icemoon
+	icon_state = "planet_icemoon"
+
 /obj/screen/parallax_layer/ice_surface
 	icon_state = "ice_surface"
 	blend_mode = BLEND_OVERLAY
@@ -391,7 +386,7 @@
 	var/turf/posobj = get_turf(C.eye)
 	if(!posobj)
 		return
-	if((SSmapping.config.map_name == "Unit Station" && posobj.z == 3) || is_centcom_level(posobj.z))
+	if((SSmapping.config?.map_name == "Unit Station" && posobj.z == 3) || is_centcom_level(posobj.z))
 		invisibility = 0
 	else
 		invisibility = INVISIBILITY_ABSTRACT
@@ -407,12 +402,20 @@
 	var/turf/posobj = get_turf(C.eye)
 	if(!posobj)
 		return
-	if((SSmapping.config.map_name == "Unit Station" && posobj.z == 3) || is_centcom_level(posobj.z))
+	if((SSmapping.config?.map_name == "Unit Station" && posobj.z == 3) || is_centcom_level(posobj.z))
 		invisibility = 0
 	else
 		invisibility = INVISIBILITY_ABSTRACT
 
 /obj/screen/parallax_layer/cyberspess
 	icon_state = "cyberspess"
+	color = "#ff3333"
 	speed = 4
 	layer = 1
+
+/obj/screen/parallax_layer/mazespace
+	icon_state = "mazespace"
+	color = "#ff3333"
+	speed = 16
+	alpha = 75
+	layer = 2

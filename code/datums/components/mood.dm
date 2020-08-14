@@ -42,7 +42,7 @@
 		RegisterSignal(parent, COMSIG_ADD_MOOD_EVENT_RND, .proc/add_event) //Mood events that are only for RnD members
 
 /datum/component/mood/proc/print_mood(mob/user)
-	var/msg = "<span class='info'>*---------*\n<EM>Моё текущее настроение</EM></span>\n"
+	var/msg = "<span class='info'><EM>Моё текущее настроение</EM></span>\n"
 	msg += "<span class='notice'>Мое психическое состояние: </span>" //Long term
 	switch(sanity)
 		if(SANITY_GREAT to INFINITY)
@@ -86,7 +86,7 @@
 			msg += event.description
 	else
 		msg += "<span class='nicegreen'>Да как-то всё равно на всё в данный момент.<span>\n"
-	to_chat(user, msg)
+	to_chat(user, "<div class='examine_block'>[msg]</div>")
 
 ///Called after moodevent/s have been added/removed.
 /datum/component/mood/proc/update_mood()
@@ -97,8 +97,8 @@
 		mood += event.mood_change
 		if(!event.hidden)
 			shown_mood += event.mood_change
-		mood *= mood_modifier
-		shown_mood *= mood_modifier
+	mood *= mood_modifier
+	shown_mood *= mood_modifier
 
 	switch(mood)
 		if(-INFINITY to MOOD_LEVEL_SAD4)
@@ -160,9 +160,6 @@
 	if(!conflicting_moodies.len) //no special icons- go to the normal icon states
 		screen_obj.icon_state = "mood[mood_level]"
 		return
-
-	if(prob(15))
-		owner.name_color = pick(GLOB.safe_name_colors)
 
 	for(var/i in conflicting_moodies)
 		var/datum/mood_event/event = i

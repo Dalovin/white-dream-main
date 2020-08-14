@@ -3,7 +3,7 @@
 	name = "бездна"
 	desc = "Смотри под ноги."
 	baseturfs = /turf/open/chasm
-	smooth = SMOOTH_TRUE | SMOOTH_BORDER | SMOOTH_MORE
+	smoothing_flags = SMOOTH_TRUE | SMOOTH_BORDER | SMOOTH_MORE
 	icon = 'icons/turf/floors/chasms.dmi'
 	icon_state = "smooth"
 	canSmoothWith = list(/turf/open/floor/fakepit, /turf/open/chasm)
@@ -13,6 +13,11 @@
 /turf/open/chasm/Initialize()
 	. = ..()
 	AddComponent(/datum/component/chasm, SSmapping.get_turf_below(src))
+
+/// Lets people walk into chasms.
+/turf/open/chasm/CanAllowThrough(atom/movable/AM, turf/target)
+	. = ..()
+	return TRUE
 
 /turf/open/chasm/proc/set_target(turf/target)
 	var/datum/component/chasm/chasm_component = GetComponent(/datum/component/chasm)

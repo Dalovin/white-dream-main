@@ -19,7 +19,13 @@ GLOBAL_VAR(restart_counter)
   *
   */
 /world/New()
+	var/extools = world.GetConfig("env", "EXTOOLS_DLL") || (world.system_type == MS_WINDOWS ? "./byond-extools.dll" : "./libbyond-extools.so")
+	if (fexists(extools))
+		call(extools, "maptick_initialize")()
 	enable_debugger()
+#ifdef REFERENCE_TRACKING
+	enable_reference_tracking()
+#endif
 
 	//Early profile for auto-profiler - will be stopped on profiler init if necessary.
 #if DM_BUILD >= 1506
@@ -30,13 +36,13 @@ GLOBAL_VAR(restart_counter)
 
 	SetupExternalRSC()
 
-	GLOB.config_error_log = GLOB.world_manifest_log = GLOB.world_pda_log = GLOB.world_job_debug_log = GLOB.sql_error_log = GLOB.world_href_log = GLOB.world_runtime_log = GLOB.world_attack_log = GLOB.world_game_log = GLOB.world_shuttle_log = "data/logs/config_error.[GUID()].log" //temporary file used to record errors with loading config, moved to log directory once logging is set bl
-
 	make_datum_references_lists()	//initialises global lists for referencing frequently used datums (so that we only ever do it once)
 
-	TgsNew(minimum_required_security_level = TGS_SECURITY_TRUSTED)
+	GLOB.config_error_log = GLOB.world_manifest_log = GLOB.world_pda_log = GLOB.world_job_debug_log = GLOB.sql_error_log = GLOB.world_href_log = GLOB.world_runtime_log = GLOB.world_attack_log = GLOB.world_game_log = GLOB.world_econ_log = GLOB.world_shuttle_log = "data/logs/config_error.[GUID()].log" //temporary file used to record errors with loading config, moved to log directory once logging is set bl
 
 	GLOB.revdata = new
+
+	InitTgs()
 
 	config.Load(params[OVERRIDE_CONFIG_DIRECTORY_PARAMETER])
 
@@ -47,6 +53,9 @@ GLOBAL_VAR(restart_counter)
 	SSdbcore.CheckSchemaVersion()
 	SSdbcore.SetRoundID()
 	SetupLogs()
+	load_poll_data()
+
+	populate_gear_list()
 
 #ifndef USE_CUSTOM_ERROR_HANDLER
 	world.log = file("[GLOB.log_directory]/dd.log")
@@ -56,8 +65,8 @@ GLOBAL_VAR(restart_counter)
 #endif
 
 	LoadVerbs(/datum/verbs/menu)
-	if(CONFIG_GET(flag/usewhitelist))
-		load_whitelist()
+
+	load_whitelist()
 
 	load_whitelist_exrp()
 
@@ -72,8 +81,13 @@ GLOBAL_VAR(restart_counter)
 
 	Master.Initialize(10, FALSE, TRUE)
 
-	if(TEST_RUN_PARAMETER in params)
-		HandleTestRun()
+	#ifdef UNIT_TESTS
+	HandleTestRun()
+	#endif
+
+/world/proc/InitTgs()
+	TgsNew(new /datum/tgs_event_handler/impl, TGS_SECURITY_TRUSTED)
+	GLOB.revdata.load_tgs_info()
 
 /world/proc/HandleTestRun()
 	//trigger things to run the whole process
@@ -86,7 +100,7 @@ GLOBAL_VAR(restart_counter)
 #else
 	cb = VARSET_CALLBACK(SSticker, force_ending, TRUE)
 #endif
-	SSticker.OnRoundstart(CALLBACK(GLOBAL_PROC, /proc/addtimer, cb, 10 SECONDS))
+	SSticker.OnRoundstart(CALLBACK(GLOBAL_PROC, /proc/_addtimer, cb, 10 SECONDS))
 
 /world/proc/SetupExternalRSC()
 #if (PRELOAD_RSC == 0)
@@ -127,6 +141,7 @@ GLOBAL_VAR(restart_counter)
 	GLOB.world_cloning_log = "[GLOB.log_directory]/cloning.log"
 	GLOB.world_asset_log = "[GLOB.log_directory]/asset.log"
 	GLOB.world_attack_log = "[GLOB.log_directory]/attack.log"
+	GLOB.world_econ_log = "[GLOB.log_directory]/econ.log"
 	GLOB.world_pda_log = "[GLOB.log_directory]/pda.log"
 	GLOB.world_telecomms_log = "[GLOB.log_directory]/telecomms.log"
 	GLOB.world_manifest_log = "[GLOB.log_directory]/manifest.log"
@@ -145,11 +160,12 @@ GLOBAL_VAR(restart_counter)
 	GLOB.demo_log = "[GLOB.log_directory]/demo.log"
 
 #ifdef UNIT_TESTS
-	GLOB.test_log = file("[GLOB.log_directory]/tests.log")
+	GLOB.test_log = "[GLOB.log_directory]/tests.log"
 	start_log(GLOB.test_log)
 #endif
 	start_log(GLOB.world_game_log)
 	start_log(GLOB.world_attack_log)
+	start_log(GLOB.world_econ_log)
 	start_log(GLOB.world_pda_log)
 	start_log(GLOB.world_telecomms_log)
 	start_log(GLOB.world_manifest_log)
@@ -235,16 +251,17 @@ GLOBAL_VAR(restart_counter)
 		if (usr)
 			log_admin("[key_name(usr)] Has requested an immediate world restart via client side debugging tools")
 			message_admins("[key_name_admin(usr)] Has requested an immediate world restart via client side debugging tools")
-		to_chat(world, "<span class='boldannounce'>Rebooting World immediately due to host request.</span>")
+		to_chat(world, "<span class='boldannounce'>Немедленная перезагрузка по требованию сервера.</span>")
 	else
-		to_chat(world, "<span class='boldannounce'>Rebooting world...</span>")
+		to_chat(world, "<span class='boldannounce'>Конец!</span>")
 		Master.Shutdown()	//run SS shutdowns
 
 	TgsReboot()
 
-	if(TEST_RUN_PARAMETER in params)
-		FinishTestRun()
-		return
+	#ifdef UNIT_TESTS
+	FinishTestRun()
+	return
+	#endif
 
 	if(TgsAvailable())
 		var/do_hard_reboot
@@ -269,7 +286,16 @@ GLOBAL_VAR(restart_counter)
 
 	log_world("World rebooted at [time_stamp()]")
 	shutdown_logging() // Past this point, no logging procs can be used, at risk of data loss.
-	shelleo("curl -X POST http://localhost:3333/reboot-white")
+	shelleo("curl -X POST http://localhost:3636/reboot-white")
+	..()
+
+/world/Del()
+	// memory leaks bad
+	var/num_deleted = 0
+	for(var/datum/gas_mixture/GM)
+		GM.__gasmixture_unregister()
+		num_deleted++
+	log_world("Deallocated [num_deleted] gas mixtures")
 	..()
 
 /world/proc/update_status()
@@ -278,18 +304,20 @@ GLOBAL_VAR(restart_counter)
 	var/hostedby
 	var/special_string
 	var/server_name = "piss"
+	var/server_type = "coom"
 	if(config)
 		special_string = CONFIG_GET(string/special_string)
 		hostedby = CONFIG_GET(string/hostedby)
 		server_name = CONFIG_GET(string/servername)
+		server_type = CONFIG_GET(string/servertype)
 		s += "[special_string]"
 
-	s += "<a href=\"https://discord.gg/BNUgzsT\"><big><b>[server_name]: Green Edition</b></big></br>"
+	s += "<a href=\"https://discord.gg/BNUgzsT\"><big><b>[server_name]: [server_type]</b></big></br>"
 	s += "<img src=\"https://hub.station13.ru/o/?=[world.time]\"></a>"
 
 	var/players = GLOB.clients.len
 
-	s += "<b>Players:</b> [players]/33</br>"
+	s += "<b>Players:</b> [players]/71</br>"
 
 	if (!host && hostedby)
 		s += "<b>Host:</b> [hostedby]"
@@ -309,6 +337,7 @@ GLOBAL_VAR(restart_counter)
 	maxz++
 	SSmobs.MaxZChanged()
 	SSidlenpcpool.MaxZChanged()
+	world.refresh_atmos_grid()
 
 
 /world/proc/change_fps(new_value = 20)
@@ -333,3 +362,5 @@ GLOBAL_VAR(restart_counter)
 
 /world/proc/on_tickrate_change()
 	SStimer?.reset_buckets()
+
+/world/proc/refresh_atmos_grid()

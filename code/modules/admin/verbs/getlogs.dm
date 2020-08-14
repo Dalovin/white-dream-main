@@ -2,19 +2,19 @@
 /client/proc/getserverlogs()
 	set name = "Get Server Logs"
 	set desc = "View/retrieve logfiles."
-	set category = "АДМИН"
+	set category = "Адм"
 
 	browseserverlogs()
 
 /client/proc/getcurrentlogs()
 	set name = "Get Current Logs"
 	set desc = "View/retrieve logfiles for the current round."
-	set category = "АДМИН"
+	set category = "Адм"
 
-	browseserverlogs("[GLOB.log_directory]/")
+	browseserverlogs(current=TRUE)
 
-/client/proc/browseserverlogs(path = "data/logs/")
-	path = browse_files(path)
+/client/proc/browseserverlogs(current=FALSE)
+	var/path = browse_files(current ? BROWSE_ROOT_CURRENT_LOGS : BROWSE_ROOT_ALL_LOGS)
 	if(!path)
 		return
 

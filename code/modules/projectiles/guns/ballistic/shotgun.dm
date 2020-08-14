@@ -2,9 +2,10 @@
 	name = "дробовик"
 	desc = "Традиционный дробовик с деревянным прикладом."
 	icon_state = "shotgun"
+	worn_icon_state = null
 	lefthand_file = 'icons/mob/inhands/weapons/64x_guns_left.dmi'
 	righthand_file = 'icons/mob/inhands/weapons/64x_guns_right.dmi'
-	item_state = "shotgun"
+	inhand_icon_state = "shotgun"
 	inhand_x_dimension = 64
 	inhand_y_dimension = 64
 	fire_sound = 'sound/weapons/gun/shotgun/shot.ogg'
@@ -20,7 +21,7 @@
 	semi_auto = FALSE
 	internal_magazine = TRUE
 	casing_ejector = FALSE
-	bolt_wording = "pump"
+	bolt_wording = "помповый механизм"
 	cartridge_wording = "shell"
 	tac_reloads = FALSE
 	weapon_weight = WEAPON_HEAVY
@@ -42,7 +43,7 @@
 	name = "дробовик охраны"
 	desc = "Прочный дробовик с более длинным магазином и фиксированным тактическим запасом, предназначенным для несмертельного контроля над беспорядками."
 	icon_state = "riotshotgun"
-	item_state = "shotgun"
+	inhand_icon_state = "shotgun"
 	fire_delay = 7
 	mag_type = /obj/item/ammo_box/magazine/internal/shot/riot
 	sawn_desc = "Пошли со мной, если хочешь жить."
@@ -58,24 +59,19 @@
 	name = "боевой дробовик"
 	desc = "Полуавтоматический дробовик с тактической фурниторой и шестиместным магазином."
 	icon_state = "cshotgun"
-	item_state = "shotgun_combat"
+	inhand_icon_state = "shotgun_combat"
 	fire_delay = 5
 	mag_type = /obj/item/ammo_box/magazine/internal/shot/com
 	w_class = WEIGHT_CLASS_HUGE
 
-/obj/item/gun/ballistic/shotgun/automatic/combat/compact
-	name = "укороченный боевой дробовик"
-	desc = "Мелкая версия боевого дробовика. Для близких встреч."
-	icon_state = "cshotgunc"
-	mag_type = /obj/item/ammo_box/magazine/internal/shot/com/compact
-	w_class = WEIGHT_CLASS_BULKY
-
 //Dual Feed Shotgun
 
 /obj/item/gun/ballistic/shotgun/automatic/dual_tube
-	name = "колёсный дробовик"
+	name = "двухтиповый дробовик"
 	desc = "Улучшенный дробовик с двумя раздельными трубами, что позволяет быстро выбирать между двумя различными калибрами."
 	icon_state = "cycler"
+	inhand_icon_state = "bulldog"
+	worn_icon_state = "cshotgun"
 	mag_type = /obj/item/ammo_box/magazine/internal/shot/tube
 	w_class = WEIGHT_CLASS_HUGE
 	var/toggled = FALSE
@@ -84,7 +80,7 @@
 
 /obj/item/gun/ballistic/shotgun/automatic/dual_tube/examine(mob/user)
 	. = ..()
-	. += "<span class='notice'>Alt-click чтоб изменить это.</span>"
+	. += "<span class='notice'>Alt-click чтобы изменить это.</span>"
 
 /obj/item/gun/ballistic/shotgun/automatic/dual_tube/Initialize()
 	. = ..()
@@ -104,9 +100,9 @@
 	alternate_magazine = current_mag
 	toggled = !toggled
 	if(toggled)
-		to_chat(user, "<span class='notice'>Вы выбрали трубу 'B'.</span>")
+		to_chat(user, "<span class='notice'>Труба 'B'.</span>")
 	else
-		to_chat(user, "<span class='notice'>Вы выбрали трубу 'А'.</span>")
+		to_chat(user, "<span class='notice'>Труба 'А'.</span>")
 
 /obj/item/gun/ballistic/shotgun/automatic/dual_tube/AltClick(mob/living/user)
 	if(!istype(user) || !user.canUseTopic(src, BE_CLOSE, ismonkey(user)))
@@ -116,10 +112,11 @@
 // Bulldog shotgun //
 
 /obj/item/gun/ballistic/shotgun/bulldog
-	name = "\improper дробовик''Bulldog'' "
+	name = "дробовик''Bulldog''"
 	desc = "Полуавтоматический дробовик с магнитной подачей для боя в узких коридорах по прозвищу «Бульдог». Совместим только со специализированными 8-круглыми барабанными магазинами."
 	icon_state = "bulldog"
-	item_state = "bulldog"
+	inhand_icon_state = "bulldog"
+	worn_icon_state = "cshotgun"
 	lefthand_file = 'icons/mob/inhands/weapons/guns_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/weapons/guns_righthand.dmi'
 	inhand_x_dimension = 32
@@ -137,6 +134,7 @@
 	empty_indicator = TRUE
 	empty_alarm = TRUE
 	special_mags = TRUE
+	mag_display_ammo = TRUE
 	semi_auto = TRUE
 	internal_magazine = FALSE
 	tac_reloads = TRUE
@@ -152,7 +150,7 @@
 	name = "двухстволка"
 	desc = "Истинная классика."
 	icon_state = "dshotgun"
-	item_state = "shotgun_db"
+	inhand_icon_state = "shotgun_db"
 	w_class = WEIGHT_CLASS_BULKY
 	weapon_weight = WEAPON_MEDIUM
 	force = 10
@@ -190,7 +188,7 @@
 	name = "кустарный дробовик"
 	desc = "Труба, сделанная под дробовик."
 	icon_state = "ishotgun"
-	item_state = "ishotgun"
+	inhand_icon_state = "ishotgun"
 	w_class = WEIGHT_CLASS_BULKY
 	force = 10
 	slot_flags = null
@@ -205,18 +203,18 @@
 		var/obj/item/stack/cable_coil/C = A
 		if(C.use(10))
 			slot_flags = ITEM_SLOT_BACK
-			to_chat(user, "<span class='notice'>Вы привязываете кабель к дробовику, теперь можно носить дробовик на спине.</span>")
+			to_chat(user, "<span class='notice'>Привязываю кабель к дробовику, теперь можно носить дробовик на спине.</span>")
 			slung = TRUE
 			update_icon()
 		else
-			to_chat(user, "<span class='warning'> Вам нужно как минимум десять длин кабеля, если вы хотите сделать стропу!</span>")
+			to_chat(user, "<span class='warning'>Требуется минимум десять длин кабеля, если мне нужно сделать стропу!</span>")
 
 /obj/item/gun/ballistic/shotgun/doublebarrel/improvised/update_icon_state()
 	. = ..()
 	if(slung)
-		item_state = "ishotgunsling"
+		inhand_icon_state = "ishotgunsling"
 	if(sawn_off)
-		item_state = "ishotgun_sawn"
+		inhand_icon_state = "ishotgun_sawn"
 
 /obj/item/gun/ballistic/shotgun/doublebarrel/improvised/update_overlays()
 	. = ..()
@@ -231,12 +229,16 @@
 		new /obj/item/stack/cable_coil(get_turf(src), 10)
 		slung = 0
 		update_icon()
+		lefthand_file = 'icons/mob/inhands/weapons/64x_guns_left.dmi'
+		righthand_file = 'icons/mob/inhands/weapons/64x_guns_right.dmi'
 
 /obj/item/gun/ballistic/shotgun/doublebarrel/improvised/sawn
 	name = "импровизированный обрез"
 	desc = "Делает одиночный выстрел. Не промахнись."
 	icon_state = "ishotgun_sawn"
-	item_state = "ishotgun_sawn"
+	inhand_icon_state = "ishotgun_sawn"
+	worn_icon_state = "gun"
+	worn_icon = null
 	w_class = WEIGHT_CLASS_NORMAL
 	sawn_off = TRUE
 	slot_flags = ITEM_SLOT_BELT
@@ -245,7 +247,7 @@
 	name = "модифицированный крюком обрез"
 	desc = "Дальность не проблема, когда вы можете притянуть жертву к себе."
 	icon_state = "hookshotgun"
-	item_state = "shotgun"
+	inhand_icon_state = "shotgun"
 	load_sound = 'sound/weapons/gun/shotgun/insert_shell.ogg'
 	mag_type = /obj/item/ammo_box/magazine/internal/shot/bounty
 	w_class = WEIGHT_CLASS_BULKY
@@ -266,10 +268,10 @@
 	if(!istype(user) || !user.canUseTopic(src, BE_CLOSE, ismonkey(user)))
 		return
 	if(toggled)
-		to_chat(user,"<span class='notice'>Вы собрались стрелять.</span>")
+		to_chat(user,"<span class='notice'>Собираюсь стрелять.</span>")
 		fire_sound = initial(fire_sound)
 	else
-		to_chat(user,"<span class='notice'>Вы будете использовать крюк.</span>")
+		to_chat(user,"<span class='notice'>Буду использовать крюк.</span>")
 		fire_sound = 'sound/weapons/batonextend.ogg'
 	toggled = !toggled
 

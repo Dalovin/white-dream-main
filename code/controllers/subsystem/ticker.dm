@@ -27,7 +27,11 @@ SUBSYSTEM_DEF(ticker)
 	var/admin_delay_notice = ""				//a message to display to anyone who tries to restart the world after a delay
 	var/ready_for_reboot = FALSE			//all roundend preparation done with, all that's left is reboot
 
-	var/triai = 0							//Global holder for Triumvirate
+	///If not set to ANON_DISABLED then people spawn with a themed anon name (see anonymousnames.dm)
+	var/anonymousnames = ANON_DISABLED
+	///Boolean to see if the game needs to set up a triumvirate ai (see tripAI.dm)
+	var/triai = FALSE
+
 	var/tipped = 0							//Did we broadcast the tip of the day yet?
 	var/selected_tip						// What will be the tip of the day?
 
@@ -54,6 +58,9 @@ SUBSYSTEM_DEF(ticker)
 	var/list/round_end_events
 	var/mode_result = "undefined"
 	var/end_state = "undefined"
+
+	/// People who have been commended and will receive a heart
+	var/list/hearts
 
 /datum/controller/subsystem/ticker/Initialize(timeofday)
 	load_mode()
@@ -205,7 +212,7 @@ SUBSYSTEM_DEF(ticker)
 
 
 /datum/controller/subsystem/ticker/proc/setup()
-	to_chat(world, "<span class='boldannounce'>Начинаем игру...</span>")
+	to_chat(world, "<span class='green'> > Запускаем симуляцию...</span>")
 	var/init_start = world.timeofday
 		//Create and announce mode
 	var/list/datum/game_mode/runnable_modes
@@ -223,7 +230,7 @@ SUBSYSTEM_DEF(ticker)
 
 		if(!mode)
 			if(!runnable_modes.len)
-				to_chat(world, "<B>Ничего не вышло!</B> Откатываем таймер назад.")
+				to_chat(world, "<span class='green'> > <B>Ничего не вышло!</B> Откатываем таймер назад.</span>")
 				return 0
 			mode = pickweight(runnable_modes)
 			if(!mode)	//too few roundtypes all run too recently
@@ -232,7 +239,7 @@ SUBSYSTEM_DEF(ticker)
 	else
 		mode = config.pick_mode(GLOB.master_mode)
 		if(!mode.can_start())
-			to_chat(world, "<B>Unable to start [mode.name].</B> Not enough players, [mode.required_players] players and [mode.required_enemies] eligible antagonists needed. Reverting to pre-game lobby.")
+			to_chat(world, "<span class='green'> > <B>Режим [mode.name] не хочет запускаться.</B> Недостаточно игроков, требуется [mode.required_players] готовых и [mode.required_enemies] антагов. Откатываем таймер назад.</span>")
 			qdel(mode)
 			mode = null
 			SSjob.ResetOccupations()
@@ -254,7 +261,7 @@ SUBSYSTEM_DEF(ticker)
 			SSjob.ResetOccupations()
 			return 0
 	else
-		message_admins("<span class='notice'>DEBUG: Bypassing prestart checks...</span>")
+		message_admins("<span class='notice'>ДЕБАГ: Обходим стартовые проверки... <b>Не забудьте отключить режим Debug-Game после успешного старта!</b></span>")
 
 	CHECK_TICK
 	if(hide_mode)
@@ -318,7 +325,7 @@ SUBSYSTEM_DEF(ticker)
 
 	var/list/adm = get_admin_counts()
 	var/list/allmins = adm["present"]
-	send2tgs("Server", "Round [GLOB.round_id ? "#[GLOB.round_id]:" : "of"] [hide_mode ? "secret":"[mode.name]"] has started[allmins.len ? ".":" with no active admins online!"]")
+	send2adminchat("Server", "Round [GLOB.round_id ? "#[GLOB.round_id]:" : "of"] [hide_mode ? "secret":"[mode.name]"] has started[allmins.len ? ".":" with no active admins online!"]")
 	setup_done = TRUE
 
 	for(var/i in GLOB.start_landmarks_list)
@@ -328,6 +335,20 @@ SUBSYSTEM_DEF(ticker)
 		else
 			stack_trace("[S] [S.type] found in start landmarks list, which isn't a start landmark!")
 
+	// handle persistence stuff that requires ckeys, in this case hardcore mode and temporal scarring
+	for(var/i in GLOB.player_list)
+		if(!ishuman(i))
+			continue
+		var/mob/living/carbon/human/iter_human = i
+
+		iter_human.increment_scar_slot()
+		iter_human.load_persistent_scars()
+
+		if(!iter_human.hardcore_survival_score)
+			continue
+		if(iter_human.mind?.special_role)
+			iter_human.hardcore_survival_score *= 2 //Double for antags
+		to_chat(iter_human, "<span class='notice'>You will gain [round(iter_human.hardcore_survival_score)] hardcore random points if you survive this round!</span>")
 
 //These callbacks will fire after roundstart key transfer
 /datum/controller/subsystem/ticker/proc/OnRoundstart(datum/callback/cb)
@@ -345,10 +366,7 @@ SUBSYSTEM_DEF(ticker)
 
 /datum/controller/subsystem/ticker/proc/station_explosion_detonation(atom/bomb)
 	if(bomb)	//BOOM
-		var/turf/epi = bomb.loc
 		qdel(bomb)
-		if(epi)
-			explosion(epi, 0, 256, 512, 0, TRUE, TRUE, 0, TRUE)
 
 /datum/controller/subsystem/ticker/proc/create_characters()
 	for(var/i in GLOB.new_player_list)
@@ -421,7 +439,7 @@ SUBSYSTEM_DEF(ticker)
 			m = pick(memetips)
 
 	if(m)
-		to_chat(world, "<font color='purple'><b>Заметка: </b>[html_encode(m)]</font>")
+		to_chat(world, "<span class='purple'><b>Заметка: </b>[html_encode(m)]</span>")
 
 /datum/controller/subsystem/ticker/proc/check_queue()
 	if(!queued_players.len)
@@ -482,6 +500,7 @@ SUBSYSTEM_DEF(ticker)
 
 	delay_end = SSticker.delay_end
 
+	anonymousnames = SSticker.anonymousnames
 	triai = SSticker.triai
 	tipped = SSticker.tipped
 	selected_tip = SSticker.selected_tip
@@ -541,7 +560,7 @@ SUBSYSTEM_DEF(ticker)
 		if(WIZARD_KILLED)
 			news_message = "Tensions have flared with the Space Wizard Federation following the death of one of their members aboard [station_name()]."
 		if(STATION_NUKED)
-			news_message = "[station_name()] activated its self destruct device for unknown reasons. Attempts to clone the Captain so he can be arrested and executed are underway."
+			news_message = "[station_name()] activated its self-destruct device for unknown reasons. Attempts to clone the Captain so he can be arrested and executed are underway."
 		if(CLOCK_SUMMON)
 			news_message = "The garbled messages about hailing a mouse and strange energy readings from [station_name()] have been discovered to be an ill-advised, if thorough, prank by a clown."
 		if(CLOCK_SILICONS)
@@ -631,18 +650,11 @@ SUBSYSTEM_DEF(ticker)
 
 	var/statspage = CONFIG_GET(string/roundstatsurl)
 	var/gamelogloc = CONFIG_GET(string/gamelogurl)
-	var/demopage = CONFIG_GET(string/demopage)
-
-	if(GLOB.round_id && demopage)
-		to_chat(world, "<span class='info'>Реплей раунда просмотреть <a href=\"[demopage][GLOB.round_id]\">можно тут!</a></span>")
-		world.shelleo("cd data && screen -dmS copyscripto python3 dp.py [GLOB.round_id]")
 
 	if(statspage)
 		to_chat(world, "<span class='info'>Статистику по раундам вы можете найти на <a href=\"[statspage][GLOB.round_id]\">нашем сайте!</a></span>")
 	else if(gamelogloc)
 		to_chat(world, "<span class='info'>Round logs can be located <a href=\"[gamelogloc]\">at this website!</a></span>")
-
-	sleep(20)
 
 	log_game("<span class='boldannounce'>Пересоздаём мир. [reason]</span>")
 
@@ -653,7 +665,7 @@ SUBSYSTEM_DEF(ticker)
 	save_admin_data()
 	update_everything_flag_in_db()
 	if(!round_end_sound)
-		round_end_sound = pick('sound/roundend/logoff.ogg', 'code/shitcode/valtos/sounds/group_masturbation.ogg')
+		round_end_sound = 'sound/roundend/end.ogg'
 	///The reference to the end of round sound that we have chosen.
 	var/sound/end_of_round_sound_ref = sound(round_end_sound)
 	for(var/mob/M in GLOB.player_list)
@@ -661,3 +673,12 @@ SUBSYSTEM_DEF(ticker)
 			SEND_SOUND(M.client, end_of_round_sound_ref)
 
 	text2file(login_music, "data/last_round_lobby_music.txt")
+
+/datum/controller/subsystem/ticker/Topic(href, list/href_list)
+	. = ..()
+	if(href_list["cancel_heart"] && usr.client.holder)
+		var/mob/heart_sender = locate(href_list["heart_source"])
+		var/mob/intended_recepient = locate(href_list["heart_target"])
+		log_admin("[usr.ckey] blocked commendation from [heart_sender] ([heart_sender.ckey]) to [intended_recepient] ([intended_recepient.ckey])")
+		message_admins("[usr.ckey] blocked commendation from [heart_sender] ([heart_sender.ckey]) to [intended_recepient] ([intended_recepient.ckey])")
+		hearts[intended_recepient] = null

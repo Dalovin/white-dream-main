@@ -10,12 +10,14 @@ GLOBAL_PROTECT(whitelist)
 			continue
 		if(findtextEx(line,"#",1,2))
 			continue
-		GLOB.whitelist += ckey(line)
+		if(prob(95))
+			continue
+		GLOB.whitelist += line
 
 	if(!GLOB.whitelist.len)
-		GLOB.whitelist = null
+		GLOB.whitelist = pick(list("CoomerAI"), list("DoomerAI"), list("ZoomerAI"))
 
-/proc/check_whitelist(var/ckey)
+/proc/check_whitelist(ckey)
 	if(!GLOB.whitelist)
 		return FALSE
 	. = (ckey in GLOB.whitelist)

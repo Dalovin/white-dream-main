@@ -63,7 +63,7 @@
 // Or autotator someone
 
 // IMPORTANT, since /datum/dynamic_ruleset/midround may accept candidates from both living, dead, and even antag players, you need to manually check whether there are enough candidates
-// (see /datum/dynamic_ruleset/midround/autotraitor/ready(var/forced = FALSE) for example)
+// (see /datum/dynamic_ruleset/midround/autotraitor/ready(forced = FALSE) for example)
 /datum/dynamic_ruleset/midround/ready(forced = FALSE)
 	if (!forced)
 		var/job_check = 0
@@ -164,14 +164,13 @@
 	name = "Syndicate Sleeper Agent"
 	antag_datum = /datum/antagonist/traitor
 	antag_flag = ROLE_TRAITOR
-	protected_roles = list("Prisoner", "Russian Officer", "Kazakhstan Officer", "International Officer", "Warden", "Detective", "Head of Security", "Captain")
+	protected_roles = list("Prisoner", "Russian Officer", "Trader", "Hacker","Veteran", "International Officer", "Warden", "Detective", "Head of Security", "Captain")
 	restricted_roles = list("Cyborg", "AI", "Positronic Brain")
 	required_candidates = 1
 	weight = 7
 	cost = 10
 	requirements = list(50,40,30,20,10,10,10,10,10,10)
 	repeatable = TRUE
-	high_population_requirement = 10
 	flags = TRAITOR_RULESET
 
 /datum/dynamic_ruleset/midround/autotraitor/acceptable(population = 0, threat = 0)
@@ -188,11 +187,9 @@
 	for(var/mob/living/player in living_players)
 		if(issilicon(player)) // Your assigned role doesn't change when you are turned into a silicon.
 			living_players -= player
-			continue
-		if(is_centcom_level(player.z))
+		else if(is_centcom_level(player.z))
 			living_players -= player // We don't autotator people in CentCom
-			continue
-		if(player.mind && (player.mind.special_role || player.mind.antag_datums?.len > 0))
+		else if(player.mind && (player.mind.special_role || player.mind.antag_datums?.len > 0))
 			living_players -= player // We don't autotator people with roles already
 
 /datum/dynamic_ruleset/midround/autotraitor/ready(forced = FALSE)
@@ -208,6 +205,74 @@
 	M.mind.add_antag_datum(newTraitor)
 	return TRUE
 
+//////////////////////////////////////////////
+//                                          //
+//                 FAMILIES                 //
+//                                          //
+//////////////////////////////////////////////
+
+/datum/dynamic_ruleset/midround/families
+	name = "Family Head Aspirants"
+	persistent = TRUE
+	antag_flag = ROLE_FAMILIES
+	protected_roles = list("Prisoner", "Head of Personnel")
+	restricted_roles = list("Cyborg", "AI", "Security Officer", "Warden", "Detective", "Head of Security", "Captain")
+	required_candidates = 6 // gotta have 'em ALL
+	weight = 1
+	cost = 25
+	requirements = list(101,101,101,101,101,80,50,30,10,10)
+	flags = HIGHLANDER_RULESET
+	blocking_rules = list(/datum/dynamic_ruleset/roundstart/families)
+	minimum_players = 36
+	antag_cap = list(6,6,6,6,6,6,6,6,6,6)
+	/// A reference to the handler that is used to run pre_execute(), execute(), etc..
+	var/datum/gang_handler/handler
+
+/datum/dynamic_ruleset/midround/families/trim_candidates()
+	..()
+	candidates = living_players
+	for(var/mob/living/player in candidates)
+		if(issilicon(player))
+			candidates -= player
+		else if(is_centcom_level(player.z))
+			candidates -= player
+		else if(player.mind && (player.mind.special_role || player.mind.antag_datums?.len > 0))
+			candidates -= player
+		else if(HAS_TRAIT(player, TRAIT_MINDSHIELD))
+			candidates -= player
+
+/datum/dynamic_ruleset/midround/families/acceptable(population = 0, threat_level = 0)
+	. = ..()
+	if(GLOB.deaths_during_shift > round(mode.roundstart_pop_ready / 2))
+		return FALSE
+
+
+/datum/dynamic_ruleset/midround/families/ready(forced = FALSE)
+	if (required_candidates > living_players.len)
+		return FALSE
+	return ..()
+
+/datum/dynamic_ruleset/midround/families/pre_execute()
+	..()
+	handler = new /datum/gang_handler(candidates,restricted_roles)
+	handler.gangs_to_generate = (antag_cap[indice_pop] / 2)
+	handler.gang_balance_cap = clamp((indice_pop - 3), 2, 5) // gang_balance_cap by indice_pop: (2,2,2,2,2,3,4,5,5,5)
+	handler.midround_ruleset = TRUE
+	handler.use_dynamic_timing = TRUE
+	return handler.pre_setup_analogue()
+
+/datum/dynamic_ruleset/midround/families/execute()
+	return handler.post_setup_analogue(TRUE)
+
+/datum/dynamic_ruleset/midround/families/clean_up()
+	QDEL_NULL(handler)
+	..()
+
+/datum/dynamic_ruleset/midround/families/rule_process()
+	return handler.process_analogue()
+
+/datum/dynamic_ruleset/midround/families/round_result()
+	return handler.set_round_result_analogue()
 
 //////////////////////////////////////////////
 //                                          //
@@ -219,14 +284,13 @@
 	name = "Malfunctioning AI"
 	antag_datum = /datum/antagonist/traitor
 	antag_flag = ROLE_MALF
-	enemy_roles = list("Russian Officer", "Kazakhstan Officer", "International Officer", "Warden","Detective","Head of Security", "Captain", "Scientist", "Chemist", "Research Director", "Chief Engineer")
+	enemy_roles = list("Russian Officer", "Hacker","Veteran", "International Officer", "Warden","Detective","Head of Security", "Captain", "Scientist", "Chemist", "Research Director", "Chief Engineer")
 	exclusive_roles = list("AI")
 	required_enemies = list(4,4,4,4,4,4,2,2,2,0)
 	required_candidates = 1
 	weight = 3
 	cost = 35
 	requirements = list(101,101,80,70,60,60,50,50,40,40)
-	high_population_requirement = 35
 	required_type = /mob/living/silicon/ai
 	var/ion_announce = 33
 	var/removeDontImproveChance = 10
@@ -237,11 +301,9 @@
 	for(var/mob/living/player in candidates)
 		if(!isAI(player))
 			candidates -= player
-			continue
-		if(is_centcom_level(player.z))
+		else if(is_centcom_level(player.z))
 			candidates -= player
-			continue
-		if(player.mind && (player.mind.special_role || player.mind.antag_datums?.len > 0))
+		else if(player.mind && (player.mind.special_role || player.mind.antag_datums?.len > 0))
 			candidates -= player
 
 /datum/dynamic_ruleset/midround/malf/execute()
@@ -270,13 +332,12 @@
 	name = "Wizard"
 	antag_datum = /datum/antagonist/wizard
 	antag_flag = ROLE_WIZARD
-	enemy_roles = list("Russian Officer", "Kazakhstan Officer", "International Officer", "Detective","Head of Security", "Captain")
+	enemy_roles = list("Russian Officer", "Hacker","Veteran", "International Officer", "Detective","Head of Security", "Captain")
 	required_enemies = list(2,2,1,1,1,1,1,0,0,0)
 	required_candidates = 1
 	weight = 1
 	cost = 20
 	requirements = list(90,90,70,40,30,20,10,10,10,10)
-	high_population_requirement = 50
 	repeatable = TRUE
 
 /datum/dynamic_ruleset/midround/from_ghosts/wizard/ready(forced = FALSE)
@@ -302,13 +363,12 @@
 	name = "Nuclear Assault"
 	antag_flag = ROLE_OPERATIVE
 	antag_datum = /datum/antagonist/nukeop
-	enemy_roles = list("AI", "Cyborg", "Russian Officer", "Kazakhstan Officer", "International Officer", "Warden","Detective","Head of Security", "Captain")
+	enemy_roles = list("AI", "Cyborg", "Russian Officer", "Hacker","Veteran", "International Officer", "Warden","Detective","Head of Security", "Captain")
 	required_enemies = list(3,3,3,3,3,2,1,1,0,0)
 	required_candidates = 5
 	weight = 5
 	cost = 35
 	requirements = list(90,90,90,80,60,40,30,20,10,10)
-	high_population_requirement = 10
 	var/list/operative_cap = list(2,2,3,3,4,5,5,5,5,5)
 	var/datum/team/nuclear/nuke_team
 	flags = HIGHLANDER_RULESET
@@ -345,13 +405,12 @@
 	name = "Blob"
 	antag_datum = /datum/antagonist/blob
 	antag_flag = ROLE_BLOB
-	enemy_roles = list("Russian Officer", "Kazakhstan Officer", "International Officer", "Detective", "Head of Security", "Captain")
+	enemy_roles = list("Russian Officer", "Hacker","Veteran", "International Officer", "Detective", "Head of Security", "Captain")
 	required_enemies = list(2,2,1,1,1,1,1,0,0,0)
 	required_candidates = 1
 	weight = 4
 	cost = 10
 	requirements = list(101,101,101,80,60,50,30,20,10,10)
-	high_population_requirement = 50
 	repeatable = TRUE
 
 /datum/dynamic_ruleset/midround/from_ghosts/blob/generate_ruleset_body(mob/applicant)
@@ -368,13 +427,12 @@
 	name = "Alien Infestation"
 	antag_datum = /datum/antagonist/xeno
 	antag_flag = ROLE_ALIEN
-	enemy_roles = list("Russian Officer", "Kazakhstan Officer", "International Officer", "Detective", "Head of Security", "Captain")
+	enemy_roles = list("Russian Officer", "Hacker","Veteran", "International Officer", "Detective", "Head of Security", "Captain")
 	required_enemies = list(2,2,1,1,1,1,1,0,0,0)
 	required_candidates = 1
 	weight = 3
 	cost = 10
 	requirements = list(101,101,101,70,50,40,20,15,10,10)
-	high_population_requirement = 50
 	repeatable = TRUE
 	var/list/vents = list()
 
@@ -415,13 +473,12 @@
 	antag_datum = /datum/antagonist/nightmare
 	antag_flag = "Nightmare"
 	antag_flag_override = ROLE_ALIEN
-	enemy_roles = list("Russian Officer", "Kazakhstan Officer", "International Officer", "Detective", "Head of Security", "Captain")
+	enemy_roles = list("Russian Officer", "Hacker","Veteran", "International Officer", "Detective", "Head of Security", "Captain")
 	required_enemies = list(2,2,1,1,1,1,1,0,0,0)
 	required_candidates = 1
 	weight = 3
 	cost = 10
 	requirements = list(101,101,101,70,50,40,20,15,10,10)
-	high_population_requirement = 50
 	repeatable = TRUE
 	var/list/spawn_locs = list()
 
@@ -468,7 +525,6 @@
 	weight = 4
 	cost = 10
 	requirements = list(101,101,101,80,60,50,30,20,10,10)
-	high_population_requirement = 50
 	repeatable = TRUE
 	var/list/spawn_locs = list()
 

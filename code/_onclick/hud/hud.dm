@@ -6,13 +6,15 @@
 
 // The default UI style is the first one in the list
 GLOBAL_LIST_INIT(available_ui_styles, list(
+	"Cyberspess" = 'icons/mob/screen_cyberspess.dmi',
 	"Midnight" = 'icons/mob/screen_midnight.dmi',
 	"Retro" = 'icons/mob/screen_retro.dmi',
 	"Plasmafire" = 'icons/mob/screen_plasmafire.dmi',
 	"Slimecore" = 'icons/mob/screen_slimecore.dmi',
 	"Operative" = 'icons/mob/screen_operative.dmi',
-	"Bassboosted" = 'icons/mob/screen_bassboosted.dmi'
-));
+	"Clockwork" = 'icons/mob/screen_clockwork.dmi',
+	"Glass" = 'icons/mob/screen_glass.dmi'
+))
 
 /proc/ui_style2icon(ui_style)
 	return GLOB.available_ui_styles[ui_style] || GLOB.available_ui_styles[GLOB.available_ui_styles[1]]
@@ -58,7 +60,7 @@ GLOBAL_LIST_INIT(available_ui_styles, list(
 	var/obj/screen/healthdoll
 	var/obj/screen/internals
 	var/obj/screen/tooltip
-	var/obj/screen/wanted_lvl
+	var/obj/screen/wanted/wanted_lvl
 	var/obj/screen/spacesuit
 	// subtypes can override this to force a specific UI style
 	var/ui_style
@@ -79,20 +81,19 @@ GLOBAL_LIST_INIT(available_ui_styles, list(
 
 	tooltip = new /obj/screen/tooltip()
 	tooltip.hud = src
-	if (!(owner.client.prefs.w_toggles & TOOLTIP_USER_POS))
-		tooltip.screen_loc = "NORTH,CENTER-4:16"
+	if (owner.client.prefs.w_toggles & TOOLTIP_USER_POS)
+		tooltip.screen_loc = "SOUTH+1,CENTER-4:16"
 	infodisplay += tooltip
+
+	/*
+	extend(owner)
+	*/
 
 	for(var/mytype in subtypesof(/obj/screen/plane_master))
 		var/obj/screen/plane_master/instance = new mytype()
 		plane_masters["[instance.plane]"] = instance
 		instance.backdrop(mymob)
 
-	wanted_lvl = new /obj/screen()
-	wanted_lvl.icon = 'icons/obj/gang/wanted_160x32.dmi'
-	wanted_lvl.icon_state = "wanted_0"
-	wanted_lvl.screen_loc = ui_wanted_lvl
-	infodisplay += wanted_lvl
 	owner.overlay_fullscreen("see_through_darkness", /obj/screen/fullscreen/see_through_darkness)
 
 /datum/hud/Destroy()

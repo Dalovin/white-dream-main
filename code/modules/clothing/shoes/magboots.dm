@@ -13,7 +13,7 @@
 
 /obj/item/clothing/shoes/magboots/verb/toggle()
 	set name = "Toggle Magboots"
-	set category = "ОБЪЕКТ"
+	set category = "Объект"
 	set src in usr
 	if(!can_use(usr))
 		return
@@ -32,6 +32,7 @@
 	to_chat(user, "<span class='notice'>Переключаю магниты в состояние [magpulse ? "вкл" : "выкл"].</span>")
 	user.update_inv_shoes()	//so our mob-overlays update
 	user.update_gravity(user.has_gravity())
+	user.update_equipment_speed_mods() //we want to update our speed so we arent running at max speed in regular magboots
 	for(var/X in actions)
 		var/datum/action/A = X
 		A.UpdateButtonIcon()

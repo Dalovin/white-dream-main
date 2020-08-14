@@ -5,6 +5,7 @@
 	icon_keyboard = "security_key"
 	req_one_access = list(ACCESS_SECURITY, ACCESS_FORENSICS_LOCKERS)
 	circuit = /obj/item/circuitboard/computer/secure_data
+	light_color = COLOR_SOFT_RED
 	var/rank = null
 	var/screen = null
 	var/datum/data/record/active1 = null
@@ -18,7 +19,6 @@
 	var/sortBy = "name"
 	var/order = 1 // -1 = Descending - 1 = Ascending
 
-	light_color = LIGHT_COLOR_RED
 
 /obj/machinery/computer/secure_data/syndie
 	icon_keyboard = "syndie_key"
@@ -273,7 +273,7 @@ What a mess.*/
 		active1 = null
 	if(!( GLOB.data_core.security.Find(active2) ))
 		active2 = null
-	if(usr.contents.Find(src) || (in_range(src, usr) && isturf(loc)) || issilicon(usr) || IsAdminGhost(usr))
+	if(usr.contents.Find(src) || (in_range(src, usr) && isturf(loc)) || issilicon(usr) || isAdminGhostAI(usr))
 		usr.set_machine(src)
 		switch(href_list["choice"])
 // SORTING!
@@ -314,7 +314,7 @@ What a mess.*/
 					authenticated = borg.name
 					rank = "AI"
 					screen = 1
-				else if(IsAdminGhost(M))
+				else if(isAdminGhostAI(M))
 					active1 = null
 					active2 = null
 					authenticated = M.client.holder.admin_signature
@@ -748,7 +748,7 @@ What a mess.*/
 				switch(href_list["choice"])
 					if("Change Rank")
 						if(active1)
-							active1.fields["rank"] = href_list["rank"]
+							active1.fields["rank"] = strip_html(href_list["rank"])
 							if(href_list["rank"] in get_all_jobs())
 								active1.fields["real_rank"] = href_list["real_rank"]
 
@@ -812,11 +812,10 @@ What a mess.*/
 		return
 	printing = TRUE
 	sleep(20)
-	var/obj/item/photo/P = new/obj/item/photo(drop_location())
+	var/obj/item/photo/P = new/obj/item/photo(drop_location()[1])
 	var/datum/picture/toEmbed = new(name = person_name, desc = "The photo on file for [person_name].", image = temp)
 	P.set_picture(toEmbed, TRUE, TRUE)
-	P.pixel_x = rand(-10, 10)
-	P.pixel_y = rand(-10, 10)
+	P.forceMove(P.loc, rand(-10, 10), rand(-10, 10))
 	printing = FALSE
 
 /obj/machinery/computer/secure_data/emp_act(severity)

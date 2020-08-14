@@ -23,12 +23,12 @@
 	use_power = IDLE_POWER_USE
 	idle_power_usage = 2
 	active_power_usage = 6
-	power_channel = ENVIRON
+	power_channel = AREA_USAGE_ENVIRON
 	resistance_flags = FIRE_PROOF
 
 	light_power = 0
 	light_range = 7
-	light_color = "#ff3232"
+	light_color = COLOR_VIVID_RED
 
 	//Trick to get the glowing overlay visible from a distance
 	luminosity = 1

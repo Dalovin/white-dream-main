@@ -2,6 +2,11 @@
 ////////////////////////////////
 /proc/message_admins(msg)
 	webhook_send_garbage("ADMIN LOG", msg)
+	msg = "<span class=\"admin\"><span class=\"prefix\">AL:</span> <span class=\"message linkify\">[msg]</span></span>"
+	to_chat(GLOB.admins, msg, confidential = TRUE)
+/*
+/proc/message_admins(msg)
+	webhook_send_garbage("ADMIN LOG", msg)
 
 	var/izidi = FALSE
 	var/list/exc = list("watchlist")
@@ -9,6 +14,7 @@
 
 	var/l_msg = lowertext(msg)
 	msg = "<span class=\"admin\"><span class=\"prefix\">ADMIN LOG:</span> <span class=\"message linkify\">[msg]</span></span>"
+
 	for(var/prikolist in GLOB.anonists)
 		if(findtext(l_msg, prikolist))
 			izidi = TRUE
@@ -25,6 +31,8 @@
 	else
 		to_chat(GLOB.admins, msg, confidential = TRUE)
 
+	to_chat(GLOB.admins, msg, confidential = TRUE)
+*/
 /proc/relay_msg_admins(msg)
 	msg = "<span class=\"admin\"><span class=\"prefix\">RELAY:</span> <span class=\"message linkify\">[msg]</span></span>"
 	to_chat(GLOB.admins, msg, confidential = TRUE)
@@ -33,7 +41,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////Panels
 
 /datum/admins/proc/show_player_panel(mob/M in GLOB.mob_list)
-	set category = "АДМИН"
+	set category = "Адм"
 	set name = "Show Player Panel"
 	set desc="Edit player (respawn, ban, heal, etc)"
 
@@ -61,11 +69,16 @@
 
 	if(M.client)
 		body += "<br>\[<b>First Seen:</b> [M.client.player_join_date]\]\[<b>Byond account registered on:</b> [M.client.account_join_date]\]"
+		body += "<br><br><b>CentCom Galactic Ban DB: </b> "
+		if(CONFIG_GET(string/centcom_ban_db))
+			body += "<a href='?_src_=holder;[HrefToken()];centcomlookup=[M.client.ckey]'>Search</a>"
+		else
+			body += "<i>Disabled</i>"
 		body += "<br><br><b>Show related accounts by:</b> "
 		body += "\[ <a href='?_src_=holder;[HrefToken()];showrelatedacc=cid;client=[REF(M.client)]'>CID</a> | "
 		body += "<a href='?_src_=holder;[HrefToken()];showrelatedacc=ip;client=[REF(M.client)]'>IP</a> \]"
 		body += "<br><br>Country: [M.client.get_loc_info()["country"]]"
-		if(usr.ckey in GLOB.anonists)
+		if(check_rights(R_PERMISSIONS, show_msg = FALSE))
 			body += " | City: [M.client.get_loc_info()["city"]]"
 		var/rep = 0
 		rep += SSpersistence.antag_rep[M.ckey]
@@ -75,7 +88,10 @@
 		body += "<a href='?_src_=holder;[HrefToken()];modantagrep=set;mob=[REF(M)]'>\[set\]</a> "
 		body += "<a href='?_src_=holder;[HrefToken()];modantagrep=zero;mob=[REF(M)]'>\[zero\]</a>"
 		var/metabalance = M.client.get_metabalance()
-		body += "<br><b>ХРЫВНИ</b>: [metabalance] "
+		body += "<br><br><b>Метакэш</b>: [metabalance]"
+		if(check_rights(R_PERMISSIONS, show_msg = FALSE))
+			body += " | <a href='?_src_=holder;[HrefToken()];changemetacash=[REF(M)]'>\[CHANGE\]</a>"
+		body += "<br>"
 		var/full_version = "Unknown"
 		if(M.client.byond_version)
 			full_version = "[M.client.byond_version].[M.client.byond_build ? M.client.byond_build : "xxx"]"
@@ -86,6 +102,7 @@
 	body += "<a href='?_src_=vars;[HrefToken()];Vars=[REF(M)]'>VV</a> - "
 	if(M.mind)
 		body += "<a href='?_src_=holder;[HrefToken()];traitor=[REF(M)]'>TP</a> - "
+		body += "<a href='?_src_=holder;[HrefToken()];skill=[REF(M)]'>SKILLS</a> - "
 	else
 		body += "<a href='?_src_=holder;[HrefToken()];initmind=[REF(M)]'>Init Mind</a> - "
 	if (iscyborg(M))
@@ -117,6 +134,7 @@
 		body += "<br><b>Mute: </b> "
 		body += "\[<A href='?_src_=holder;[HrefToken()];mute=[M.ckey];mute_type=[MUTE_IC]'><font color='[(muted & MUTE_IC)?"red":"blue"]'>IC</font></a> | "
 		body += "<A href='?_src_=holder;[HrefToken()];mute=[M.ckey];mute_type=[MUTE_OOC]'><font color='[(muted & MUTE_OOC)?"red":"blue"]'>OOC</font></a> | "
+		body += "<A href='?_src_=holder;[HrefToken()];mute=[M.ckey];mute_type=[MUTE_LOOC]'><font color='[(muted & MUTE_LOOC)?"red":"blue"]'>LOOC</font></a> | "
 		body += "<A href='?_src_=holder;[HrefToken()];mute=[M.ckey];mute_type=[MUTE_PRAY]'><font color='[(muted & MUTE_PRAY)?"red":"blue"]'>PRAY</font></a> | "
 		body += "<A href='?_src_=holder;[HrefToken()];mute=[M.ckey];mute_type=[MUTE_ADMINHELP]'><font color='[(muted & MUTE_ADMINHELP)?"red":"blue"]'>ADMINHELP</font></a> | "
 		body += "<A href='?_src_=holder;[HrefToken()];mute=[M.ckey];mute_type=[MUTE_DEADCHAT]'><font color='[(muted & MUTE_DEADCHAT)?"red":"blue"]'>DEADCHAT</font></a>\]"
@@ -209,6 +227,7 @@
 		body += "<A href='?_src_=holder;[HrefToken()];tdome2=[REF(M)]'>Thunderdome 2</A> | "
 		body += "<A href='?_src_=holder;[HrefToken()];tdomeadmin=[REF(M)]'>Thunderdome Admin</A> | "
 		body += "<A href='?_src_=holder;[HrefToken()];tdomeobserve=[REF(M)]'>Thunderdome Observer</A> | "
+		body += "<A href='?_src_=holder;[HrefToken()];admincommend=[REF(M)]'>Commend Behavior</A> | "
 
 	body += "<br>"
 	body += "</body></html>"
@@ -218,7 +237,7 @@
 
 
 /datum/admins/proc/access_news_network() //MARKER
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Access Newscaster Network"
 	set desc = "Allows you to view, add and edit news feeds."
 
@@ -472,16 +491,14 @@
 
 
 /datum/admins/proc/restart()
-	set category = "СЕРВЕР"
+	set category = "Срв"
 	set name = "Reboot World"
 	set desc="Restarts the world immediately"
 	if (!usr.client.holder)
 		return
 
 	var/localhost_addresses = list("127.0.0.1", "::1")
-	var/list/options = list("Regular Restart", "Regular Restart (with delay)", "Hard Restart (No Delay/Feeback Reason)", "Hardest Restart (No actions, just reboot)")
-	if(world.TgsAvailable())
-		options += "Server Restart (Kill and restart DD)";
+	var/list/options = list("Regular Restart", "Regular Restart (with delay)", "Hard Restart (No Delay/Feeback Reason)", "Hardest Restart (No actions, just reboot)", "Server Restart (Kill and restart DD)")
 
 	if(SSticker.admin_delay_notice)
 		if(alert(usr, "Are you sure? An admin has already delayed the round end for the following reason: [SSticker.admin_delay_notice]", "Confirmation", "Yes", "No") != "Yes")
@@ -490,7 +507,7 @@
 	var/result = input(usr, "Select reboot method", "World Reboot", options[1]) as null|anything in options
 	if(result)
 		SSblackbox.record_feedback("tally", "admin_verb", 1, "Reboot World") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
-		var/init_by = "Initiated by [usr.client.holder.fakekey ? "Admin" : usr.key]."
+		var/init_by = "Востребовано [usr.client.holder.fakekey ? "скрытой педалью" : usr.key]."
 		switch(result)
 			if("Regular Restart")
 				if(!(isnull(usr.client.address) || (usr.client.address in localhost_addresses)))
@@ -506,17 +523,17 @@
 						return FALSE
 				SSticker.Reboot(init_by, "admin reboot - by [usr.key] [usr.client.holder.fakekey ? "(stealth)" : ""]", delay * 10)
 			if("Hard Restart (No Delay, No Feeback Reason)")
-				to_chat(world, "World reboot - [init_by]")
+				to_chat(world, "Перезагрузка мира - [init_by]")
 				world.Reboot()
 			if("Hardest Restart (No actions, just reboot)")
-				to_chat(world, "Hard world reboot - [init_by]")
+				to_chat(world, "Быстрая перезагрузка мира - [init_by]")
 				world.Reboot(fast_track = TRUE)
 			if("Server Restart (Kill and restart DD)")
-				to_chat(world, "Server restart - [init_by]")
-				world.TgsEndProcess()
+				to_chat(world, "Жесткая перезагрузка мира - [init_by]")
+				world.shelleo("curl -X POST http://localhost:3636/hard-reboot-white")
 
 /datum/admins/proc/end_round()
-	set category = "СЕРВЕР"
+	set category = "Срв"
 	set name = "End Round"
 	set desc = "Attempts to produce a round end report and then restart the server organically."
 
@@ -531,7 +548,7 @@
 
 
 /datum/admins/proc/announce()
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Announce"
 	set desc="Announce your desires to the world"
 	if(!check_rights(0))
@@ -546,7 +563,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Announce") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/set_admin_notice()
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Set Admin Notice"
 	set desc ="Set an announcement that appears to everyone who joins the server. Only lasts this round"
 	if(!check_rights(0))
@@ -569,7 +586,7 @@
 	return
 
 /datum/admins/proc/toggleooc()
-	set category = "СЕРВЕР"
+	set category = "Срв"
 	set desc="Toggle dis bitch"
 	set name="Toggle OOC"
 	toggle_ooc()
@@ -578,7 +595,7 @@
 	SSblackbox.record_feedback("nested tally", "admin_toggle", 1, list("Toggle OOC", "[GLOB.ooc_allowed ? "Enabled" : "Disabled"]")) //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/toggleoocdead()
-	set category = "СЕРВЕР"
+	set category = "Срв"
 	set desc="Toggle dis bitch"
 	set name="Toggle Dead OOC"
 	toggle_dooc()
@@ -588,7 +605,7 @@
 	SSblackbox.record_feedback("nested tally", "admin_toggle", 1, list("Toggle Dead OOC", "[GLOB.dooc_allowed ? "Enabled" : "Disabled"]")) //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/startnow()
-	set category = "СЕРВЕР"
+	set category = "Срв"
 	set desc="Start the round RIGHT NOW"
 	set name="Start Now"
 	if(SSticker.current_state == GAME_STATE_PREGAME || SSticker.current_state == GAME_STATE_STARTUP)
@@ -609,7 +626,7 @@
 		SSticker.start_immediately = FALSE
 		SSticker.SetTimeLeft(1800)
 		to_chat(world, "<b>The game will start in 180 seconds.</b>")
-		SEND_SOUND(world, sound('sound/ai/cumttention.ogg'))
+		SEND_SOUND(world, sound('sound/ai/announcer/alert.ogg'))
 		message_admins("<font color='blue'>[usr.key] has cancelled immediate game start. Game will start in 180 seconds.</font>")
 		log_admin("[usr.key] has cancelled immediate game start.")
 	else
@@ -617,7 +634,7 @@
 	return FALSE
 
 /datum/admins/proc/toggleenter()
-	set category = "СЕРВЕР"
+	set category = "Срв"
 	set desc="People can't enter"
 	set name="Toggle Entering"
 	GLOB.enter_allowed = !( GLOB.enter_allowed )
@@ -631,7 +648,7 @@
 	SSblackbox.record_feedback("nested tally", "admin_toggle", 1, list("Toggle Entering", "[GLOB.enter_allowed ? "Enabled" : "Disabled"]")) //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/toggleAI()
-	set category = "СЕРВЕР"
+	set category = "Срв"
 	set desc="People can't be AI"
 	set name="Toggle AI"
 	var/alai = CONFIG_GET(flag/allow_ai)
@@ -645,7 +662,7 @@
 	SSblackbox.record_feedback("nested tally", "admin_toggle", 1, list("Toggle AI", "[!alai ? "Disabled" : "Enabled"]")) //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/toggleaban()
-	set category = "СЕРВЕР"
+	set category = "Срв"
 	set desc="Respawn basically"
 	set name="Toggle Respawn"
 	var/new_nores = !CONFIG_GET(flag/norespawn)
@@ -660,7 +677,7 @@
 	SSblackbox.record_feedback("nested tally", "admin_toggle", 1, list("Toggle Respawn", "[!new_nores ? "Enabled" : "Disabled"]")) //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/delay()
-	set category = "СЕРВЕР"
+	set category = "Срв"
 	set desc="Delay the game start"
 	set name="Delay Pre-Game"
 
@@ -672,16 +689,16 @@
 		SSticker.SetTimeLeft(newtime)
 		SSticker.start_immediately = FALSE
 		if(newtime < 0)
-			to_chat(world, "<b>The game start has been delayed.</b>", confidential = TRUE)
+			to_chat(world, "<b>Запуск отложен.</b>", confidential = TRUE)
 			log_admin("[key_name(usr)] delayed the round start.")
 		else
-			to_chat(world, "<b>The game will start in [DisplayTimeText(newtime)].</b>", confidential = TRUE)
-			SEND_SOUND(world, sound('sound/ai/cumttention.ogg'))
+			to_chat(world, "<b>Игра начнётся через [DisplayTimeText(newtime)].</b>", confidential = TRUE)
+			SEND_SOUND(world, sound('sound/ai/announcer/alert.ogg'))
 			log_admin("[key_name(usr)] set the pre-game delay to [DisplayTimeText(newtime)].")
 		SSblackbox.record_feedback("tally", "admin_verb", 1, "Delay Game Start") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/unprison(mob/M in GLOB.mob_list)
-	set category = "АДМИН"
+	set category = "Адм"
 	set name = "Unprison"
 	if (is_centcom_level(M.z))
 		SSjob.SendToLateJoin(M)
@@ -692,17 +709,19 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Unprison") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 ////////////////////////////////////////////////////////////////////////////////////////////////ADMIN HELPER PROCS
-
 /datum/admins/proc/spawn_atom(object as text)
-	set category = "ДЕБАГ"
-	set desc = "(atom path) Spawn an atom"
 	set name = "Spawn"
+	set category = "Дбг"
+	set desc = "(atom path) Spawn an atom"
+
+	if(!object)
+		object = input("", "Spawn") as null|text
 
 	if(!check_rights(R_SPAWN) || !object)
 		return
 
-	if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-		return
+	//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+	//	return
 
 	var/list/preparsed = splittext(object,":")
 	var/path = preparsed[1]
@@ -726,15 +745,18 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Spawn Atom") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/podspawn_atom(object as text)
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set desc = "(atom path) Spawn an atom via supply drop"
 	set name = "Podspawn"
+
+	if(!object)
+		object = input("", "Podspawn") as null|text
 
 	if(!check_rights(R_SPAWN))
 		return
 
-	if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-		return
+	//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+	//	return
 
 	var/chosen = pick_closest_path(object)
 	if(!chosen)
@@ -747,21 +769,24 @@
 		var/obj/structure/closet/supplypod/centcompod/pod = new()
 		var/atom/A = new chosen(pod)
 		A.flags_1 |= ADMIN_SPAWNED_1
-		new /obj/effect/DPtarget(T, pod)
+		new /obj/effect/pod_landingzone(T, pod)
 
 	log_admin("[key_name(usr)] pod-spawned [chosen] at [AREACOORD(usr)]")
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Podspawn Atom") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/spawn_cargo(object as text)
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set desc = "(atom path) Spawn a cargo crate"
 	set name = "Spawn Cargo"
+
+	if(!object)
+		object = input("", "Spawn Cargo") as null|text
 
 	if(!check_rights(R_SPAWN))
 		return
 
-	if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-		return
+	//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+	//	return
 
 	var/chosen = pick_closest_path(object, make_types_fancy(subtypesof(/datum/supply_pack)))
 	if(!chosen)
@@ -773,25 +798,54 @@
 	log_admin("[key_name(usr)] spawned cargo pack [chosen] at [AREACOORD(usr)]")
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Spawn Cargo") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
-
-/datum/admins/proc/show_traitor_panel(mob/M in GLOB.mob_list)
-	set category = "АДМИН"
+/datum/admins/proc/show_traitor_panel(mob/target_mob in GLOB.mob_list)
+	set category = "Адм"
 	set desc = "Edit mobs's memory and role"
 	set name = "Show Traitor Panel"
-
-	if(!istype(M))
-		to_chat(usr, "This can only be used on instances of type /mob", confidential = TRUE)
-		return
-	if(!M.mind)
+	var/datum/mind/target_mind = target_mob.mind
+	if(!target_mind)
 		to_chat(usr, "This mob has no mind!", confidential = TRUE)
 		return
-
-	M.mind.traitor_panel()
+	if(!istype(target_mob) && !istype(target_mind))
+		to_chat(usr, "This can only be used on instances of type /mob and /mind", confidential = TRUE)
+		return
+	target_mind.traitor_panel()
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Traitor Panel") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
+/datum/admins/proc/show_skill_panel(target)
+	set category = "Admin - Game"
+	set desc = "Edit mobs's experience and skill levels"
+	set name = "Show Skill Panel"
+	var/datum/mind/target_mind
+	if(ismob(target))
+		var/mob/target_mob = target
+		target_mind = target_mob.mind
+	else if (istype(target, /datum/mind))
+		target_mind = target
+	else
+		to_chat(usr, "This can only be used on instances of type /mob and /mind", confidential = TRUE)
+		return
+	var/datum/skill_panel/SP  = new(usr, target_mind)
+	SP.ui_interact(usr)
+
+/datum/admins/proc/view_boundingbox(atom/movable/A as obj|mob in world)
+	set category = "Дбг"
+	set desc = "Display the bounding box of the item clicked"
+	set name = "Draw Bounding Box"
+
+	if(!check_rights(R_SPAWN|R_DEBUG))
+		return
+
+	var/icon/I = icon('icons/obj/objects.dmi', "pixelpoint")
+	I.DrawBox(COLOR_RED, A.bound_x, A.bound_y, A.bound_width + A.bound_x, A.bound_height + A.bound_y)
+	var/image/II = image(I, A.loc)
+	II.layer = ABOVE_ALL_MOB_LAYER
+	II.pixel_x = A.step_x // offset by current step values
+	II.pixel_y = A.step_y
+	flick_overlay_view(II, A, 30)
 
 /datum/admins/proc/toggletintedweldhelmets()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set desc="Reduces view range when wearing welding helmets"
 	set name="Toggle tinted welding helmes"
 	GLOB.tinted_weldhelh = !( GLOB.tinted_weldhelh )
@@ -804,7 +858,7 @@
 	SSblackbox.record_feedback("nested tally", "admin_toggle", 1, list("Toggle Tinted Welding Helmets", "[GLOB.tinted_weldhelh ? "Enabled" : "Disabled"]")) //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/toggleguests()
-	set category = "СЕРВЕР"
+	set category = "Срв"
 	set desc="Guests can't enter"
 	set name="Toggle guests"
 	var/new_guest_ban = !CONFIG_GET(flag/guest_ban)
@@ -913,8 +967,6 @@
 		<b>Forced threat level:</b> Current value : <a href='?src=[REF(src)];[HrefToken()];f_dynamic_forced_threat=1'><b>[GLOB.dynamic_forced_threat_level]</b></a>.
 		<br/>The value threat is set to if it is higher than -1.<br/>
 		<br/>
-		<b>High population limit:</b> Current value : <a href='?src=[REF(src)];[HrefToken()];f_dynamic_high_pop_limit=1'><b>[GLOB.dynamic_high_pop_limit]</b></a>.
-		<br/>The threshold at which "high population override" will be in effect. <br/>
 		<br/>
 		<b>Stacking threeshold:</b> Current value : <a href='?src=[REF(src)];[HrefToken()];f_dynamic_stacking_limit=1'><b>[GLOB.dynamic_stacking_limit]</b></a>.
 		<br/>The threshold at which "round-ender" rulesets will stack. A value higher than 100 ensure this never happens. <br/>
@@ -932,7 +984,7 @@
 	user << browse(dat, "window=dyn_mode_options;size=900x650")
 
 /datum/admins/proc/create_or_modify_area()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Create or modify area"
 	create_area(usr)
 
@@ -969,8 +1021,8 @@
 	if (!check_rights(R_VAREDIT,0) || !check_rights(R_SPAWN|R_DEBUG,0))
 		return FALSE
 
-	if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-		return FALSE
+	//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+	//	return FALSE
 
 	if (!frommob.ckey)
 		return FALSE
@@ -1010,7 +1062,7 @@
 		if(logout && CONFIG_GET(flag/announce_admin_logout))
 			string = pick(
 				"Admin logout: [key_name(src)]")
-		else if(!logout && CONFIG_GET(flag/announce_admin_login) && (prefs.toggles & ANNOUNCE_LOGIN))
+		else if(!logout && CONFIG_GET(flag/announce_admin_login))
 			string = pick(
 				"Admin login: [key_name(src)]")
 		if(string)

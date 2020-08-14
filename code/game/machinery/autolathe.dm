@@ -216,7 +216,7 @@
 
 /obj/machinery/autolathe/proc/make_item(power, list/materials_used, list/picked_materials, multiplier, coeff, is_stack, mob/user)
 	var/datum/component/material_container/materials = GetComponent(/datum/component/material_container)
-	var/atom/A = drop_location()
+	var/atom/A = drop_location()[1]
 	use_power(power)
 
 	materials.use_materials(materials_used)
@@ -225,6 +225,14 @@
 		var/obj/item/stack/N = new being_built.build_path(A, multiplier)
 		N.update_icon()
 		N.autolathe_crafted(src)
+
+		if(length(picked_materials))
+			N.set_custom_materials(picked_materials, 1 / multiplier) //Ensure we get the non multiplied amount
+			for(var/x in picked_materials)
+				var/datum/material/M = x
+				if(!istype(M, /datum/material/glass) && !istype(M, /datum/material/iron))
+					user.client.give_award(/datum/award/achievement/misc/getting_an_upgrade, user)
+
 	else
 		for(var/i=1, i<=multiplier, i++)
 			var/obj/item/new_item = new being_built.build_path(A)

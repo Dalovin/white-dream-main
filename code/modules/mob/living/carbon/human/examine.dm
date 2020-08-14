@@ -6,16 +6,61 @@
 	var/t_a 	= ru_a()
 
 	var/obscure_name
+	var/true_info = FALSE
 
-	if(isliving(user))
-		var/mob/living/L = user
-		if(HAS_TRAIT(L, TRAIT_PROSOPAGNOSIA))
+	if(ishuman(user))
+		var/mob/living/carbon/human/H = user
+		if(HAS_TRAIT(H, TRAIT_PROSOPAGNOSIA))
 			obscure_name = TRUE
+		if(H.glasses && H.glasses.type == /obj/item/clothing/glasses/hud/wzzzz/hacker_rig)
+			true_info = TRUE
 
-	. = list("<span class='info'>*---------*\nЭто же <EM>[!obscure_name ? name : "Unknown"]</EM>!")
+	. = list("")
 
-	if(user.stat == CONSCIOUS)
-		visible_message("<span class='small'><b>[user]</b> смотрит на <b>[!obscure_name ? name : "Unknown"]</b>.</span>", null, null, COMBAT_MESSAGE_RANGE)
+	if(true_info)
+		if(!client || !client.holder)
+			. += "<div class='examine_block'><span class='info'>ОБЪЕКТ: <EM>[name]</EM>.<hr>"
+			SEND_SOUND(user, sound('sound/ai/hacker/scanned.ogg'))
+			var/is_weapon = FALSE
+			for(var/I in get_contents())
+				if(istype(I, /obj/item/gun) || istype(I, /obj/item/melee))
+					hud_list[HACKER_HUD].add_overlay("node_weapon")
+					is_weapon = TRUE
+					break
+			if(is_weapon)
+				spawn(15)
+					SEND_SOUND(user, sound('sound/ai/hacker/weapon.ogg'))
+				. += "<span class='warning'><big>Обнаружено оружие.</big></span>"
+			else
+				hud_list[HACKER_HUD].cut_overlay("node_weapon")
+
+			if(!mind?.antag_datums)
+				spawn(30)
+					SEND_SOUND(user, sound('sound/ai/hacker/neutral.ogg'))
+				hud_list[HACKER_HUD].cut_overlay("node_enemy")
+				hud_list[HACKER_HUD].add_overlay("node_neutral")
+			else
+				spawn(30)
+					SEND_SOUND(user, sound('sound/ai/hacker/enemy.ogg'))
+				hud_list[HACKER_HUD].cut_overlay("node_neutral")
+				hud_list[HACKER_HUD].add_overlay("node_enemy")
+
+			if(stat == DEAD)
+				spawn(45)
+					SEND_SOUND(user, sound('sound/ai/hacker/dead.ogg'))
+				hud_list[HACKER_HUD].add_overlay("node_dead")
+			else
+				hud_list[HACKER_HUD].cut_overlay("node_dead")
+		else
+			. += "<div class='examine_block'><span class='info'>ОБЪЕКТ: <EM>[name]</EM>.<hr>"
+			SEND_SOUND(user, sound('sound/ai/hacker/na.ogg'))
+			hud_list[HACKER_HUD].cut_overlay("node_na")
+			hud_list[HACKER_HUD].add_overlay("node_na")
+	else
+		. += "<div class='examine_block'><span class='info'>Это же <EM>[!obscure_name ? name : "Unknown"]</EM>!<hr>"
+
+	if(user.stat == CONSCIOUS && ishuman(user))
+		user.visible_message("<span class='small'><b>[user]</b> смотрит на <b>[!obscure_name ? name : "Unknown"]</b>.</span>", null, null, COMBAT_MESSAGE_RANGE)
 
 	var/list/obscured = check_obscured_slots()
 	var/skipface = (wear_mask && (wear_mask.flags_inv & HIDEFACE)) || (head && (head.flags_inv & HIDEFACE))
@@ -147,6 +192,8 @@
 
 	var/temp = getBruteLoss() //no need to calculate each of these twice
 
+	. += "<hr>"
+
 	var/list/msg = list()
 
 	var/list/missing = list(BODY_ZONE_HEAD, BODY_ZONE_CHEST, BODY_ZONE_L_ARM, BODY_ZONE_R_ARM, BODY_ZONE_L_LEG, BODY_ZONE_R_LEG)
@@ -157,19 +204,24 @@
 			disabled += BP
 		missing -= BP.body_zone
 		for(var/obj/item/I in BP.embedded_objects)
-			if(I.is_embed_harmless())
+			if(I.isEmbedHarmless())
 				msg += "<B>Из [t_ego] [BP.name] торчит [icon2html(I, user)] [I]!</B>\n"
 			else
 				msg += "<B>У н[t_ego] застрял [icon2html(I, user)] [I] в [BP.name]!</B>\n"
 
+		for(var/i in BP.wounds)
+			var/datum/wound/iter_wound = i
+			msg += "[iter_wound.get_examine_description(user)]\n"
+
 	for(var/X in disabled)
 		var/obj/item/bodypart/BP = X
 		var/damage_text
-		if(!(BP.get_damage(include_stamina = FALSE) >= BP.max_damage)) //Stamina is disabling the limb
-			damage_text = "вялый и безжизненный"
-		else
-			damage_text = (BP.brute_dam >= BP.burn_dam) ? BP.heavy_brute_msg : BP.heavy_burn_msg
-		msg += "<B>[t_ego] [BP.name] [damage_text]!</B>\n"
+		if(BP.is_disabled() != BODYPART_DISABLED_WOUND) // skip if it's disabled by a wound (cuz we'll be able to see the bone sticking out!)
+			if(!(BP.get_damage(include_stamina = FALSE) >= BP.max_damage)) //we don't care if it's stamcritted
+				damage_text = "выглядит бледновато"
+			else
+				damage_text = (BP.brute_dam >= BP.burn_dam) ? BP.heavy_brute_msg : BP.heavy_burn_msg
+		msg += "<B>[ru_ego(TRUE)] [BP.name] [damage_text]!</B>\n"
 
 	//stores missing limbs
 	var/l_limbs_missing = 0
@@ -249,11 +301,39 @@
 
 	if(bleedsuppress)
 		msg += "[t_on] перевязан[t_a].\n"
-	else if(bleed_rate)
-		if(reagents.has_reagent(/datum/reagent/toxin/heparin, needs_metabolizing = TRUE))
-			msg += "<b>[t_on] обильно истекает кровью!</b>\n"
+	else if(is_bleeding())
+		var/list/obj/item/bodypart/bleeding_limbs = list()
+
+		for(var/i in bodyparts)
+			var/obj/item/bodypart/BP = i
+			if(BP.get_bleed_rate())
+				bleeding_limbs += BP
+
+		var/num_bleeds = LAZYLEN(bleeding_limbs)
+
+		var/list/bleed_text
+		if(appears_dead)
+			bleed_text = list("<span class='deadsay'><B>Кровь брызгает струйками из [ru_ego(FALSE)]")
 		else
-			msg += "<B>[t_on] истекает кровью!</B>\n"
+			bleed_text = list("<B>[t_on] имеет кровотечение из [ru_ego(FALSE)]")
+
+		switch(num_bleeds)
+			if(1 to 2)
+				bleed_text += " [ru_otkuda_zone(bleeding_limbs[1].name)][num_bleeds == 2 ? " и [ru_otkuda_zone(bleeding_limbs[2].name)]" : ""]"
+			if(3 to INFINITY)
+				for(var/i in 1 to (num_bleeds - 1))
+					var/obj/item/bodypart/BP = bleeding_limbs[i]
+					bleed_text += " [ru_otkuda_zone(BP.name)],"
+				bleed_text += " и [ru_otkuda_zone(bleeding_limbs[num_bleeds].name)]"
+
+		if(appears_dead)
+			bleed_text += ", но похоже уже замедляется.</span></B>\n"
+		else
+			if(reagents.has_reagent(/datum/reagent/toxin/heparin, needs_metabolizing = TRUE))
+				bleed_text += " невероятно быстро"
+
+			bleed_text += "!</B>\n"
+		msg += bleed_text.Join()
 
 	if(reagents.has_reagent(/datum/reagent/teslium, needs_metabolizing = TRUE))
 		msg += "[t_on] испускает нежное голубое свечение!\n"
@@ -298,6 +378,10 @@
 					msg += "[t_on] смотрит в пустоту.\n"
 				if (HAS_TRAIT(src, TRAIT_DEAF))
 					msg += "[t_on] не реагирует на шум.\n"
+				if (bodytemperature > dna.species.bodytemp_heat_damage_limit)
+					msg += "[t_on] краснеет и хрипит.\n"
+				if (bodytemperature < dna.species.bodytemp_cold_damage_limit)
+					msg += "[t_on] дрожит.\n"
 
 			msg += "</span>"
 
@@ -318,14 +402,28 @@
 			else if(!client)
 				msg += "[t_on] имеет пустой, рассеянный взгляд и кажется совершенно не реагирующим ни на что. [t_on] может выйти из этого в ближайшее время.\n"
 
+	var/scar_severity = 0
+	for(var/i in all_scars)
+		var/datum/scar/S = i
+		if(S.is_visible(user))
+			scar_severity += S.severity
+
+	switch(scar_severity)
+		if(1 to 2)
+			msg += "<span class='smallnoticeital'>[t_on] похоже имеет шрамы... Стоит присмотреться, чтобы разглядеть ещё.</span>\n"
+		if(3 to 4)
+			msg += "<span class='notice'><i>[t_on] имеет несколько серьёзных шрамов... Стоит присмотреться, чтобы разглядеть ещё.</i></span>\n"
+		if(5 to 6)
+			msg += "<span class='notice'><b><i>[t_on] имеет множество ужасных шрамов... Стоит присмотреться, чтобы разглядеть ещё.</i></b></span>\n"
+		if(7 to INFINITY)
+			msg += "<span class='notice'><b><i>[t_on] имеет разорванное в хлам тело состоящее из шрамов... Стоит присмотреться, чтобы разглядеть ещё?</i></b></span>\n"
+
 	if (length(msg))
 		. += "\n<span class='warning'>[msg.Join("")]</span>"
 
 	var/trait_exam = common_trait_examine()
 	if (!isnull(trait_exam))
 		. += trait_exam
-
-	var/traitstring = get_trait_string()
 
 	var/perpname = get_face_name(get_id_name(""))
 	if(perpname && (HAS_TRAIT(user, TRAIT_SECURITY_HUD) || HAS_TRAIT(user, TRAIT_MEDICAL_HUD)))
@@ -348,9 +446,10 @@
 			R = find_record("name", perpname, GLOB.data_core.medical)
 			if(R)
 				. += "<a href='?src=[REF(src)];hud=m;evaluation=1'>\[Medical evaluation\]</a><br>"
-			if(traitstring)
+			var/quirkstring = get_quirk_string(TRUE, CAT_QUIRK_ALL)
+			if(quirkstring)
 				. += "<span class='notice ml-1'>Выявленные физиологические признаки:</span>"
-				. += "<span class='notice ml-2'>[traitstring]</span>"
+				. += "<span class='notice ml-2'>[quirkstring]</span>"
 
 		if(HAS_TRAIT(user, TRAIT_SECURITY_HUD))
 			if(!user.stat && user != src)
@@ -367,9 +466,10 @@
 					"<a href='?src=[REF(src)];hud=s;add_crime=1'>\[Добавить нарушение\]</a> ",
 					"<a href='?src=[REF(src)];hud=s;view_comment=1'>\[Просмотреть комментарии\]</a> ",
 					"<a href='?src=[REF(src)];hud=s;add_comment=1'>\[Добавить комментарий\]</a> "), "")
-	else if(isobserver(user) && traitstring)
-		. += "<span class='info'><b>Черты:</b> [traitstring]</span>"
-	. += "<span class='info'>*---------*</span>"
+	else if(isobserver(user))
+		. += "<hr><span class='info'><b>Черты:</b> [get_quirk_string()]</span>"
+	. += "</div>"
+	SEND_SIGNAL(src, COMSIG_PARENT_EXAMINE, user, .)
 
 /mob/living/proc/status_effect_examines(pronoun_replacement) //You can include this in any mob's examine() to show the examine texts of status effects!
 	var/list/dat = list()

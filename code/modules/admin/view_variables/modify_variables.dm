@@ -17,7 +17,7 @@ GLOBAL_PROTECT(VVpixelmovement)
 //FALSE = no subtypes, strict exact type pathing (or the type doesn't have subtypes)
 //TRUE = Yes subtypes
 //NULL = User cancelled at the prompt or invalid type given
-/client/proc/vv_subtype_prompt(var/type)
+/client/proc/vv_subtype_prompt(type)
 	if (!ispath(type))
 		return
 	var/list/subtypes = subtypesof(type)
@@ -282,8 +282,8 @@ GLOBAL_PROTECT(VVpixelmovement)
 	if(param_var_name in GLOB.VVckey_edit)
 		if(!check_rights(R_SPAWN|R_DEBUG))
 			return FALSE
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return FALSE
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return FALSE
 	if(param_var_name in GLOB.VVicon_edit_lock)
 		if(!check_rights(R_FUN|R_DEBUG))
 			return FALSE

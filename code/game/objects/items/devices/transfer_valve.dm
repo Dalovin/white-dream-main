@@ -2,13 +2,12 @@
 	icon = 'icons/obj/assemblies.dmi'
 	name = "tank transfer valve"
 	icon_state = "valve_1"
-	item_state = "ttv"
+	inhand_icon_state = "ttv"
 	lefthand_file = 'icons/mob/inhands/weapons/bombs_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/weapons/bombs_righthand.dmi'
 	desc = "Regulates the transfer of air between two tanks."
 	w_class = WEIGHT_CLASS_BULKY
-	var/ui_x = 310
-	var/ui_y = 320
+
 	var/obj/item/tank/tank_one
 	var/obj/item/tank/tank_two
 	var/obj/item/assembly/attached_device
@@ -126,8 +125,8 @@
 		target_self = TRUE
 	if(change_volume)
 		if(!target_self)
-			target.volume += tank_two.volume
-		target.volume += tank_one.air_contents.volume
+			target.set_volume(target.return_volume() + tank_two.air_contents.return_volume())
+		target.set_volume(target.return_volume() + tank_one.air_contents.return_volume())
 	var/datum/gas_mixture/temp
 	temp = tank_one.air_contents.remove_ratio(1)
 	target.merge(temp)
@@ -138,11 +137,11 @@
 /obj/item/transfer_valve/proc/split_gases()
 	if (!valve_open || !tank_one || !tank_two)
 		return
-	var/ratio1 = tank_one.air_contents.volume/tank_two.air_contents.volume
+	var/ratio1 = tank_one.air_contents.return_volume()/tank_two.air_contents.return_volume()
 	var/datum/gas_mixture/temp
 	temp = tank_two.air_contents.remove_ratio(ratio1)
 	tank_one.air_contents.merge(temp)
-	tank_two.air_contents.volume -=  tank_one.air_contents.volume
+	tank_two.air_contents.set_volume(tank_two.air_contents.return_volume() - tank_one.air_contents.return_volume())
 
 /*
 	Exadv1: I know this isn't how it's going to work, but this was just to check
@@ -193,11 +192,13 @@
 /obj/item/transfer_valve/proc/c_state()
 	return
 
-/obj/item/transfer_valve/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, \
-									datum/tgui/master_ui = null, datum/ui_state/state = GLOB.hands_state)
-	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+/obj/item/transfer_valve/ui_state(mob/user)
+	return GLOB.hands_state
+
+/obj/item/transfer_valve/ui_interact(mob/user, datum/tgui/ui)
+	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
-		ui = new(user, src, ui_key, "transfer_valve", name, ui_x, ui_y, master_ui, state)
+		ui = new(user, src, "TransferValve", name)
 		ui.open()
 
 /obj/item/transfer_valve/ui_data(mob/user)
@@ -241,3 +242,9 @@
 				. = TRUE
 
 	update_icon()
+
+/**
+  * Returns if this is ready to be detonated. Checks if both tanks are in place.
+  */
+/obj/item/transfer_valve/proc/ready()
+	return tank_one && tank_two

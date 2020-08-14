@@ -1,6 +1,7 @@
 /obj/structure/chair/e_chair
-	name = "electric chair"
-	desc = "Looks absolutely SHOCKING!"
+	name = "электрический стул"
+	desc = "Выглядит абсолютно ШОКИРУЮЩИМ!"
+	icon = 'icons/obj/chairs.dmi'
 	icon_state = "echair0"
 	var/obj/item/assembly/shock_kit/part = null
 	var/last_time = 1
@@ -29,9 +30,9 @@
 	var/area/A = get_area(src)
 	if(!isarea(A))
 		return
-	if(!A.powered(EQUIP))
+	if(!A.powered(AREA_USAGE_EQUIP))
 		return
-	A.use_power(EQUIP, 5000)
+	A.use_power(AREA_USAGE_EQUIP, 5000)
 
 	flick("echair_shock", src)
 	var/datum/effect_system/spark_spread/s = new /datum/effect_system/spark_spread
@@ -41,9 +42,9 @@
 		for(var/m in buckled_mobs)
 			var/mob/living/buckled_mob = m
 			buckled_mob.electrocute_act(85, src, 1)
-			to_chat(buckled_mob, "<span class='userdanger'>You feel a deep shock course through your body!</span>")
+			to_chat(buckled_mob, "<span class='userdanger'>Меня что-то бьёт током!</span>")
 			addtimer(CALLBACK(buckled_mob, /mob/living.proc/electrocute_act, 85, src, 1), 1)
-	visible_message("<span class='danger'>The electric chair went off!</span>", "<span class='hear'>You hear a deep sharp shock!</span>")
+	visible_message("<span class='danger'>Электрический стул жахает током!</span>", "<span class='hear'>Слышу глубокий разряд тока!</span>")
 
 /obj/structure/chair/e_chair/post_buckle_mob(mob/living/L)
 	SEND_SIGNAL(L, COMSIG_ADD_MOOD_EVENT, "dying", /datum/mood_event/deaths_door)

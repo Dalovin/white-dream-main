@@ -39,8 +39,8 @@ Difficulty: Hard
 	desc = "A massive metal club that hangs in the air as though waiting. It'll make you dance to its beat."
 	health = 2500
 	maxHealth = 2500
-	attack_verb_continuous = "clubs"
-	attack_verb_simple = "club"
+	attack_verb_continuous = "бьёт"
+	attack_verb_simple = "бьёт"
 	attack_sound = 'sound/weapons/sonic_jackhammer.ogg'
 	icon_state = "hierophant"
 	icon_living = "hierophant"
@@ -54,10 +54,10 @@ Difficulty: Hard
 	melee_damage_lower = 15
 	melee_damage_upper = 15
 	speed = 10
-	move_to_delay = 10
+	move_to_delay = 0.5
 	ranged = TRUE
 	ranged_cooldown_time = 40
-	aggro_vision_range = 21 //so it can see to one side of the arena to the other
+	aggro_vision_range = 672 //so it can see to one side of the arena to the other
 	loot = list(/obj/item/hierophant_club)
 	crusher_loot = list(/obj/item/hierophant_club, /obj/item/crusher_trophy/vortex_talisman)
 	wander = FALSE
@@ -133,7 +133,7 @@ Difficulty: Hard
 	var/mob/living/L
 	if(isliving(target))
 		L = target
-		target_slowness += L.cached_multiplicative_slowdown
+		target_slowness += L.step_size
 	if(client)
 		target_slowness += 1
 
@@ -409,7 +409,7 @@ Difficulty: Hard
 		for(var/mob/living/L in view(7,src))
 			stored_nearby += L // store the people to grant the achievements to once we die
 		hierophant_burst(null, get_turf(src), 10)
-		set_stat(CONSCIOUS) // deathgasp wont run if dead, stupid
+		set_stat(CONSCIOUS) // deathgasp won't run if dead, stupid
 		..(force_grant = stored_nearby)
 
 /mob/living/simple_animal/hostile/megafauna/hierophant/Destroy()
@@ -456,6 +456,7 @@ Difficulty: Hard
 				else
 					burst_range = 3
 					INVOKE_ASYNC(src, .proc/burst, get_turf(src), 0.25) //melee attacks on living mobs cause it to release a fast burst if on cooldown
+				OpenFire()
 			else
 				devour(L)
 		else
@@ -471,10 +472,12 @@ Difficulty: Hard
 
 /mob/living/simple_animal/hostile/megafauna/hierophant/Moved(oldLoc, movement_dir)
 	. = ..()
-	if(!stat && .)
+	if(!stat && . && oldLoc != loc)
 		var/obj/effect/temp_visual/hierophant/squares/HS = new(oldLoc)
 		HS.setDir(movement_dir)
-		playsound(src, 'sound/mecha/mechmove04.ogg', 150, TRUE, -4)
+		if(COOLDOWN_FINISHED(src, next_move_sound))
+			playsound(src, 'sound/mecha/mechmove04.ogg', 150, TRUE, -4)
+			COOLDOWN_START(src, next_move_sound, 0.5 SECONDS)
 		if(target)
 			arena_trap(target)
 
@@ -518,15 +521,15 @@ Difficulty: Hard
 	icon_state = "wall"
 	light_range = MINIMUM_USEFUL_LIGHT_RANGE
 	duration = 100
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 
 /obj/effect/temp_visual/hierophant/wall/Initialize(mapload, new_caster)
 	. = ..()
-	queue_smooth_neighbors(src)
-	queue_smooth(src)
+	QUEUE_SMOOTH_NEIGHBORS(src)
+	QUEUE_SMOOTH(src)
 
 /obj/effect/temp_visual/hierophant/wall/Destroy()
-	queue_smooth_neighbors(src)
+	QUEUE_SMOOTH_NEIGHBORS(src)
 	return ..()
 
 /obj/effect/temp_visual/hierophant/wall/CanAllowThrough(atom/movable/mover, turf/target)
@@ -628,7 +631,7 @@ Difficulty: Hard
 
 /obj/effect/temp_visual/hierophant/blast
 	icon_state = "hierophant_blast"
-	name = "vortex blast"
+	name = "вихревой взрыв"
 	light_range = 2
 	light_power = 2
 	desc = "Get out of the way!"
@@ -675,15 +678,15 @@ Difficulty: Hard
 		if(L.client)
 			flash_color(L.client, "#660099", 1)
 		playsound(L,'sound/weapons/sear.ogg', 50, TRUE, -4)
-		to_chat(L, "<span class='userdanger'>You're struck by a [name]!</span>")
+		to_chat(L, "<span class='userdanger'>Моя ударяет <b>[name]</b>!</span>")
 		var/limb_to_hit = L.get_bodypart(pick(BODY_ZONE_HEAD, BODY_ZONE_CHEST, BODY_ZONE_R_ARM, BODY_ZONE_L_ARM, BODY_ZONE_R_LEG, BODY_ZONE_L_LEG))
-		var/armor = L.run_armor_check(limb_to_hit, "melee", "Your armor absorbs [src]!", "Your armor blocks part of [src]!", 50, "Your armor was penetrated by [src]!")
-		L.apply_damage(damage, BURN, limb_to_hit, armor)
+		var/armor = L.run_armor_check(limb_to_hit, "melee", "Моя броня поглощает <b>[src]</b>!", "Моя броня блокирует часть <b>[src]</b>!", FALSE, 50, "Моя броня пробита <b>[src]</b>!")
+		L.apply_damage(damage, BURN, limb_to_hit, armor, wound_bonus=CANT_WOUND)
 		if(ishostile(L))
 			var/mob/living/simple_animal/hostile/H = L //mobs find and damage you...
 			if(H.stat == CONSCIOUS && !H.target && H.AIStatus != AI_OFF && !H.client)
 				if(!QDELETED(caster))
-					if(get_dist(H, caster) <= H.aggro_vision_range)
+					if(bounds_dist(H, caster) <= H.aggro_vision_range)
 						H.FindTarget(list(caster), 1)
 					else
 						H.Goto(get_turf(caster), H.move_to_delay, 3)
@@ -696,7 +699,7 @@ Difficulty: Hard
 		if(M.occupant)
 			if(friendly_fire_check && caster && caster.faction_check_mob(M.occupant))
 				continue
-			to_chat(M.occupant, "<span class='userdanger'>Your [M.name] is struck by a [name]!</span>")
+			to_chat(M.occupant, "<span class='userdanger'>Мой [M.name] был подвержен [name]!</span>")
 		playsound(M,'sound/weapons/sear.ogg', 50, TRUE, -4)
 		M.take_damage(damage, BURN, 0, 0)
 

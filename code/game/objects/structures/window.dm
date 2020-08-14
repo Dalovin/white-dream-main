@@ -6,14 +6,19 @@
 	layer = ABOVE_OBJ_LAYER //Just above doors
 	pressure_resistance = 4*ONE_ATMOSPHERE
 	anchored = TRUE //initially is 0 for tile smoothing
-	flags_1 = ON_BORDER_1
+	flags_1 = ON_BORDER_1 | RAD_PROTECT_CONTENTS_1
 	max_integrity = 25
 	can_be_unanchored = TRUE
 	resistance_flags = ACID_PROOF
 	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 80, "acid" = 100)
 	CanAtmosPass = ATMOS_PASS_PROC
 	rad_insulation = RAD_VERY_LIGHT_INSULATION
-	rad_flags = RAD_PROTECT_CONTENTS
+
+	bound_height = 7
+	bound_width = 32
+	bound_x = 0
+	bound_y = 25
+
 	var/ini_dir = null
 	var/state = WINDOW_OUT_OF_FRAME
 	var/reinf = FALSE
@@ -27,6 +32,8 @@
 	var/real_explosion_block	//ignore this, just use explosion_block
 	var/breaksound = "shatter"
 	var/hitsound = 'sound/effects/Glasshit.ogg'
+	flags_ricochet = RICOCHET_HARD
+	ricochet_chance_mod = 0.4
 
 
 /obj/structure/window/examine(mob/user)
@@ -90,39 +97,28 @@
 		deconstruct(FALSE)
 
 /obj/structure/window/setDir(direct)
-	if(!fulltile)
-		..()
-	else
-		..(FULLTILE_WINDOW_DIR)
+	if(fulltile)
+		direct = FULLTILE_WINDOW_DIR
+	return ..()
+
+/obj/structure/window/update_bounds(olddir, newdir)
+	if(newdir == FULLTILE_WINDOW_DIR)
+		bound_width = 32
+		bound_height = 32
+		bound_x = 0
+		bound_y = 0
+	else if(olddir == FULLTILE_WINDOW_DIR)
+		olddir = dir = initial(dir)
+		bound_width = initial(bound_width)
+		bound_height = initial(bound_height)
+		bound_x = initial(bound_x)
+		bound_y = initial(bound_y)
+	return ..()
 
 /obj/structure/window/CanAllowThrough(atom/movable/mover, turf/target)
 	. = ..()
 	if(istype(mover) && (mover.pass_flags & PASSGLASS))
-		return 1
-	if(dir == FULLTILE_WINDOW_DIR)
-		return 0	//full tile window, you can't move into it!
-	var/attempted_dir = get_dir(loc, target)
-	if(attempted_dir == dir)
-		return
-	if(istype(mover, /obj/structure/window))
-		var/obj/structure/window/W = mover
-		if(!valid_window_location(loc, W.ini_dir))
-			return FALSE
-	else if(istype(mover, /obj/structure/windoor_assembly))
-		var/obj/structure/windoor_assembly/W = mover
-		if(!valid_window_location(loc, W.ini_dir))
-			return FALSE
-	else if(istype(mover, /obj/machinery/door/window) && !valid_window_location(loc, mover.dir))
-		return FALSE
-	else if(attempted_dir != dir)
 		return TRUE
-
-/obj/structure/window/CheckExit(atom/movable/O, turf/target)
-	if(istype(O) && (O.pass_flags & PASSGLASS))
-		return 1
-	if(get_dir(O.loc, target) == dir)
-		return 0
-	return 1
 
 /obj/structure/window/attack_tk(mob/user)
 	user.changeNext_move(CLICK_CD_MELEE)
@@ -179,8 +175,8 @@
 		if(I.tool_behaviour == TOOL_SCREWDRIVER)
 			to_chat(user, "<span class='notice'>Начинаю [anchored ? "откручивать окно от пола":"прикручивать окно к полу"]...</span>")
 			if(I.use_tool(src, user, decon_speed, volume = 75, extra_checks = CALLBACK(src, .proc/check_anchored, anchored)))
-				setAnchored(!anchored)
-				to_chat(user, "<span class='notice'>[anchored ? "Прикручиваю к полу":"откручиваю от пола"].</span>")
+				set_anchored(!anchored)
+				to_chat(user, "<span class='notice'>[anchored ? "Прикручиваю к полу":"Откручиваю от пола"].</span>")
 			return
 		else if(I.tool_behaviour == TOOL_WRENCH && !anchored)
 			to_chat(user, "<span class='notice'>Начинаю разбирать [src.name]...</span>")
@@ -200,7 +196,7 @@
 
 	return ..()
 
-/obj/structure/window/setAnchored(anchorvalue)
+/obj/structure/window/set_anchored(anchorvalue)
 	..()
 	air_update_turf(TRUE)
 	update_nearby_icons()
@@ -217,17 +213,17 @@
 	return check_state(checked_state) && check_anchored(checked_anchored)
 
 /obj/structure/window/mech_melee_attack(obj/mecha/M)
-	if(!can_be_reached())
+	if(!can_be_reached(M))
 		return
 	..()
 
 /obj/structure/window/proc/can_be_reached(mob/user)
 	if(!fulltile)
-		if(get_dir(user,src) & dir)
+		if(GET_PIXELDIR(user,src) & dir)
 			for(var/obj/O in loc)
-				if(!O.CanPass(user, user.loc, 1))
-					return 0
-	return 1
+				if(!O.CanPass(user) && O != src)
+					return FALSE
+	return TRUE
 
 /obj/structure/window/take_damage(damage_amount, damage_type = BRUTE, damage_flag = 0, sound_effect = 1)
 	. = ..()
@@ -251,7 +247,7 @@
 	if(!disassembled)
 		playsound(src, breaksound, 70, TRUE)
 		if(!(flags_1 & NODECONSTRUCT_1))
-			for(var/obj/item/shard/debris in spawnDebris(drop_location()))
+			for(var/obj/item/shard/debris in spawnDebris(drop_location()[1]))
 				transfer_fingerprints_to(debris) // transfer fingerprints to shards only
 	qdel(src)
 	update_nearby_icons()
@@ -262,8 +258,6 @@
 	. += new /obj/effect/decal/cleanable/glass(location)
 	if (reinf)
 		. += new /obj/item/stack/rods(location, (fulltile ? 2 : 1))
-	if (fulltile)
-		. += new /obj/item/shard(location)
 
 /obj/structure/window/proc/can_be_rotated(mob/user,rotation_type)
 	if(anchored)
@@ -289,10 +283,10 @@
 	return ..()
 
 
-/obj/structure/window/Move()
+/obj/structure/window/Move(atom/newloc, direct = 0, _step_x, _step_y)
 	var/turf/T = loc
+	direct = ini_dir
 	. = ..()
-	setDir(ini_dir)
 	move_update_air(T)
 
 /obj/structure/window/CanAtmosPass(turf/T)
@@ -303,8 +297,8 @@
 //This proc is used to update the icons of nearby windows.
 /obj/structure/window/proc/update_nearby_icons()
 	update_icon()
-	if(smooth)
-		queue_smooth_neighbors(src)
+	if(smoothing_flags)
+		QUEUE_SMOOTH_NEIGHBORS(src)
 
 //merges adjacent full-tile windows into one
 /obj/structure/window/update_overlays()
@@ -316,8 +310,8 @@
 		var/ratio = obj_integrity / max_integrity
 		ratio = CEILING(ratio*4, 1) * 25
 
-		if(smooth)
-			queue_smooth(src)
+		if(smoothing_flags)
+			QUEUE_SMOOTH(src)
 
 		cut_overlay(crack_overlay)
 		if(ratio > 75)
@@ -370,6 +364,7 @@
 	state = RWINDOW_SECURE
 	glass_type = /obj/item/stack/sheet/rglass
 	rad_insulation = RAD_HEAVY_INSULATION
+	ricochet_chance_mod = 0.8
 
 //this is shitcode but all of construction is shitcode and needs a refactor, it works for now
 //If you find this like 4 years later and construction still hasn't been refactored, I'm so sorry for this
@@ -415,7 +410,7 @@
 				if(I.use_tool(src, user, 50, volume = 50))
 					to_chat(user, "<span class='notice'>Снимаю окно с болтов и теперь оно может быть свободно перемещено.</span>")
 					state = WINDOW_OUT_OF_FRAME
-					setAnchored(FALSE)
+					set_anchored(FALSE)
 				return
 	return ..()
 
@@ -462,15 +457,6 @@
 	explosion_block = 1
 	glass_type = /obj/item/stack/sheet/plasmaglass
 	rad_insulation = RAD_NO_INSULATION
-
-/obj/structure/window/plasma/spawnDebris(location)
-	. = list()
-	. += new /obj/item/shard/plasma(location)
-	. += new /obj/effect/decal/cleanable/glass/plasma(location)
-	if (reinf)
-		. += new /obj/item/stack/rods(location, (fulltile ? 2 : 1))
-	if (fulltile)
-		. += new /obj/item/shard/plasma(location)
 
 /obj/structure/window/plasma/spawner/east
 	dir = EAST
@@ -540,7 +526,7 @@
 				if(I.use_tool(src, user, 50, volume = 50))
 					to_chat(user, "<span class='notice'>You unfasten the bolts from the frame and the window pops loose.</span>")
 					state = WINDOW_OUT_OF_FRAME
-					setAnchored(FALSE)
+					set_anchored(FALSE)
 				return
 	return ..()
 
@@ -582,15 +568,40 @@
 /* Full Tile Windows (more obj_integrity) */
 
 /obj/structure/window/fulltile
-	icon = 'icons/obj/smooth_structures/window.dmi'
+	icon = 'white/valtos/icons/window_glass.dmi'
 	icon_state = "window"
 	dir = FULLTILE_WINDOW_DIR
 	max_integrity = 50
 	fulltile = TRUE
 	flags_1 = PREVENT_CLICK_UNDER_1
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 	canSmoothWith = list(/obj/structure/window/fulltile, /obj/structure/window/reinforced/fulltile, /obj/structure/window/reinforced/tinted/fulltile, /obj/structure/window/plasma/fulltile, /obj/structure/window/plasma/reinforced/fulltile)
 	glass_amount = 2
+
+/obj/structure/window/fulltile/attackby(obj/item/W, mob/user, params)
+	if(is_glass_sheet(W))
+		var/obj/item/stack/ST = W
+		if (ST.get_amount() < 2)
+			to_chat(user, "<span class='warning'>Надо бы хотя бы парочку листов стекла!</span>")
+			return
+		if(!anchored)
+			to_chat(user, "<span class='warning'>Надо бы прикрутить [src] к полу!</span>")
+			return
+		for(var/obj/machinery/door/firedoor/window/FD in loc)
+			to_chat(user, "<span class='warning'>Здесь уже есть окно!</span>")
+			return
+		to_chat(user, "<span class='notice'>Начинаю ставить запасное окно...</span>")
+		if(do_after(user,30, target = src))
+			if(!src.loc || !anchored)
+				return
+			for(var/obj/machinery/door/firedoor/window/FD in loc)
+				to_chat(user, "<span class='warning'>Здесь уже есть запасное окно!</span>")
+				return
+			new/obj/machinery/door/firedoor/window(drop_location())
+			ST.use(2)
+			to_chat(user, "<span class='notice'>Ставлю запасное окно на [src].</span>")
+		return
+	. = ..()
 
 /obj/structure/window/fulltile/unanchored
 	anchored = FALSE
@@ -602,7 +613,7 @@
 	max_integrity = 300
 	fulltile = TRUE
 	flags_1 = PREVENT_CLICK_UNDER_1
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 	canSmoothWith = list(/obj/structure/window/fulltile, /obj/structure/window/reinforced/fulltile, /obj/structure/window/reinforced/tinted/fulltile, /obj/structure/window/plasma/fulltile, /obj/structure/window/plasma/reinforced/fulltile)
 	glass_amount = 2
 
@@ -610,31 +621,81 @@
 	anchored = FALSE
 
 /obj/structure/window/plasma/reinforced/fulltile
-	icon = 'icons/obj/smooth_structures/rplasma_window.dmi'
+	icon = 'white/valtos/icons/window_rplasma.dmi'
 	icon_state = "rplasmawindow"
 	dir = FULLTILE_WINDOW_DIR
 	state = RWINDOW_SECURE
 	max_integrity = 1000
 	fulltile = TRUE
 	flags_1 = PREVENT_CLICK_UNDER_1
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 	glass_amount = 2
+
+/obj/structure/window/plasma/reinforced/fulltile/attackby(obj/item/W, mob/user, params)
+	if(is_glass_sheet(W))
+		var/obj/item/stack/ST = W
+		if (ST.get_amount() < 2)
+			to_chat(user, "<span class='warning'>Надо бы хотя бы парочку листов стекла!</span>")
+			return
+		if(!anchored)
+			to_chat(user, "<span class='warning'>Надо бы прикрутить [src] к полу!</span>")
+			return
+		for(var/obj/machinery/door/firedoor/window/FD in loc)
+			to_chat(user, "<span class='warning'>Здесь уже есть окно!</span>")
+			return
+		to_chat(user, "<span class='notice'>Начинаю ставить запасное окно...</span>")
+		if(do_after(user,30, target = src))
+			if(!src.loc || !anchored)
+				return
+			for(var/obj/machinery/door/firedoor/window/FD in loc)
+				to_chat(user, "<span class='warning'>Здесь уже есть запасное окно!</span>")
+				return
+			new/obj/machinery/door/firedoor/window(drop_location())
+			ST.use(2)
+			to_chat(user, "<span class='notice'>Ставлю запасное окно на [src].</span>")
+		return
+	. = ..()
 
 /obj/structure/window/plasma/reinforced/fulltile/unanchored
 	anchored = FALSE
 	state = WINDOW_OUT_OF_FRAME
 
 /obj/structure/window/reinforced/fulltile
-	icon = 'icons/obj/smooth_structures/reinforced_window.dmi'
+	icon = 'white/valtos/icons/window_rglass.dmi'
 	icon_state = "r_window"
 	dir = FULLTILE_WINDOW_DIR
 	max_integrity = 150
 	fulltile = TRUE
 	flags_1 = PREVENT_CLICK_UNDER_1
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 	state = RWINDOW_SECURE
 	canSmoothWith = list(/obj/structure/window/fulltile, /obj/structure/window/reinforced/fulltile, /obj/structure/window/reinforced/tinted/fulltile, /obj/structure/window/plasma/fulltile, /obj/structure/window/plasma/reinforced/fulltile)
 	glass_amount = 2
+
+/obj/structure/window/reinforced/fulltile/attackby(obj/item/W, mob/user, params)
+	if(is_glass_sheet(W))
+		var/obj/item/stack/ST = W
+		if (ST.get_amount() < 2)
+			to_chat(user, "<span class='warning'>Надо бы хотя бы парочку листов стекла!</span>")
+			return
+		if(!anchored)
+			to_chat(user, "<span class='warning'>Надо бы прикрутить [src] к полу!</span>")
+			return
+		for(var/obj/machinery/door/firedoor/window/FD in loc)
+			to_chat(user, "<span class='warning'>Здесь уже есть окно!</span>")
+			return
+		to_chat(user, "<span class='notice'>Начинаю ставить запасное окно...</span>")
+		if(do_after(user,30, target = src))
+			if(!src.loc || !anchored)
+				return
+			for(var/obj/machinery/door/firedoor/window/FD in loc)
+				to_chat(user, "<span class='warning'>Здесь уже есть запасное окно!</span>")
+				return
+			new/obj/machinery/door/firedoor/window(drop_location())
+			ST.use(2)
+			to_chat(user, "<span class='notice'>Ставлю запасное окно на [src].</span>")
+		return
+	. = ..()
 
 /obj/structure/window/reinforced/fulltile/unanchored
 	anchored = FALSE
@@ -646,7 +707,7 @@
 	dir = FULLTILE_WINDOW_DIR
 	fulltile = TRUE
 	flags_1 = PREVENT_CLICK_UNDER_1
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 	canSmoothWith = list(/obj/structure/window/fulltile, /obj/structure/window/reinforced/fulltile, /obj/structure/window/reinforced/tinted/fulltile, /obj/structure/window/plasma/fulltile, /obj/structure/window/plasma/reinforced/fulltile)
 	glass_amount = 2
 
@@ -670,11 +731,12 @@
 	reinf = TRUE
 	heat_resistance = 1600
 	armor = list("melee" = 90, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 50, "bio" = 100, "rad" = 100, "fire" = 80, "acid" = 100)
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 	canSmoothWith = null
 	explosion_block = 3
 	glass_type = /obj/item/stack/sheet/titaniumglass
 	glass_amount = 2
+	ricochet_chance_mod = 0.9
 
 /obj/structure/window/shuttle/narsie_act()
 	add_atom_colour("#3C3434", FIXED_COLOUR_PRIORITY)
@@ -697,7 +759,7 @@
 	flags_1 = PREVENT_CLICK_UNDER_1
 	heat_resistance = 1600
 	armor = list("melee" = 95, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 50, "bio" = 100, "rad" = 100, "fire" = 80, "acid" = 100)
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 	canSmoothWith = null
 	explosion_block = 3
 	damage_deflection = 11 //The same as normal reinforced windows.3
@@ -719,7 +781,7 @@
 	max_integrity = 15
 	fulltile = TRUE
 	flags_1 = PREVENT_CLICK_UNDER_1
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 	canSmoothWith = list(/obj/structure/window/paperframe, /obj/structure/mineral_door/paperframe)
 	glass_amount = 2
 	glass_type = /obj/item/stack/sheet/paperframes
@@ -772,7 +834,7 @@
 		cut_overlay(torn)
 		add_overlay(paper)
 		set_opacity(TRUE)
-	queue_smooth(src)
+	QUEUE_SMOOTH(src)
 
 
 /obj/structure/window/paperframe/attackby(obj/item/W, mob/user)
@@ -805,7 +867,7 @@
 
 /obj/structure/window/bronze/fulltile
 	icon_state = "clockwork_window"
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 	canSmoothWith = null
 	fulltile = TRUE
 	flags_1 = PREVENT_CLICK_UNDER_1

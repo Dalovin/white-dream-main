@@ -71,14 +71,14 @@
 	name = "basketball"
 	icon = 'icons/obj/items_and_weapons.dmi'
 	icon_state = "basketball"
-	item_state = "basketball"
+	inhand_icon_state = "basketball"
 	desc = "Here's your chance, do your dance at the Space Jam."
 	w_class = WEIGHT_CLASS_BULKY //Stops people from hiding it in their bags/pockets
 
 /obj/item/toy/beach_ball/holoball/dodgeball
 	name = "dodgeball"
 	icon_state = "dodgeball"
-	item_state = "dodgeball"
+	inhand_icon_state = "dodgeball"
 	desc = "Used for playing the most violent and degrading of childhood games."
 
 /obj/item/toy/beach_ball/holoball/dodgeball/throw_impact(atom/hit_atom, datum/thrownthing/throwingdatum)
@@ -127,7 +127,7 @@
 /obj/structure/holohoop/hitby(atom/movable/AM, skipcatch, hitpush, blocked, datum/thrownthing/throwingdatum)
 	if (isitem(AM) && !istype(AM,/obj/projectile))
 		if(prob(50))
-			AM.forceMove(get_turf(src))
+			AM.forceMove(get_turf(src), -8)
 			visible_message("<span class='warning'>Swish! [AM] lands in [src].</span>")
 			return
 		else
@@ -154,7 +154,7 @@
 	use_power = IDLE_POWER_USE
 	idle_power_usage = 2
 	active_power_usage = 6
-	power_channel = ENVIRON
+	power_channel = AREA_USAGE_ENVIRON
 
 /obj/machinery/readybutton/attack_ai(mob/user as mob)
 	to_chat(user, "<span class='warning'>The station AI is not to interact with these devices!</span>")
@@ -217,7 +217,7 @@
 /obj/machinery/conveyor/holodeck
 
 /obj/machinery/conveyor/holodeck/attackby(obj/item/I, mob/user, params)
-	if(!user.transferItemToLoc(I, drop_location()))
+	if(!user.transferItemToLoc(I, src))
 		return ..()
 
 /obj/item/paper/fluff/holodeck/trek_diploma

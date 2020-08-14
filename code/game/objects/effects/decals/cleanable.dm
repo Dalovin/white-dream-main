@@ -1,6 +1,9 @@
 /obj/effect/decal/cleanable
 	gender = PLURAL
 	layer = ABOVE_NORMAL_TURF_LAYER
+	bound_width = 8 // most decals are roughly 1/4 of a tile
+	bound_height = 8
+	bound_x  = 4
 	var/list/random_icon_states = null
 	var/blood_state = "" //I'm sorry but cleanable/blood code is ass, and so is blood_DNA
 	var/bloodiness = 0 //0-100, amount of blood in this decal, used for making footprints and affecting the alpha of bloody footprints
@@ -15,7 +18,7 @@
 	if(loc && isturf(loc))
 		for(var/obj/effect/decal/cleanable/C in loc)
 			if(C != src && C.type == type && !QDELETED(C))
-				if (replace_decal(C))
+				if (replace_decal(C) && !bounds_dist(src, C))
 					return INITIALIZE_HINT_QDEL
 
 	if(LAZYLEN(diseases))
@@ -26,7 +29,7 @@
 		if(LAZYLEN(diseases_to_add))
 			AddComponent(/datum/component/infective, diseases_to_add)
 
-	addtimer(CALLBACK(src, /datum.proc/_AddComponent, list(/datum/component/beauty, beauty)), 0)
+	INVOKE_ASYNC(src, /datum.proc/_AddComponent, list(/datum/component/beauty, beauty))
 
 	var/turf/T = get_turf(src)
 	if(T && is_station_level(T.z))
@@ -43,7 +46,7 @@
 		return TRUE
 
 /obj/effect/decal/cleanable/attackby(obj/item/W, mob/user, params)
-	if(istype(W, /obj/item/reagent_containers/glass) || istype(W, /obj/item/reagent_containers/food/drinks))
+	if((istype(W, /obj/item/reagent_containers/glass) && !istype(W, /obj/item/reagent_containers/glass/rag)) || istype(W, /obj/item/reagent_containers/food/drinks))
 		if(src.reagents && W.reagents)
 			. = 1 //so the containers don't splash their content on the src while scooping.
 			if(!src.reagents.total_volume)
@@ -100,9 +103,11 @@
 			S.blood_state = blood_state
 			update_icon()
 			H.update_inv_shoes()
-/atom/effect/decal/cleanable/washed(atom/washer)
-	. = ..()
+
+/obj/effect/decal/cleanable/wash(clean_types)
+	..()
 	qdel(src)
+	return TRUE
 
 /obj/effect/decal/cleanable/proc/can_bloodcrawl_in()
 	if((blood_state != BLOOD_STATE_OIL) && (blood_state != BLOOD_STATE_NOT_BLOODY))

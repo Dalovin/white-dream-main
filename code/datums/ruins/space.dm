@@ -170,14 +170,14 @@
 
 /datum/map_template/ruin/space/djstation
 	id = "djstation"
-	suffix = "djstation.dmm"
+	suffix = "DJstation.dmm"
 	name = "DJ Station"
 	description = "Until very recently this pirate radio station was used to harangue local space stations over a variety of perceived \"ethics violations\". \
 	It seems like someone finally got sick of it, but the equipment still works."
 
 /datum/map_template/ruin/space/thederelict
 	id = "thederelict"
-	suffix = "thederelict.dmm"
+	suffix = "TheDerelict.dmm"
 	name = "Kosmicheskaya Stantsiya 13"
 	description = "The true fate of Kosmicheskaya Stantsiya 13 is an open question to this day. Most corporations deny its existence, for fear of questioning on what became of its crew."
 
@@ -209,7 +209,7 @@
 	description = "Listening stations form the backbone of the syndicate's information-gathering operations. \
 	Assignment to these stations is dreaded by most agents, as it entails long and lonely shifts listening to nearby stations chatter incessantly about the most meaningless things."
 
-/datum/map_template/ruin/space/oldAIsat
+/datum/map_template/ruin/space/old_ai_sat
 	id = "oldAIsat"
 	suffix = "oldAIsat.dmm"
 	name = "Abandoned Telecommunications Satellite"
@@ -287,14 +287,6 @@
 	suffix = "clericden.dmm"
 	name = "Cleric's Den"
 	description = "Once part of a larger monastery, this holy order of long dead clerics practiced far less non-violence than they preached. Appears to have been untouched by looters, however. Odd."
-
-/datum/map_template/ruin/space/kinggoatarena
-	id = "kinggoatarena"
-	suffix = "kinggoatarena.dmm"
-	name = "King Goat Arena"
-	description = "Well wish you luck."
-	allow_duplicates = FALSE
-	unpickable = TRUE
 
 /datum/map_template/ruin/space/forgottenship
 	id = "forgottenship"

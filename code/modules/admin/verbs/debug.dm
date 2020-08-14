@@ -1,5 +1,5 @@
 /client/proc/Debug2()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Debug-Game"
 	if(!check_rights(R_DEBUG))
 		return
@@ -27,7 +27,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 */
 
 /client/proc/Cell()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Air Status in Location"
 	if(!mob)
 		return
@@ -38,7 +38,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Air Status In Location") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_robotize(mob/M in GLOB.mob_list)
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Make Robot"
 
 	if(!SSticker.HasRoundStarted())
@@ -53,7 +53,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		alert("Invalid mob")
 
 /client/proc/cmd_admin_blobize(mob/M in GLOB.mob_list)
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Make Blob"
 
 	if(!SSticker.HasRoundStarted())
@@ -68,7 +68,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 
 
 /client/proc/cmd_admin_animalize(mob/M in GLOB.mob_list)
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Make Simple Animal"
 
 	if(!SSticker.HasRoundStarted())
@@ -88,7 +88,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 
 
 /client/proc/makepAI(turf/T in GLOB.mob_list)
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Make pAI"
 	set desc = "Specify a location to spawn a pAI device, then specify a key to play that pAI"
 
@@ -115,13 +115,13 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	pai.real_name = pai.name
 	pai.key = choice.key
 	card.setPersonality(pai)
-	for(var/datum/paiCandidate/candidate in SSpai.candidates)
+	for(var/datum/pai_candidate/candidate in SSpai.candidates)
 		if(candidate.key == choice.key)
 			SSpai.candidates.Remove(candidate)
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Make pAI") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_alienize(mob/M in GLOB.mob_list)
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Make Alien"
 
 	if(!SSticker.HasRoundStarted())
@@ -136,7 +136,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		alert("Invalid mob")
 
 /client/proc/cmd_admin_slimeize(mob/M in GLOB.mob_list)
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Make slime"
 
 	if(!SSticker.HasRoundStarted())
@@ -152,8 +152,15 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 
 
 //TODO: merge the vievars version into this or something maybe mayhaps
+/client/proc/cmd_debug_del_all_wrapper()
+	set category = "Дбг"
+	set name = "Del-All"
+
+	var/msg = input(src, null, "Del-All") as text|null
+	if(msg)
+		cmd_debug_del_all(msg)
+
 /client/proc/cmd_debug_del_all(object as text)
-	set category = "ДЕБАГ"
 	set name = "Del-All"
 
 	var/list/matches = get_fancy_list_of_atom_types()
@@ -177,7 +184,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 
 
 /client/proc/cmd_debug_make_powernets()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Make Powernets"
 	SSmachines.makepowernets()
 	log_admin("[key_name(src)] has remade the powernet. makepowernets() called.")
@@ -185,7 +192,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Make Powernets") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_grantfullaccess(mob/M in GLOB.mob_list)
-	set category = "АДМИН"
+	set category = "Адм"
 	set name = "Grant Full Access"
 
 	if(!SSticker.HasRoundStarted())
@@ -227,7 +234,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	message_admins("<span class='adminnotice'>[key_name_admin(usr)] has granted [M.key] full access.</span>")
 
 /client/proc/cmd_assume_direct_control(mob/M in GLOB.mob_list)
-	set category = "АДМИН"
+	set category = "Адм"
 	set name = "Assume direct control"
 	set desc = "Direct intervention"
 
@@ -248,7 +255,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Assume Direct Control") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_give_direct_control(mob/M in GLOB.mob_list)
-	set category = "АДМИН"
+	set category = "Адм"
 	set name = "Give direct control"
 
 	if(!M)
@@ -274,7 +281,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Give Direct Control") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_test_atmos_controllers()
-	set category = "Mapping"
+	set category = "Маппинг"
 	set name = "Test Atmos Monitoring Consoles"
 
 	var/list/dat = list()
@@ -310,7 +317,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	popup.open()
 
 /client/proc/cmd_admin_areatest(on_station)
-	set category = "Mapping"
+	set category = "Маппинг"
 	set name = "Test Areas"
 
 	var/list/dat = list()
@@ -482,17 +489,17 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 
 
 /client/proc/cmd_admin_areatest_station()
-	set category = "Mapping"
+	set category = "Маппинг"
 	set name = "Test Areas (STATION Z)"
 	cmd_admin_areatest(TRUE)
 
 /client/proc/cmd_admin_areatest_all()
-	set category = "Mapping"
+	set category = "Маппинг"
 	set name = "Test Areas (ALL)"
 	cmd_admin_areatest(FALSE)
 
 /client/proc/cmd_admin_dress(mob/M in GLOB.mob_list)
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Select equipment"
 	if(!(ishuman(M) || isobserver(M)))
 		alert("Invalid mob")
@@ -594,7 +601,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 
 /client/proc/startSinglo()
 
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Start Singularity"
 	set desc = "Sets up the singularity and all machines to get power flowing through the station"
 
@@ -607,10 +614,10 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 
 	for(var/obj/machinery/field/generator/F in GLOB.machines)
 		if(F.active == 0)
+			F.set_anchored(TRUE)
 			F.active = 1
 			F.state = 2
 			F.power = 250
-			F.anchored = TRUE
 			F.warming_up = 3
 			F.start_fields()
 			F.update_icon()
@@ -627,7 +634,6 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 				S.pixel_x = -96
 				S.pixel_y = -96
 				S.grav_pull = 0
-				//S.consume_range = 3
 				S.dissipate = 0
 				//S.dissipate_delay = 10
 				//S.dissipate_track = 0
@@ -637,8 +643,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		if(Rad.anchored)
 			if(!Rad.loaded_tank)
 				var/obj/item/tank/internals/plasma/Plasma = new/obj/item/tank/internals/plasma(Rad)
-				Plasma.air_contents.assert_gas(/datum/gas/plasma)
-				Plasma.air_contents.gases[/datum/gas/plasma][MOLES] = 70
+				Plasma.air_contents.set_moles(/datum/gas/plasma, 70)
 				Rad.drainratio = 0
 				Rad.loaded_tank = Plasma
 				Plasma.forceMove(Rad)
@@ -651,7 +656,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 			SMES.input_attempt = 1
 
 /client/proc/cmd_debug_mob_lists()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Debug Mob Lists"
 	set desc = "For when you just gotta know"
 
@@ -672,7 +677,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 			to_chat(usr, jointext(GLOB.joined_player_list,","), confidential = TRUE)
 
 /client/proc/cmd_display_del_log()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Display del() Log"
 	set desc = "Display del's log of everything that's passed through it."
 
@@ -701,30 +706,37 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	usr << browse(dellog.Join(), "window=dellog")
 
 /client/proc/cmd_display_overlay_log()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Display overlay Log"
 	set desc = "Display SSoverlays log of everything that's passed through it."
 
 	render_stats(SSoverlays.stats, src)
 
 /client/proc/cmd_display_init_log()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Display Initialize() Log"
 	set desc = "Displays a list of things that didn't handle Initialize() properly"
 
 	usr << browse(replacetext(SSatoms.InitLog(), "\n", "<br>"), "window=initlog")
 
-/client/proc/debug_huds(i as num)
-	set category = "ДЕБАГ"
+/client/proc/debug_huds_wrapper()
+	set category = "Дбг"
 	set name = "Debug HUDs"
 	set desc = "Debug the data or antag HUDs"
+
+	var/msg = input(src, null, "Debug HUDs") as num|null
+	if(msg)
+		debug_huds(msg)
+
+/client/proc/debug_huds(i as num)
+	set name = "Debug HUDs"
 
 	if(!holder)
 		return
 	debug_variables(GLOB.huds[i])
 
 /client/proc/jump_to_ruin()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Jump to Ruin"
 	set desc = "Displays a list of all placed ruins to teleport to."
 	if(!holder)
@@ -756,7 +768,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		to_chat(usr, "<span class='italics'>[template.description]</span>", confidential = TRUE)
 
 /client/proc/place_ruin()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Spawn Ruin"
 	set desc = "Attempt to randomly place a specific ruin."
 	if (!holder)
@@ -806,7 +818,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		to_chat(src, "<span class='warning'>Failed to place [template.name].</span>", confidential = TRUE)
 
 /client/proc/clear_dynamic_transit()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Clear Dynamic Turf Reservations"
 	set desc = "Deallocates all reserved space, restoring it to round start conditions."
 	if(!holder)
@@ -820,7 +832,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	SSmapping.wipe_reservations()				//this goes after it's logged, incase something horrible happens.
 
 /client/proc/toggle_medal_disable()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Toggle Medal Disable"
 	set desc = "Toggles the safety lock on trying to contact the medal hub."
 
@@ -834,7 +846,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	log_admin("[key_name(src)] [SSachievements.achievements_enabled ? "disabled" : "enabled"] the medal hub lockout.")
 
 /client/proc/view_runtimes()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "View Runtimes"
 	set desc = "Open the runtime Viewer"
 
@@ -844,7 +856,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	GLOB.error_cache.show_to(src)
 
 /client/proc/pump_random_event()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Pump Random Event"
 	set desc = "Schedules the event subsystem to fire a new random event immediately. Some events may fire without notification."
 	if(!holder)
@@ -857,7 +869,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	log_admin("[key_name(src)] pumped a random event.")
 
 /client/proc/start_line_profiling()
-	set category = "Profile"
+	set category = "Профайл"
 	set name = "Start Line Profiling"
 	set desc = "Starts tracking line by line profiling for code lines that support it"
 
@@ -868,7 +880,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	log_admin("[key_name(src)] started line by line profiling.")
 
 /client/proc/stop_line_profiling()
-	set category = "Profile"
+	set category = "Профайл"
 	set name = "Stops Line Profiling"
 	set desc = "Stops tracking line by line profiling for code lines that support it"
 
@@ -879,7 +891,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	log_admin("[key_name(src)] stopped line by line profiling.")
 
 /client/proc/show_line_profiling()
-	set category = "Profile"
+	set category = "Профайл"
 	set name = "Show Line Profiling"
 	set desc = "Shows tracked profiling info from code lines that support it"
 
@@ -895,10 +907,70 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	profile_show(src, sort)
 
 /client/proc/reload_configuration()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Reload Configuration"
 	set desc = "Force config reload to world default"
 	if(!check_rights(R_DEBUG))
 		return
 	if(alert(usr, "Are you absolutely sure you want to reload the configuration from the default path on the disk, wiping any in-round modificatoins?", "Really reset?", "No", "Yes") == "Yes")
 		config.admin_reload()
+
+/// A debug verb to check the sources of currently running timers
+/client/proc/check_timer_sources()
+	set category = "Дбг"
+	set name = "Check Timer Sources"
+	set desc = "Checks the sources of the running timers"
+	if (!check_rights(R_DEBUG))
+		return
+
+	var/bucket_list_output = generate_timer_source_output(SStimer.bucket_list)
+	var/second_queue = generate_timer_source_output(SStimer.second_queue)
+
+	usr << browse({"
+		<h3>bucket_list</h3>
+		[bucket_list_output]
+
+		<h3>second_queue</h3>
+		[second_queue]
+	"}, "window=check_timer_sources;size=700x700")
+
+/proc/generate_timer_source_output(list/datum/timedevent/events)
+	var/list/per_source = list()
+
+	// Collate all events and figure out what sources are creating the most
+	for (var/_event in events)
+		if (!_event)
+			continue
+		var/datum/timedevent/event = _event
+
+		do
+			if (event.source)
+				if (per_source[event.source] == null)
+					per_source[event.source] = 1
+				else
+					per_source[event.source] += 1
+			event = event.next
+		while (event && event != _event)
+
+	// Now, sort them in order
+	var/list/sorted = list()
+	for (var/source in per_source)
+		sorted += list(list("source" = source, "count" = per_source[source]))
+	sorted = sortTim(sorted, .proc/cmp_timer_data)
+
+	// Now that everything is sorted, compile them into an HTML output
+	var/output = "<table border='1'>"
+
+	for (var/_timer_data in sorted)
+		var/list/timer_data = _timer_data
+		output += {"<tr>
+			<td><b>[timer_data["source"]]</b></td>
+			<td>[timer_data["count"]]</td>
+		</tr>"}
+
+	output += "</table>"
+
+	return output
+
+/proc/cmp_timer_data(list/a, list/b)
+	return b["count"] - a["count"]

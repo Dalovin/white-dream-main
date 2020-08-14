@@ -20,13 +20,12 @@
 	maxHealth = 50000
 	health = 50000
 	healable = 0
-
 	harm_intent_damage = 10
 	obj_damage = 100
 	melee_damage_lower = 68
 	melee_damage_upper = 83
-	attack_verb_continuous = "claws"
-	attack_verb_simple = "claw"
+	attack_verb_continuous = "разрывает"
+	attack_verb_simple = "разрывает"
 	attack_sound = 'sound/hallucinations/growl1.ogg'
 
 	atmos_requirements = list("min_oxy" = 0, "max_oxy" = 0, "min_tox" = 0, "max_tox" = 0, "min_co2" = 0, "max_co2" = 0, "min_n2" = 0, "max_n2" = 0)
@@ -40,8 +39,8 @@
 
 	see_in_dark = 13
 	lighting_alpha = LIGHTING_PLANE_ALPHA_MOSTLY_VISIBLE
-	vision_range = 12
-	aggro_vision_range = 12
+	vision_range = 384
+	aggro_vision_range = 384
 
 	search_objects = 1 // So that it can see through walls
 
@@ -61,6 +60,7 @@
 /mob/living/simple_animal/hostile/statue/Initialize(mapload, mob/living/creator)
 	. = ..()
 	// Give spells
+	LAZYINITLIST(mob_spell_list)
 	mob_spell_list += new /obj/effect/proc_holder/spell/aoe_turf/flicker_lights(src)
 	mob_spell_list += new /obj/effect/proc_holder/spell/aoe_turf/blindness(src)
 	mob_spell_list += new /obj/effect/proc_holder/spell/targeted/night_vision(src)
@@ -108,6 +108,9 @@
 /mob/living/simple_animal/hostile/statue/face_atom()
 	if(!can_be_seen(get_turf(loc)))
 		..()
+
+/mob/living/simple_animal/hostile/statue/IsVocal() //we're a statue, of course we can't talk.
+	return FALSE
 
 /mob/living/simple_animal/hostile/statue/proc/can_be_seen(turf/destination)
 	if(!cannot_be_seen)

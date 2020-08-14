@@ -8,11 +8,6 @@
   * * [/obj/item/proc/afterattack]. The return value does not matter.
   */
 /obj/item/proc/melee_attack_chain(mob/user, atom/target, params)
-	SSdemo.mark_dirty(src)
-	if(isturf(target))
-		SSdemo.mark_turf(target)
-	else
-		SSdemo.mark_dirty(target)
 	if(tool_behaviour && target.tool_act(user, src, tool_behaviour))
 		return
 	if(pre_attack(target, user, params))
@@ -67,7 +62,7 @@
 	if(..())
 		return TRUE
 	user.changeNext_move(CLICK_CD_MELEE)
-	return I.attack(src, user)
+	return I.attack(src, user, params)
 
 /**
   * Called from [/mob/living/attackby]
@@ -76,7 +71,7 @@
   * * mob/living/M - The mob being hit by this item
   * * mob/living/user - The mob hitting with this item
   */
-/obj/item/proc/attack(mob/living/M, mob/living/user)
+/obj/item/proc/attack(mob/living/M, mob/living/user, params)
 	if(SEND_SIGNAL(src, COMSIG_ITEM_ATTACK, M, user) & COMPONENT_ITEM_NO_ATTACK)
 		return
 	SEND_SIGNAL(user, COMSIG_MOB_ITEM_ATTACK, M, user)
@@ -87,6 +82,11 @@
 		to_chat(user, "<span class='warning'>You don't want to harm other living beings!</span>")
 		return
 
+	if(item_flags & EYE_STAB && user.zone_selected == BODY_ZONE_PRECISE_EYES)
+		if(HAS_TRAIT(user, TRAIT_CLUMSY) && prob(50))
+			M = user
+		if(eyestab(M,user))
+			return
 	if(!force)
 		playsound(loc, 'sound/weapons/tap.ogg', get_clamped_volume(), TRUE, -1)
 	else if(hitsound)
@@ -99,6 +99,7 @@
 		user.client.give_award(/datum/award/achievement/misc/selfouch, user)
 
 	user.do_attack_animation(M)
+
 	M.attacked_by(src, user)
 
 	log_combat(user, M, "атакует", src.name, "(INTENT: [uppertext(user.a_intent)]) (DAMTYPE: [uppertext(damtype)])")
@@ -131,7 +132,6 @@
 	send_item_attack_message(I, user)
 	if(I.force)
 		apply_damage(I.force, I.damtype)
-
 		if(I.damtype == BRUTE)
 			if(prob(33))
 				I.add_mob_blood(src)
@@ -172,9 +172,9 @@
 		else
 			return clamp(w_class * 6, 10, 100) // Multiply the item's weight class by 6, then clamp the value between 10 and 100
 
-/mob/living/proc/send_item_attack_message(obj/item/I, mob/living/user, hit_area)
+/mob/living/proc/send_item_attack_message(obj/item/I, mob/living/user, hit_area, obj/item/bodypart/hit_bodypart)
 	var/message_verb = "бьёт"
-	if(I.attack_verb && I.attack_verb.len)
+	if(length(I.attack_verb))
 		message_verb = "[pick(I.attack_verb)]"
 	else if(!I.force)
 		return
@@ -186,7 +186,7 @@
 	var/attack_message = "<b>[src]</b> [message_verb] в [message_hit_area] <b>[sklonenie(I.name, TVORITELNI, I.gender)]</b>!"
 	var/attack_message_local = "[capitalize(message_verb)] [message_hit_area] <b>[sklonenie(I.name, TVORITELNI, I.gender)]</b>!"
 	if(user in viewers(src, null))
-		attack_message = "<b>[user]</b> [message_verb] <b>[sklonenie(src.name, VINITELNI, gender)]</b> [message_hit_area] [sklonenie(I.name, TVORITELNI, I.gender)]!"
+		attack_message = "<b>[user]</b> [message_verb] <b>[sklonenie(src.name, VINITELNI, gender)]</b> в [message_hit_area] [sklonenie(I.name, TVORITELNI, I.gender)]!"
 		attack_message_local = "<b>[user]</b> [message_verb] <b>меня</b> в [message_hit_area] [sklonenie(I.name, TVORITELNI, I.gender)]!"
 	if(user == src)
 		attack_message_local = "Моё великолепие [message_verb] себя в [message_hit_area] [sklonenie(I.name, TVORITELNI, I.gender)]"

@@ -1,8 +1,6 @@
 /datum/job/psychologist
 	title = "Psychologist"
-	flag = PSYCHOLOGIST
 	department_head = list("Head of Personnel","Chief Medical Officer")
-	department_flag = CIVILIAN
 	faction = "Station"
 	total_positions = 1
 	spawn_positions = 1
@@ -30,7 +28,7 @@
 	pda_slot = ITEM_SLOT_BELT
 	l_hand = /obj/item/clipboard
 
-	backpack_contents = list(/obj/item/storage/pill_bottle/mannitol, /obj/item/storage/pill_bottle/psicodine, /obj/item/storage/pill_bottle/paxpsych, /obj/item/storage/pill_bottle/happinesspsych, /obj/item/storage/pill_bottle/lsdpsych)
+	backpack_contents = list(/obj/item/modular_computer/tablet/preset/cheap=1, /obj/item/storage/pill_bottle/mannitol, /obj/item/storage/pill_bottle/psicodine, /obj/item/storage/pill_bottle/paxpsych, /obj/item/storage/pill_bottle/happinesspsych, /obj/item/storage/pill_bottle/lsdpsych, /obj/item/storage/pill_bottle/labebium)
 
 	backpack = /obj/item/storage/backpack/medic
 	satchel = /obj/item/storage/backpack/satchel/med

@@ -171,6 +171,7 @@
 	r_pocket = /obj/item/pda/heads
 	l_hand = /obj/item/clipboard
 	id = /obj/item/card/id/centcom
+	backpack_contents = list(/obj/item/stamp/centcom=1)
 
 /datum/outfit/centcom/centcom_official/post_equip(mob/living/carbon/human/H, visualsOnly = FALSE)
 	if(visualsOnly)
@@ -394,7 +395,7 @@
 		/obj/item/stack/sheet/glass/fifty=1,\
 		/obj/item/stack/sheet/plasteel/twenty=1,\
 		/obj/item/etherealballdeployer=1,\
-		/obj/item/stack/light_w=30,\
+		/obj/item/stack/light_w/thirty=1,\
 		/obj/item/construction/rcd/loaded=1)
 
 /datum/outfit/centcom/ert/clown/party

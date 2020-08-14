@@ -79,7 +79,7 @@
 	name = "The Lens of Truesight"
 	desc = "I can see forever!"
 	icon_state = "monocle"
-	item_state = "headset"
+	inhand_icon_state = "headset"
 
 
 /obj/structure/academy_wizard_spawner
@@ -221,7 +221,7 @@
 		user.dropItemToGround(src)
 
 
-/obj/item/dice/d20/fate/proc/effect(var/mob/living/carbon/human/user,roll)
+/obj/item/dice/d20/fate/proc/effect(mob/living/carbon/human/user,roll)
 	var/turf/T = get_turf(src)
 	switch(roll)
 		if(1)
@@ -235,7 +235,7 @@
 			user.death()
 		if(3)
 			//Swarm of creatures
-			T.visible_message("<span class='userdanger'>A swarm of creatures surround [user]!</span>")
+			T.visible_message("<span class='userdanger'>A swarm of creatures surrounds [user]!</span>")
 			for(var/direction in GLOB.alldirs)
 				new /mob/living/simple_animal/hostile/netherworld(get_step(get_turf(user),direction))
 		if(4)
@@ -262,7 +262,7 @@
 			var/atom/throw_target = get_edge_target_turf(user, throw_dir)
 			user.throw_at(throw_target, 200, 4)
 		if(8)
-			//Fueltank Explosion
+			//Fuel tank Explosion
 			T.visible_message("<span class='userdanger'>An explosion bursts into existence around [user]!</span>")
 			explosion(get_turf(user),-1,0,2, flame_range = 2)
 		if(9)
@@ -276,8 +276,8 @@
 		if(11)
 			//Cookie
 			T.visible_message("<span class='userdanger'>A cookie appears out of thin air!</span>")
-			var/obj/item/reagent_containers/food/snacks/cookie/C = new(drop_location())
-			do_smoke(0, drop_location())
+			var/obj/item/reagent_containers/food/snacks/cookie/C = new(drop_location()[1])
+			do_smoke(0, drop_location()[1])
 			C.name = "Cookie of Fate"
 		if(12)
 			//Healing
@@ -298,18 +298,18 @@
 		if(14)
 			//Free Gun
 			T.visible_message("<span class='userdanger'>An impressive gun appears!</span>")
-			do_smoke(0, drop_location())
-			new /obj/item/gun/ballistic/revolver/mateba(drop_location())
+			do_smoke(0, drop_location()[1])
+			new /obj/item/gun/ballistic/revolver/mateba(drop_location()[1])
 		if(15)
 			//Random One-use spellbook
 			T.visible_message("<span class='userdanger'>A magical looking book drops to the floor!</span>")
-			do_smoke(0, drop_location())
-			new /obj/item/book/granter/spell/random(drop_location())
+			do_smoke(0, drop_location()[1])
+			new /obj/item/book/granter/spell/random(drop_location()[1])
 		if(16)
 			//Servant & Servant Summon
 			T.visible_message("<span class='userdanger'>A Dice Servant appears in a cloud of smoke!</span>")
-			var/mob/living/carbon/human/H = new(drop_location())
-			do_smoke(0, drop_location())
+			var/mob/living/carbon/human/H = new(drop_location()[1])
+			do_smoke(0, drop_location()[1])
 
 			H.equipOutfit(/datum/outfit/butler)
 			var/datum/mind/servant_mind = new /datum/mind()
@@ -331,13 +331,13 @@
 		if(17)
 			//Tator Kit
 			T.visible_message("<span class='userdanger'>A suspicious box appears!</span>")
-			new /obj/item/storage/box/syndicate/bundle_A(drop_location())
-			do_smoke(0, drop_location())
+			new /obj/item/storage/box/syndicate/bundle_a(drop_location()[1])
+			do_smoke(0, drop_location()[1])
 		if(18)
 			//Captain ID
 			T.visible_message("<span class='userdanger'>A golden identification card appears!</span>")
-			new /obj/item/card/id/captains_spare(drop_location())
-			do_smoke(0, drop_location())
+			new /obj/item/card/id/captains_spare(drop_location()[1])
+			do_smoke(0, drop_location()[1])
 		if(19)
 			//Instrinct Resistance
 			T.visible_message("<span class='userdanger'>[user] looks very robust!</span>")
@@ -363,7 +363,7 @@
 	charge_max = 100
 	clothes_req = 0
 	invocation = "JE VES"
-	invocation_type = "whisper"
+	invocation_type = INVOCATION_WHISPER
 	range = -1
 	level_max = 0 //cannot be improved
 	cooldown_min = 100

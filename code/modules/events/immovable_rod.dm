@@ -54,7 +54,14 @@ In my current plan for it, 'solid' will be defined as anything with density == 1
 	var/z_original = 0
 	var/destination
 	var/notify = TRUE
+	///We can designate a specific target to aim for, in which case we'll try to snipe them rather than just flying in a random direction
 	var/atom/special_target
+	///How many mobs we've penetrated one way or another
+	var/num_mobs_hit = 0
+	///How many mobs we've hit with clients
+	var/num_sentient_mobs_hit = 0
+	///How many people we've hit with clients
+	var/num_sentient_people_hit = 0
 
 /obj/effect/immovablerod/New(atom/start, atom/end, aimed_at)
 	..()
@@ -70,9 +77,23 @@ In my current plan for it, 'solid' will be defined as anything with density == 1
 		if(T.z == z_original)
 			special_target_valid = TRUE
 	if(special_target_valid)
-		walk_towards(src, special_target, 1)
+		walk_towards(src, special_target, 1, 32)
 	else if(end && end.z==z_original)
-		walk_towards(src, destination, 1)
+		walk_towards(src, destination, 1, 32)
+
+/obj/effect/immovablerod/examine(mob/user)
+	. = ..()
+	if(!isobserver(user))
+		return
+
+	if(!num_mobs_hit)
+		. += "<span class='notice'>So far, this rod has not hit any mobs.</span>"
+		return
+
+	. += "\t<span class='notice'>So far, this rod has hit: \n\
+		\t\t[num_mobs_hit] mobs total, \n\
+		\t\t[num_sentient_mobs_hit] of which were sentient, and \n\
+		\t\t[num_sentient_people_hit] of which were sentient people</span>"
 
 /obj/effect/immovablerod/Topic(href, href_list)
 	if(href_list["orbit"])
@@ -84,19 +105,22 @@ In my current plan for it, 'solid' will be defined as anything with density == 1
 	GLOB.poi_list -= src
 	. = ..()
 
-/obj/effect/immovablerod/Moved()
-	if((z != z_original) || (loc == destination))
-		qdel(src)
-	if(special_target && loc == get_turf(special_target))
-		complete_trajectory()
-	return ..()
+/obj/effect/immovablerod/Moved(atom/OldLoc, Dir)
+	. = ..()
+	if(.)
+		if((z != z_original) || (destination in locs))
+			qdel(src)
+		if(OldLoc != loc)
+			if(special_target && (get_turf(special_target) in locs))
+				complete_trajectory()
 
 /obj/effect/immovablerod/proc/complete_trajectory()
 	//We hit what we wanted to hit, time to go
-	special_target = null
-	destination = get_edge_target_turf(src, dir)
+	destination = get_turf(special_target)
+	if(!destination)
+		destination = get_edge_target_turf(src, dir)
 	walk(src,0)
-	walk_towards(src, destination, 1)
+	walk_towards(src, destination, 1, 32)
 
 /obj/effect/immovablerod/ex_act(severity, target)
 	return 0
@@ -108,6 +132,8 @@ In my current plan for it, 'solid' will be defined as anything with density == 1
 	return
 
 /obj/effect/immovablerod/Bump(atom/clong)
+	if(QDELETED(src))
+		return
 	if(prob(10))
 		playsound(src, 'sound/effects/bang.ogg', 50, TRUE)
 		audible_message("<span class='danger'>You hear a CLANG!</span>")
@@ -117,11 +143,15 @@ In my current plan for it, 'solid' will be defined as anything with density == 1
 		y = clong.y
 
 	if(special_target && clong == special_target)
-		complete_trajectory()
+		special_target = null
+
 
 	if(isturf(clong) || isobj(clong))
 		if(clong.density)
-			clong.ex_act(EXPLODE_HEAVY)
+			if(isturf(clong))
+				SSexplosions.medturf += clong
+			if(isobj(clong))
+				SSexplosions.medobj += clong
 
 	else if(isliving(clong))
 		penetrate(clong)
@@ -133,14 +163,26 @@ In my current plan for it, 'solid' will be defined as anything with density == 1
 		smoke.start()
 		qdel(src)
 		qdel(other)
+	addtimer(CALLBACK(src, .proc/complete_trajectory), 1)
 
-/obj/effect/immovablerod/proc/penetrate(mob/living/L)
-	L.visible_message("<span class='danger'>[L] is penetrated by an immovable rod!</span>" , "<span class='userdanger'>The rod penetrates you!</span>" , "<span class='danger'>You hear a CLANG!</span>")
-	if(ishuman(L))
-		var/mob/living/carbon/human/H = L
-		H.adjustBruteLoss(160)
-	if(L && (L.density || prob(10)))
-		L.ex_act(EXPLODE_HEAVY)
+/obj/effect/immovablerod/proc/penetrate(mob/living/smeared_mob)
+	smeared_mob.visible_message("<span class='danger'>[smeared_mob] is penetrated by an immovable rod!</span>" , "<span class='userdanger'>The rod penetrates you!</span>" , "<span class='danger'>You hear a CLANG!</span>")
+
+	if(smeared_mob.stat != DEAD)
+		num_mobs_hit++
+		if(smeared_mob.client)
+			num_sentient_mobs_hit++
+			if(iscarbon(smeared_mob))
+				num_sentient_people_hit++
+
+	if(iscarbon(smeared_mob))
+		var/mob/living/carbon/smeared_carbon = smeared_mob
+		smeared_carbon.adjustBruteLoss(100)
+		var/obj/item/bodypart/penetrated_chest = smeared_carbon.get_bodypart(BODY_ZONE_CHEST)
+		penetrated_chest?.receive_damage(60, wound_bonus = 20, sharpness=SHARP_POINTY)
+
+	if(smeared_mob.density || prob(10))
+		smeared_mob.ex_act(EXPLODE_HEAVY)
 
 /obj/effect/immovablerod/attack_hand(mob/living/user)
 	if(ishuman(user))
@@ -159,6 +201,6 @@ In my current plan for it, 'solid' will be defined as anything with density == 1
 			else
 				U.client.give_award(/datum/award/achievement/misc/feat_of_strength, U) //rod-form wizards would probably make this a lot easier to get so keep it to regular rods only
 				U.visible_message("<span class='boldwarning'>[U] suplexes [src] into the ground!</span>", "<span class='warning'>You suplex [src] into the ground!</span>")
-				new /obj/structure/festivus/anchored(drop_location())
-				new /obj/effect/anomaly/flux(drop_location())
+				new /obj/structure/festivus/anchored(drop_location()[1])
+				new /obj/effect/anomaly/flux(drop_location()[1])
 				qdel(src)

@@ -3,7 +3,7 @@
 	gender = MALE
 	pressure_resistance = 15
 	possible_a_intents = list(INTENT_HELP, INTENT_HARM)
-	hud_possible = list(HEALTH_HUD,STATUS_HUD,ANTAG_HUD,GLAND_HUD,NANITE_HUD,DIAG_NANITE_FULL_HUD)
+	hud_possible = list(HEALTH_HUD,STATUS_HUD,ANTAG_HUD,GLAND_HUD,NANITE_HUD,DIAG_NANITE_FULL_HUD,HACKER_HUD)
 	has_limbs = 1
 	held_items = list(null, null)
 	var/list/internal_organs		= list()	///List of [/obj/item/organ] in the mob. They don't go in the contents for some reason I don't want to know.
@@ -58,7 +58,6 @@
 	var/obj/halitem
 	var/hal_screwyhud = SCREWYHUD_NONE
 	var/next_hallucination = 0
-	var/cpr_time = 1 ///CPR cooldown.
 	var/damageoverlaytemp = 0
 
 	var/drunkenness = 0 ///Overall drunkenness
@@ -69,3 +68,14 @@
 	var/heat_protection = 0 // No heat protection
 	/// Protection (insulation) from the cold, Value 0-1 corresponding to the percentage of protection
 	var/cold_protection = 0 // No cold protection
+
+	/// Timer id of any transformation
+	var/transformation_timer
+
+	/// All of the wounds a carbon has afflicted throughout their limbs
+	var/list/all_wounds
+	/// All of the scars a carbon has afflicted throughout their limbs
+	var/list/all_scars
+
+	/// Simple modifier for whether this mob can handle greater or lesser skillchip complexity. See /datum/mutation/human/biotechcompat/ for example.
+	var/skillchip_complexity_modifier = 0

@@ -17,10 +17,12 @@
 	contraband = list(/obj/item/clothing/glasses/sunglasses = 2,
 					  /obj/item/storage/fancy/donut_box = 2)
 	premium = list(/obj/item/storage/belt/security/webbing = 5,
+				   /obj/item/clothing/under/costume/jabroni/sec = 5,
 				   /obj/item/coin/antagtoken = 1,
 				   /obj/item/clothing/head/helmet/blueshirt = 1,
 				   /obj/item/clothing/suit/armor/vest/blueshirt = 1,
-				   /obj/item/clothing/gloves/tackler = 5)
+				   /obj/item/clothing/gloves/tackler = 5,
+				   /obj/item/grenade/stingbang = 1)
 	refill_canister = /obj/item/vending_refill/security
 	default_price = 650
 	extra_price = 700

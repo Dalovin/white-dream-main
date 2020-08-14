@@ -5,17 +5,19 @@
 	icon_state = "grille"
 	density = TRUE
 	anchored = TRUE
-	flags_1 = CONDUCT_1
+	flags_1 = CONDUCT_1 | RAD_PROTECT_CONTENTS_1 | RAD_NO_CONTAMINATE_1
 	pressure_resistance = 5*ONE_ATMOSPHERE
 	armor = list("melee" = 50, "bullet" = 70, "laser" = 70, "energy" = 100, "bomb" = 10, "bio" = 100, "rad" = 100, "fire" = 0, "acid" = 0)
 	max_integrity = 50
 	integrity_failure = 0.4
+	bound_width = 30 // 2 px smaller than a window
+	bound_height = 30
 	var/rods_type = /obj/item/stack/rods
 	var/rods_amount = 2
 	var/rods_broken = TRUE
 	var/grille_type = null
 	var/broken_type = /obj/structure/grille/broken
-	rad_flags = RAD_PROTECT_CONTENTS | RAD_NO_CONTAMINATE
+	var/shock_cooldown
 
 /obj/structure/grille/Destroy()
 	update_cable_icons_on_turf(get_turf(src))
@@ -32,8 +34,8 @@
 	var/ratio = obj_integrity / max_integrity
 	ratio = CEILING(ratio*4, 1) * 25
 
-	if(smooth)
-		queue_smooth(src)
+	if(smoothing_flags)
+		QUEUE_SMOOTH(src)
 
 	if(ratio > 50)
 		return
@@ -51,10 +53,9 @@
 		if(RCD_DECONSTRUCT)
 			return list("mode" = RCD_DECONSTRUCT, "delay" = 20, "cost" = 5)
 		if(RCD_WINDOWGRILLE)
-			if(the_rcd.window_type == /obj/structure/window/reinforced/fulltile)
+			if(the_rcd.window_glass == RCD_WINDOW_REINFORCED)
 				return list("mode" = RCD_WINDOWGRILLE, "delay" = 40, "cost" = 12)
-			else
-				return list("mode" = RCD_WINDOWGRILLE, "delay" = 20, "cost" = 8)
+			return list("mode" = RCD_WINDOWGRILLE, "delay" = 20, "cost" = 8)
 	return FALSE
 
 /obj/structure/grille/rcd_act(mob/user, obj/item/construction/rcd/the_rcd, passed_mode)
@@ -64,19 +65,26 @@
 			qdel(src)
 			return TRUE
 		if(RCD_WINDOWGRILLE)
-			if(locate(/obj/structure/window) in loc)
+			if(!isturf(loc))
+				return FALSE
+			var/turf/T = loc
+			var/window_dir = the_rcd.window_size == RCD_WINDOW_FULLTILE ? FULLTILE_WINDOW_DIR : user.dir
+			if(!valid_window_location(T, window_dir))
 				return FALSE
 			to_chat(user, "<span class='notice'>Собираю окно.</span>")
-			var/obj/structure/window/WD = new the_rcd.window_type(drop_location())
-			WD.setAnchored(TRUE)
+			var/obj/structure/window/WD = new the_rcd.window_type(drop_location()[1], window_dir)
+			WD.set_anchored(TRUE)
 			return TRUE
 	return FALSE
 
 /obj/structure/grille/Bumped(atom/movable/AM)
 	if(!ismob(AM))
 		return
-	var/mob/M = AM
-	shock(M, 70)
+	var/thingdir = get_dir(src, AM)
+	for(var/obj/structure/window/window in OBOUNDS_EDGE(src, thingdir))
+		if(window.anchored)
+			return
+	shock(AM, 70)
 
 /obj/structure/grille/attack_animal(mob/user)
 	. = ..()
@@ -137,9 +145,9 @@
 	else if((W.tool_behaviour == TOOL_SCREWDRIVER) && (isturf(loc) || anchored))
 		if(!shock(user, 90))
 			W.play_tool_sound(src, 100)
-			setAnchored(!anchored)
-			user.visible_message("<span class='notice'>[user] [anchored ? "прикручивает" : "откручивает"] [src].</span>", \
-								 "<span class='notice'>Я [anchored ? "прикручиваю [src] к полу" : "откручиваю [src] от пола"].</span>")
+			set_anchored(!anchored)
+			user.visible_message("<span class='notice'>[user] [anchored ? "прикручивает" : "откручивает"] [src.name].</span>", \
+								 "<span class='notice'>Я [anchored ? "прикручиваю [src.name] к полу" : "откручиваю [src.name] от пола"].</span>")
 			return
 	else if(istype(W, /obj/item/stack/rods) && broken)
 		var/obj/item/stack/rods/R = W
@@ -173,20 +181,20 @@
 					return
 				var/obj/structure/window/WD
 				if(istype(W, /obj/item/stack/sheet/plasmarglass))
-					WD = new/obj/structure/window/plasma/reinforced/fulltile(drop_location()) //reinforced plasma window
+					WD = new/obj/structure/window/plasma/reinforced/fulltile(drop_location()[1]) //reinforced plasma window
 				else if(istype(W, /obj/item/stack/sheet/plasmaglass))
-					WD = new/obj/structure/window/plasma/fulltile(drop_location()) //plasma window
+					WD = new/obj/structure/window/plasma/fulltile(drop_location()[1]) //plasma window
 				else if(istype(W, /obj/item/stack/sheet/rglass))
-					WD = new/obj/structure/window/reinforced/fulltile(drop_location()) //reinforced window
+					WD = new/obj/structure/window/reinforced/fulltile(drop_location()[1]) //reinforced window
 				else if(istype(W, /obj/item/stack/sheet/titaniumglass))
-					WD = new/obj/structure/window/shuttle(drop_location())
+					WD = new/obj/structure/window/shuttle(drop_location()[1])
 				else if(istype(W, /obj/item/stack/sheet/plastitaniumglass))
-					WD = new/obj/structure/window/plasma/reinforced/plastitanium(drop_location())
+					WD = new/obj/structure/window/plasma/reinforced/plastitanium(drop_location()[1])
 				else
-					WD = new/obj/structure/window/fulltile(drop_location()) //normal window
+					WD = new/obj/structure/window/fulltile(drop_location()[1]) //normal window
 				WD.setDir(dir_to_set)
 				WD.ini_dir = dir_to_set
-				WD.setAnchored(FALSE)
+				WD.set_anchored(FALSE)
 				WD.state = 0
 				ST.use(2)
 				to_chat(user, "<span class='notice'>Ставлю [WD] на [src].</span>")
@@ -211,7 +219,7 @@
 	if(!loc) //if already qdel'd somehow, we do nothing
 		return
 	if(!(flags_1&NODECONSTRUCT_1))
-		var/obj/R = new rods_type(drop_location(), rods_amount)
+		var/obj/R = new rods_type(drop_location()[1], rods_amount)
 		transfer_fingerprints_to(R)
 		qdel(src)
 	..()
@@ -219,7 +227,7 @@
 /obj/structure/grille/obj_break()
 	if(!broken && !(flags_1 & NODECONSTRUCT_1))
 		new broken_type(src.loc)
-		var/obj/R = new rods_type(drop_location(), rods_broken)
+		var/obj/R = new rods_type(drop_location()[1], rods_broken)
 		transfer_fingerprints_to(R)
 		qdel(src)
 
@@ -234,6 +242,8 @@
 		return FALSE
 	if(!in_range(src, user))//To prevent TK and mech users from getting shocked
 		return FALSE
+	if(!COOLDOWN_FINISHED(src, shock_cooldown))
+		return FALSE
 	var/turf/T = get_turf(src)
 	var/obj/structure/cable/C = T.get_cable_node()
 	if(C)
@@ -241,6 +251,7 @@
 			var/datum/effect_system/spark_spread/s = new /datum/effect_system/spark_spread
 			s.set_up(3, 1, src)
 			s.start()
+			COOLDOWN_START(src, shock_cooldown, 0.5 SECONDS)
 			return TRUE
 		else
 			return FALSE

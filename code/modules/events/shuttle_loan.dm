@@ -54,7 +54,7 @@
 			bonus_points = 45000 //If you mess up, people die and the shuttle gets turned into swiss cheese
 
 /datum/round_event/shuttle_loan/proc/loan_shuttle()
-	priority_announce(thanks_msg, "Грузовой Шаттл Центрального Командования")
+	priority_announce(thanks_msg, "Грузовой Шаттл Центрального Командования", 'sound/ai/announcer/shuttle.ogg')
 
 	dispatched = TRUE
 	var/datum/bank_account/D = SSeconomy.get_dep_account(ACCOUNT_CAR)
@@ -111,7 +111,7 @@
 		for(var/place in shuttle_areas)
 			var/area/shuttle/shuttle_area = place
 			for(var/turf/open/floor/T in shuttle_area)
-				if(is_blocked_turf(T))
+				if(T.is_blocked_turf())
 					continue
 				empty_shuttle_turfs += T
 		if(!empty_shuttle_turfs.len)
@@ -260,7 +260,7 @@
 
 /obj/machinery/syndicatebomb/shuttle_loan/Initialize()
 	. = ..()
-	setAnchored(TRUE)
+	set_anchored(TRUE)
 	timer_set = rand(480, 600) //once the supply shuttle docks (after 5 minutes travel time), players have between 3-5 minutes to defuse the bomb
 	activate()
 	update_icon()

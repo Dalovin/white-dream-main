@@ -1,7 +1,7 @@
 /obj/structure/chair
 	name = "стул"
 	desc = "На нём можно сидеть."
-	icon = 'icons/obj/chairs.dmi'
+	icon = 'white/valtos/icons/chairs.dmi'
 	icon_state = "chair"
 	anchored = TRUE
 	can_buckle = TRUE
@@ -9,6 +9,10 @@
 	resistance_flags = NONE
 	max_integrity = 250
 	integrity_failure = 0.1
+	bound_x = 7
+	bound_width = 17
+	bound_height = 26
+	brotation = NONE // the bounds hardly change enough to warrant updating
 	custom_materials = list(/datum/material/iron = 2000)
 	var/buildstacktype = /obj/item/stack/sheet/metal
 	var/buildstackamount = 1
@@ -130,9 +134,10 @@
 
 
 /obj/structure/chair/wood
-	icon_state = "wooden_chair"
 	name = "деревянный стул"
 	desc = "Старое никогда не бывает слишком старым, чтобы не быть в моде."
+	icon = 'icons/obj/chairs.dmi'
+	icon_state = "wooden_chair"
 	resistance_flags = FLAMMABLE
 	max_integrity = 70
 	buildstacktype = /obj/item/stack/sheet/mineral/wood
@@ -149,6 +154,7 @@
 /obj/structure/chair/comfy
 	name = "удобный стул"
 	desc = "Это выглядит удобно."
+	icon = 'icons/obj/chairs.dmi'
 	icon_state = "comfychair"
 	color = rgb(255,255,255)
 	resistance_flags = FLAMMABLE
@@ -202,21 +208,24 @@
 	name = "пассажирское сиденье"
 	desc = "Удобное, безопасное сиденье. У этого есть более крепкая выглядящая система коробления, для более гладких полетов."
 	icon_state = "shuttle_chair"
+	buildstacktype = /obj/item/stack/sheet/mineral/titanium
 
 /obj/structure/chair/comfy/shuttle/GetArmrest()
 	return mutable_appearance('icons/obj/chairs.dmi', "shuttle_chair_armrest")
 
 /obj/structure/chair/office
+	icon = 'icons/obj/chairs.dmi'
 	anchored = FALSE
 	buildstackamount = 5
 	item_chair = null
 	icon_state = "officechair_dark"
-
+	COOLDOWN_DECLARE(last_move_sound)
 
 /obj/structure/chair/office/Moved()
 	. = ..()
-	if(has_gravity())
-		playsound(src, 'sound/effects/roll.ogg', 100, TRUE)
+	if(has_gravity() && COOLDOWN_FINISHED(src, last_move_sound))
+		playsound(src, 'sound/effects/roll.ogg', 100, 1)
+		COOLDOWN_START(src, last_move_sound, 0.5 SECONDS)
 
 /obj/structure/chair/office/light
 	icon_state = "officechair_white"
@@ -257,9 +266,9 @@
 /obj/item/chair
 	name = "стул"
 	desc = "Особенность потасовок в баре."
-	icon = 'icons/obj/chairs.dmi'
+	icon = 'white/valtos/icons/chairs.dmi'
 	icon_state = "chair_toppled"
-	item_state = "chair"
+	inhand_icon_state = "chair"
 	lefthand_file = 'icons/mob/inhands/misc/chairs_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/misc/chairs_righthand.dmi'
 	w_class = WEIGHT_CLASS_HUGE
@@ -345,15 +354,17 @@
 
 /obj/item/chair/stool
 	name = "табуретка"
+	icon = 'white/valtos/icons/chairs.dmi'
 	icon_state = "stool_toppled"
-	item_state = "stool"
+	inhand_icon_state = "stool"
 	origin_type = /obj/structure/chair/stool
 	break_chance = 0 //It's too sturdy.
 
 /obj/item/chair/stool/bar
 	name = "барный стул"
+	icon = 'icons/obj/chairs.dmi'
 	icon_state = "bar_toppled"
-	item_state = "stool_bar"
+	inhand_icon_state = "stool_bar"
 	origin_type = /obj/structure/chair/stool/bar
 
 /obj/item/chair/stool/narsie_act()
@@ -361,8 +372,9 @@
 
 /obj/item/chair/wood
 	name = "деревянный стул"
+	icon = 'icons/obj/chairs.dmi'
 	icon_state = "wooden_chair_toppled"
-	item_state = "woodenchair"
+	inhand_icon_state = "woodenchair"
 	resistance_flags = FLAMMABLE
 	max_integrity = 70
 	hitsound = 'sound/weapons/genhit1.ogg'
@@ -380,6 +392,7 @@
 /obj/structure/chair/old
 	name = "странный стул"
 	desc = "На нём можно сидеть. Выглядит ОЧЕНЬ комфортным."
+	icon = 'icons/obj/chairs.dmi'
 	icon_state = "chairold"
 	item_chair = null
 
@@ -387,6 +400,7 @@
 	name = "бронзовый стул"
 	desc = "Кругленький стул из бронзы. У него маленькие винтики для колес!"
 	anchored = FALSE
+	icon = 'icons/obj/chairs.dmi'
 	icon_state = "brass_chair"
 	buildstacktype = /obj/item/stack/tile/bronze
 	buildstackamount = 1
@@ -440,9 +454,10 @@
 
 
 /obj/structure/chair/plastic
-	icon_state = "plastic_chair"
 	name = "складной пластиковый стул"
 	desc = "Независимо от того, сколько вы корчитесь, это все равно будет неудобно."
+	icon = 'icons/obj/chairs.dmi'
+	icon_state = "plastic_chair"
 	resistance_flags = FLAMMABLE
 	max_integrity = 50
 	custom_materials = list(/datum/material/plastic = 2000)
@@ -472,7 +487,7 @@
 	desc = "Так или иначе, вы всегда можете найти его под борцовским рингом."
 	icon = 'icons/obj/chairs.dmi'
 	icon_state = "folded_chair"
-	item_state = "folded_chair"
+	inhand_icon_state = "folded_chair"
 	lefthand_file = 'icons/mob/inhands/misc/chairs_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/misc/chairs_righthand.dmi'
 	w_class = WEIGHT_CLASS_NORMAL

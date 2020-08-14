@@ -19,13 +19,15 @@
 	var/fire_resist = 1 //multiplies burn damage by this
 	var/atmosblock = FALSE //if the blob blocks atmos and heat spread
 	var/mob/camera/blob/overmind
+	bound_width = 31
+	bound_height = 31
 
 /obj/structure/blob/Initialize(mapload, owner_overmind)
 	. = ..()
 	if(owner_overmind)
 		overmind = owner_overmind
 		var/area/Ablob = get_area(src)
-		if(Ablob.blob_allowed) //Is this area allowed for winning as blob?
+		if(Ablob.area_flags & BLOBS_ALLOWED) //Is this area allowed for winning as blob?
 			overmind.blobs_legit += src
 	GLOB.blobs += src //Keep track of the blob in the normal list either way
 	setDir(pick(GLOB.cardinals))
@@ -50,7 +52,7 @@
 /obj/structure/blob/blob_act()
 	return
 
-/obj/structure/blob/Adjacent(var/atom/neighbour)
+/obj/structure/blob/Adjacent(atom/neighbour)
 	. = ..()
 	if(.)
 		var/result = 0

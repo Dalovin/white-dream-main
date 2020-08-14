@@ -16,6 +16,8 @@
 	icon_dead = "towercap-dead"
 	genes = list(/datum/plant_gene/trait/plant_type/fungal_metabolism)
 	mutatelist = list(/obj/item/seeds/tower/steel)
+	reagents_add = list(/datum/reagent/cellulose = 0.05)
+	graft_gene = /datum/plant_gene/trait/plant_type/fungal_metabolism
 
 /obj/item/seeds/tower/steel
 	name = "pack of steel-cap mycelium"
@@ -25,6 +27,7 @@
 	plantname = "Steel Caps"
 	product = /obj/item/grown/log/steel
 	mutatelist = list()
+	reagents_add = list(/datum/reagent/cellulose = 0.05, /datum/reagent/iron = 0.05)
 	rarity = 20
 
 
@@ -202,8 +205,9 @@
 				if(!click_params || !click_params["icon-x"] || !click_params["icon-y"])
 					return
 				//Clamp it so that the icon never moves more than 16 pixels in either direction (thus leaving the table turf)
-				W.pixel_x = clamp(text2num(click_params["icon-x"]) - 16, -(world.icon_size/2), world.icon_size/2)
-				W.pixel_y = clamp(text2num(click_params["icon-y"]) - 16, -(world.icon_size/2), world.icon_size/2)
+			var/_step_x = clamp(text2num(params["icon-x"]) - 16, -(world.icon_size/2), world.icon_size/2)
+			var/_step_y = clamp(text2num(params["icon-y"]) - 16, -(world.icon_size/2), world.icon_size/2)
+			W.forceStep(null, _step_x, _step_y)
 		else
 			return ..()
 
@@ -229,8 +233,7 @@
 	if(isopenturf(loc))
 		var/turf/open/O = loc
 		if(O.air)
-			var/loc_gases = O.air.gases
-			if(loc_gases[/datum/gas/oxygen] && loc_gases[/datum/gas/oxygen][MOLES] >= 5)
+			if(O.air.get_moles(/datum/gas/oxygen) > 13)
 				return TRUE
 	return FALSE
 

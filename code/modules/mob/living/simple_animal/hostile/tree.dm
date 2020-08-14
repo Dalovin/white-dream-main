@@ -25,8 +25,8 @@
 	harm_intent_damage = 5
 	melee_damage_lower = 8
 	melee_damage_upper = 12
-	attack_verb_continuous = "bites"
-	attack_verb_simple = "bite"
+	attack_verb_continuous = "кусает"
+	attack_verb_simple = "кусает"
 	attack_sound = 'sound/weapons/bite.ogg'
 	speak_emote = list("pines")
 	emote_taunt = list("growls")
@@ -48,12 +48,12 @@
 	..()
 	if(is_tree && isopenturf(loc))
 		var/turf/open/T = src.loc
-		if(T.air && T.air.gases[/datum/gas/carbon_dioxide])
-			var/co2 = T.air.gases[/datum/gas/carbon_dioxide][MOLES]
+		if(T.air)
+			var/co2 = T.air.get_moles(/datum/gas/carbon_dioxide)
 			if(co2 > 0)
 				if(prob(25))
 					var/amt = min(co2, 9)
-					T.air.gases[/datum/gas/carbon_dioxide][MOLES] -= amt
+					T.air.adjust_moles(/datum/gas/carbon_dioxide, -amt)
 					T.atmos_spawn_air("o2=[amt]")
 
 /mob/living/simple_animal/hostile/tree/AttackingTarget()

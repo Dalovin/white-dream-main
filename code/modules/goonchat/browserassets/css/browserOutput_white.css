@@ -4,7 +4,7 @@
 *
 ******************************************/
 
-@font-face {font-family: "Hooge";  src: url("Hooge.ttf");}
+@font-face {font-family: "Didact";  src: url("didact.ttf");}
 
 html, body {
 	padding: 0;
@@ -258,7 +258,7 @@ a.popt {text-decoration: none;}
 /* OUTPUT COLORS */
 .highlight {background: yellow;}
 
-h1, h2, h3, h4, h5, h6	{color: #0000ff;font-family: "Hooge", sans-serif;}
+h1, h2, h3, h4, h5, h6	{color: #0000ff;font-family: "Didact", sans-serif;}
 h1.alert, h2.alert		{color: #000000;}
 
 em						{font-style: normal;	font-weight: bold;}
@@ -271,7 +271,7 @@ em						{font-style: normal;	font-weight: bold;}
 .adminsay				{color: #ff4500;	font-weight: bold;}
 .admin					{color: #4473ff;font-weight: bold;}
 
-.name					{					font-weight: bold;}
+.name					{					  font-weight: bold;}
 
 .say					{}
 .deadsay				{color: #5c00e6;}
@@ -300,7 +300,10 @@ h1.alert, h2.alert		{color: #000000;margin: 0 0 14px 0;}
 .emote					{					font-style: italic;}
 
 .userdanger				{color: #ff0000;	font-weight: bold;	font-size: 185%;}
+.bolddanger				{color: #ff0000;	font-weight: bold;}
 .danger					{color: #ff0000;}
+.tinydanger				{color: #ff0000; font-size: 85%;}
+.smalldanger			{color: #ff0000; font-size: 90%;}
 .warning				{color: #ff0000;	font-style: italic;}
 .alertwarning			{color: #FF0000;	font-weight: bold}
 .boldwarning			{color: #ff0000;	font-style: italic;	font-weight: bold}
@@ -310,13 +313,16 @@ h1.alert, h2.alert		{color: #000000;margin: 0 0 14px 0;}
 .rose					{color: #ff5050;}
 .info					{color: #0000CC;}
 .notice					{color: #000099;}
+.tinynotice				{color: #000099; font-style: italic;	font-size: 85%;}
+.smallnotice			{color: #000099; font-size: 90%;}
+.smallnoticeital		{color: #000099; font-style: italic;	font-size: 90%;}
 .boldnotice				{color: #000099;	font-weight: bold;}
 .hear					{color: #000099;	font-style: italic;}
 .adminnotice			{color: #0000ff;}
 .adminhelp				{color: #ff0000;	font-weight: bold;}
 .unconscious			{color: #0000ff;	font-weight: bold;}
 .suicide				{color: #ff5050;	font-style: italic;}
-.green					{color: #03ff39;}
+.green					{color: #03aa39;}
 .red					{color: #FF0000}
 .blue					{color: #0000FF}
 .nicegreen				{color: #14a833;}
@@ -361,7 +367,8 @@ h1.alert, h2.alert		{color: #000000;margin: 0 0 14px 0;}
 .robot					{font-family: "Courier New", cursive, sans-serif;}
 
 .command_headset		{font-weight: bold;	font-size: 160%;}
-.small					{font-size: 60%;}
+.tiny					{font-size: 60%;}
+.small					{font-size: 80%;}
 .big					{font-size: 185%;}
 .reallybig				{font-size: 245%;}
 .extremelybig			{font-size: 310%;}
@@ -489,3 +496,6 @@ h1.alert, h2.alert		{color: #000000;margin: 0 0 14px 0;}
 .ml-1 {margin-left: 1em;}
 .ml-2 {margin-left: 2em;}
 .ml-3 {margin-left: 3em;}
+
+.examine_block {background: rgba(0, 0, 0, 0.1);border: 1px solid #111a27;margin: 2px 8px;padding: 8px 12px;max-width: 550px;}
+.examine_block hr {border: none; background: #333; height: 1px; margin: 8px 16px -12px 16px;}

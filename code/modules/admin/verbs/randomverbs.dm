@@ -20,7 +20,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Drop Everything") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_subtle_message(mob/M in GLOB.mob_list)
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Subtle Message"
 
 	if(!ismob(M))
@@ -46,7 +46,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Subtle Message") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_headset_message(mob/M in GLOB.mob_list)
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Headset Message"
 
 	admin_headset_message(M)
@@ -82,7 +82,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Headset Message") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_mod_antag_rep(client/C in GLOB.clients, operation)
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Modify Antagonist Reputation"
 
 	if(!check_rights(R_ADMIN))
@@ -128,7 +128,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Modify Antagonist Reputation") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_world_narrate()
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Global Narrate"
 
 	if(!check_rights(R_ADMIN))
@@ -144,7 +144,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Global Narrate") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_direct_narrate(mob/M)
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Direct Narrate"
 
 	if(!check_rights(R_ADMIN))
@@ -169,7 +169,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Direct Narrate") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_local_narrate(atom/A)
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Local Narrate"
 
 	if(!check_rights(R_ADMIN))
@@ -190,7 +190,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Local Narrate") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_godmode(mob/M in GLOB.mob_list)
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Godmode"
 	if(!check_rights(R_ADMIN))
 		return
@@ -338,7 +338,7 @@ Works kind of like entering the game with a new character. Character receives a 
 Traitors and the like can also be revived with the previous role mostly intact.
 /N */
 /client/proc/respawn_character()
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Respawn Character"
 	set desc = "Respawn a person that has been gibbed/dusted/killed. They must be a ghost for this to work and preferably should not have a body to go back into."
 	if(!check_rights(R_ADMIN))
@@ -424,7 +424,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 		new_character.real_name = record_found.fields["name"]
 		new_character.gender = record_found.fields["gender"]
 		new_character.age = record_found.fields["age"]
-		new_character.hardset_dna(record_found.fields["identity"], record_found.fields["enzymes"], record_found.fields["name"], record_found.fields["blood_type"], new record_found.fields["species"], record_found.fields["features"])
+		new_character.hardset_dna(record_found.fields["identity"], record_found.fields["enzymes"], null, record_found.fields["name"], record_found.fields["blood_type"], new record_found.fields["species"], record_found.fields["features"])
 	else
 		var/datum/preferences/A = new()
 		A.copy_to(new_character)
@@ -506,7 +506,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	return new_character
 
 /client/proc/cmd_admin_add_freeform_ai_law()
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Add Custom AI law"
 
 	if(!check_rights(R_ADMIN))
@@ -529,7 +529,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Add Custom AI Law") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_rejuvenate(mob/living/M in GLOB.mob_list)
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Rejuvenate"
 
 	if(!check_rights(R_ADMIN))
@@ -546,10 +546,10 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	var/msg = "<span class='danger'>Admin [key_name_admin(usr)] healed / revived [ADMIN_LOOKUPFLW(M)]!</span>"
 	message_admins(msg)
 	admin_ticket_log(M, msg)
-	SSblackbox.record_feedback("tally", "admin_verb", 1, "Rejuvinate") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
+	SSblackbox.record_feedback("tally", "admin_verb", 1, "Rejuvenate") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_create_centcom_report()
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Create Command Report"
 
 	if(!check_rights(R_ADMIN))
@@ -563,7 +563,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	var/announce_command_report = TRUE
 	switch(confirm)
 		if("Yes")
-			priority_announce(input, null, 'sound/ai/commandreport.ogg')
+			priority_announce(input, null, 'sound/ai/announcer/alert.ogg')
 			announce_command_report = FALSE
 		if("Cancel")
 			return
@@ -575,7 +575,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Create Command Report") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_change_command_name()
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Change Command Name"
 
 	if(!check_rights(R_ADMIN))
@@ -589,7 +589,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	log_admin("[key_name(src)] has changed the Central Command name to: [input]")
 
 /client/proc/cmd_admin_delete(atom/A as obj|mob|turf in world)
-	set category = "АДМИН"
+	set category = "Адм"
 	set name = "Delete"
 
 	if(!check_rights(R_SPAWN|R_DEBUG))
@@ -598,7 +598,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	admin_delete(A)
 
 /client/proc/cmd_admin_list_open_jobs()
-	set category = "АДМИН"
+	set category = "Адм"
 	set name = "Manage Job Slots"
 
 	if(!check_rights(R_ADMIN))
@@ -607,7 +607,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Manage Job Slots") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_explosion(atom/O as obj|mob|turf in world)
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Explosion"
 
 	if(!check_rights(R_ADMIN))
@@ -643,7 +643,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 		return
 
 /client/proc/cmd_admin_emp(atom/O as obj|mob|turf in world)
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "EM Pulse"
 
 	if(!check_rights(R_ADMIN))
@@ -668,7 +668,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 		return
 
 /client/proc/cmd_admin_gib(mob/M in GLOB.mob_list, forced)
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Gib"
 
 	if(!forced&&!check_rights(R_ADMIN))
@@ -695,7 +695,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 
 /client/proc/cmd_admin_gib_self()
 	set name = "Gibself"
-	set category = "ФАН"
+	set category = "Фан"
 
 	var/confirm = alert(src, "You sure?", "Confirm", "Yes", "No")
 	if(confirm == "Yes")
@@ -705,7 +705,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 		mob.gib(1, 1, 1)
 
 /client/proc/cmd_admin_check_contents(mob/living/M in GLOB.mob_list)
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Check Contents"
 
 	var/list/L = M.get_contents()
@@ -714,14 +714,14 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Check Contents") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/toggle_view_range()
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Change View Range"
 	set desc = "switches between 1x and custom views"
 
-	if(view == CONFIG_GET(string/default_view))
-		change_view(input("Select view range:", "FUCK YE", 7) in list(1,2,3,4,5,6,7,8,9,10,11,12,13,14,128,255))
+	if(view_size.getView() == view_size.default)
+		view_size.setTo(input("Select view range:", "FUCK YE", 7) in list(1,2,3,4,5,6,7,8,9,10,11,12,13,14,128) - 7)
 	else
-		change_view(CONFIG_GET(string/default_view))
+		view_size.resetToDefault(getScreenSize(prefs.widescreenpref))
 
 	log_admin("[key_name(usr)] changed their view range to [view].")
 	//message_admins("\blue [key_name_admin(usr)] changed their view range to [view].")	//why? removed by order of XSI
@@ -730,7 +730,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 
 /client/proc/admin_call_shuttle()
 
-	set category = "АДМИН"
+	set category = "Адм"
 	set name = "Call Shuttle"
 
 	if(EMERGENCY_AT_LEAST_DOCKED)
@@ -750,7 +750,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	return
 
 /client/proc/admin_cancel_shuttle()
-	set category = "АДМИН"
+	set category = "Адм"
 	set name = "Cancel Shuttle"
 	if(!check_rights(0))
 		return
@@ -768,7 +768,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	return
 
 /client/proc/everyone_random()
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Make Everyone Random"
 	set desc = "Make everyone have a random appearance. You can only use this before rounds!"
 
@@ -801,7 +801,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 
 
 /client/proc/toggle_random_events()
-	set category = "СЕРВЕР"
+	set category = "Срв"
 	set name = "Toggle random events on/off"
 	set desc = "Toggles random events such as meteors, black holes, blob (but not space dust) on/off"
 	var/new_are = !CONFIG_GET(flag/allow_random_events)
@@ -816,7 +816,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 
 
 /client/proc/admin_change_sec_level()
-	set category = "ОСОБЕННОЕ"
+	set category = "Особенное"
 	set name = "Set Security Level"
 	set desc = "Changes the security level. Announcement only, i.e. setting to Delta won't activate nuke"
 
@@ -833,7 +833,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 
 /client/proc/toggle_nuke(obj/machinery/nuclearbomb/N in GLOB.nuke_list)
 	set name = "Toggle Nuke"
-	set category = "ФАН"
+	set category = "Фан"
 	set popup_menu = 0
 	if(!check_rights(R_DEBUG))
 		return
@@ -851,7 +851,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSblackbox.record_feedback("nested tally", "admin_toggle", 1, list("Toggle Nuke", "[N.timing]")) //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/toggle_combo_hud()
-	set category = "АДМИН"
+	set category = "Адм"
 	set name = "Toggle Combo HUD"
 	set desc = "Toggles the Admin Combo HUD (antag, sci, med, eng)"
 
@@ -886,7 +886,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 
 
 /client/proc/run_weather()
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Run Weather"
 	set desc = "Triggers a weather on the z-level you choose."
 
@@ -909,7 +909,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Run Weather")
 
 /client/proc/mass_zombie_infection()
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Mass Zombie Infection"
 	set desc = "Infects all humans with a latent organ that will zombify \
 		them on death."
@@ -930,7 +930,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Mass Zombie Infection")
 
 /client/proc/mass_zombie_cure()
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Mass Zombie Cure"
 	set desc = "Removes the zombie infection from all humans, returning them to normal."
 	if(!check_rights(R_ADMIN))
@@ -948,7 +948,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Mass Zombie Cure")
 
 /client/proc/polymorph_all()
-	set category = "ФАН"
+	set category = "Фан"
 	set name = "Polymorph All"
 	set desc = "Applies the effects of the bolt of change to every single mob."
 
@@ -981,7 +981,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 
 
 /client/proc/show_tip()
-	set category = "АДМИН"
+	set category = "Адм"
 	set name = "Show Tip"
 	set desc = "Sends a tip (that you specify) to all players. After all \
 		you're the experienced player here."
@@ -1008,7 +1008,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Show Tip")
 
 /client/proc/modify_goals()
-	set category = "ДЕБАГ"
+	set category = "Дбг"
 	set name = "Modify goals"
 
 	if(!check_rights(R_ADMIN))
@@ -1039,7 +1039,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 		immerse_player(M, toggle=FALSE, remove=remove)
 
 /client/proc/toggle_hub()
-	set category = "СЕРВЕР"
+	set category = "Срв"
 	set name = "Toggle Hub"
 
 	world.update_hub_visibility(!GLOB.hub_visibility)
@@ -1053,11 +1053,29 @@ Traitors and the like can also be revived with the previous role mostly intact.
 
 /client/proc/smite(mob/living/target as mob)
 	set name = "Smite"
-	set category = "ФАН"
+	set category = "Фан"
 	if(!check_rights(R_ADMIN) || !check_rights(R_FUN))
 		return
 
-	var/list/punishment_list = list(ADMIN_PUNISHMENT_LIGHTNING, ADMIN_PUNISHMENT_BRAINDAMAGE, ADMIN_PUNISHMENT_GIB, ADMIN_PUNISHMENT_BSA, ADMIN_PUNISHMENT_FIREBALL, ADMIN_PUNISHMENT_ROD, ADMIN_PUNISHMENT_SUPPLYPOD_QUICK, ADMIN_PUNISHMENT_SUPPLYPOD, ADMIN_PUNISHMENT_MAZING, ADMIN_PUNISHMENT_IMMERSE)
+	var/list/punishment_list = list(ADMIN_PUNISHMENT_LIGHTNING,
+									ADMIN_PUNISHMENT_BRAINDAMAGE,
+									ADMIN_PUNISHMENT_GIB,
+									ADMIN_PUNISHMENT_BSA,
+									ADMIN_PUNISHMENT_FIREBALL,
+									ADMIN_PUNISHMENT_ROD,
+									ADMIN_PUNISHMENT_SUPPLYPOD_QUICK,
+									ADMIN_PUNISHMENT_SUPPLYPOD,
+									ADMIN_PUNISHMENT_MAZING,
+									ADMIN_PUNISHMENT_IMMERSE,
+									ADMIN_PUNISHMENT_FAT,
+									ADMIN_PUNISHMENT_FAKEBWOINK,
+									ADMIN_PUNISHMENT_NUGGET,
+									ADMIN_PUNISHMENT_CRACK,
+									ADMIN_PUNISHMENT_BLEED,
+									ADMIN_PUNISHMENT_PERFORATE,
+									ADMIN_PUNISHMENT_SCARIFY,
+									ADMIN_PUNISHMENT_SHOES
+									)
 
 	var/punishment = input("Choose a punishment", "DIVINE SMITING") as null|anything in sortList(punishment_list)
 
@@ -1103,7 +1121,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 						alert("ERROR: Incorrect / improper path given.")
 						return
 				new delivery(pod)
-			new /obj/effect/DPtarget(get_turf(target), pod)
+			new /obj/effect/pod_landingzone(get_turf(target), pod)
 		if(ADMIN_PUNISHMENT_SUPPLYPOD)
 			var/datum/centcom_podlauncher/plaunch  = new(usr)
 			if(!holder)
@@ -1123,8 +1141,133 @@ Traitors and the like can also be revived with the previous role mostly intact.
 				return
 		if(ADMIN_PUNISHMENT_IMMERSE)
 			immerse_player(target)
+		if(ADMIN_PUNISHMENT_FAT)
+			target.set_nutrition(NUTRITION_LEVEL_FAT*2)
+		if(ADMIN_PUNISHMENT_FAKEBWOINK)
+			SEND_SOUND(target, sound('sound/effects/adminhelp.ogg'))
+		if(ADMIN_PUNISHMENT_NUGGET)
+			if(!iscarbon(target))
+				to_chat(usr,"<span class='warning'>This must be used on a carbon mob.</span>", confidential = TRUE)
+				return
+			var/mob/living/carbon/C = target
+			var/timer = 2 SECONDS
+			for(var/obj/item/bodypart/thing in C.bodyparts)
+				if(thing.body_part == HEAD || thing.body_part == CHEST)
+					continue
+				addtimer(CALLBACK(thing, /obj/item/bodypart/.proc/dismember), timer)
+				addtimer(CALLBACK(GLOBAL_PROC, .proc/playsound, C, 'sound/effects/cartoon_pop.ogg', 70), timer)
+				addtimer(CALLBACK(C, /mob/living/.proc/spin, 4, 1), timer - 0.4 SECONDS)
+				timer += 2 SECONDS
+		if(ADMIN_PUNISHMENT_CRACK)
+			if(!iscarbon(target))
+				to_chat(usr,"<span class='warning'>This must be used on a carbon mob.</span>", confidential = TRUE)
+				return
+			var/mob/living/carbon/C = target
+			for(var/i in C.bodyparts)
+				var/obj/item/bodypart/squish_part = i
+				var/type_wound = pick(list(/datum/wound/blunt/critical, /datum/wound/blunt/severe, /datum/wound/blunt/critical, /datum/wound/blunt/severe, /datum/wound/blunt/moderate))
+				squish_part.force_wound_upwards(type_wound, smited=TRUE)
+		if(ADMIN_PUNISHMENT_BLEED)
+			if(!iscarbon(target))
+				to_chat(usr,"<span class='warning'>This must be used on a carbon mob.</span>", confidential = TRUE)
+				return
+			var/mob/living/carbon/C = target
+			for(var/i in C.bodyparts)
+				var/obj/item/bodypart/slice_part = i
+				var/type_wound = pick(list(/datum/wound/slash/severe, /datum/wound/slash/moderate))
+				slice_part.force_wound_upwards(type_wound, smited=TRUE)
+				type_wound = pick(list(/datum/wound/slash/critical, /datum/wound/slash/severe, /datum/wound/slash/moderate))
+				slice_part.force_wound_upwards(type_wound, smited=TRUE)
+				type_wound = pick(list(/datum/wound/slash/critical, /datum/wound/slash/severe))
+				slice_part.force_wound_upwards(type_wound, smited=TRUE)
+		if(ADMIN_PUNISHMENT_PERFORATE)
+			if(!iscarbon(target))
+				to_chat(usr,"<span class='warning'>This must be used on a carbon mob.</span>", confidential = TRUE)
+				return
+
+			var/list/how_fucked_is_this_dude = list("A little", "A lot", "So fucking much", "FUCK THIS DUDE")
+			var/hatred = input("How much do you hate this guy?") in how_fucked_is_this_dude
+			var/repetitions
+			var/shots_per_limb_per_rep = 2
+			var/damage
+			switch(hatred)
+				if("A little")
+					repetitions = 1
+					damage = 5
+				if("A lot")
+					repetitions = 2
+					damage = 8
+				if("So fucking much")
+					repetitions = 3
+					damage = 10
+				if("FUCK THIS DUDE")
+					repetitions = 4
+					damage = 10
+
+			var/mob/living/carbon/dude = target
+			var/list/open_adj_turfs = get_adjacent_open_turfs(dude)
+			var/list/wound_bonuses = list(15, 70, 110, 250)
+
+			var/delay_per_shot = 1
+			var/delay_counter = 1
+
+			dude.Immobilize(5 SECONDS)
+			for(var/wound_bonus_rep in 1 to repetitions)
+				for(var/i in dude.bodyparts)
+					var/obj/item/bodypart/slice_part = i
+					var/shots_this_limb = 0
+					for(var/t in shuffle(open_adj_turfs))
+						var/turf/iter_turf = t
+						addtimer(CALLBACK(GLOBAL_PROC, .proc/firing_squad, dude, iter_turf, slice_part.body_zone, wound_bonuses[wound_bonus_rep], damage), delay_counter)
+						delay_counter += delay_per_shot
+						shots_this_limb++
+						if(shots_this_limb > shots_per_limb_per_rep)
+							break
+
+		if(ADMIN_PUNISHMENT_SCARIFY)
+			if(!iscarbon(target))
+				to_chat(usr,"<span class='warning'>This must be used on a carbon mob.</span>", confidential = TRUE)
+				return
+			var/mob/living/carbon/dude = target
+			dude.generate_fake_scars(rand(1, 4))
+			to_chat(dude, "<span class='warning'>You feel your body grow jaded and torn...</span>")
+		if(ADMIN_PUNISHMENT_SHOES)
+			if(!iscarbon(target))
+				to_chat(usr,"<span class='warning'>This must be used on a carbon mob.</span>", confidential = TRUE)
+				return
+			var/mob/living/carbon/dude = target
+			var/obj/item/clothing/shoes/sick_kicks = dude.shoes
+			if(!sick_kicks?.can_be_tied)
+				to_chat(usr,"<span class='warning'>[dude] does not have knottable shoes!</span>", confidential = TRUE)
+				return
+			sick_kicks.adjust_laces(SHOES_KNOTTED)
 
 	punish_log(target, punishment)
+
+/**
+  * firing_squad is a proc for the :B:erforate smite to shoot each individual bullet at them, so that we can add actual delays without sleep() nonsense
+  *
+  * Hilariously, if you drag someone away mid smite, the bullets will still chase after them from the original spot, possibly hitting other people. Too funny to fix imo
+  *
+  * Arguments:
+  * * target- guy we're shooting obviously
+  * * source_turf- where the bullet begins, preferably on a turf next to the target
+  * * body_zone- which bodypart we're aiming for, if there is one there
+  * * wound_bonus- the wounding power we're assigning to the bullet, since we don't care about the base one
+  * * damage- the damage we're assigning to the bullet, since we don't care about the base one
+  */
+/proc/firing_squad(mob/living/carbon/target, turf/source_turf, body_zone, wound_bonus, damage)
+	if(!target.get_bodypart(body_zone))
+		return
+	playsound(target, 'sound/weapons/gun/revolver/shot.ogg', 100)
+	var/obj/projectile/bullet/smite/divine_wrath = new(source_turf)
+	divine_wrath.damage = damage
+	divine_wrath.wound_bonus = wound_bonus
+	divine_wrath.original = target
+	divine_wrath.def_zone = body_zone
+	divine_wrath.spread = 0
+	divine_wrath.preparePixelProjectile(target, source_turf)
+	divine_wrath.fire()
 
 /client/proc/punish_log(whom, punishment)
 	var/msg = "[key_name_admin(usr)] punished [key_name_admin(whom)] with [punishment]."
@@ -1146,7 +1289,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSshuttle.centcom_recall(SSshuttle.emergency.timer, message)
 
 /client/proc/cmd_admin_check_player_exp()	//Allows admins to determine who the newer players are.
-	set category = "АДМИН"
+	set category = "Адм"
 	set name = "Player Playtime"
 	if(!check_rights(R_ADMIN))
 		return
@@ -1156,8 +1299,10 @@ Traitors and the like can also be revived with the previous role mostly intact.
 		return
 
 	var/list/msg = list()
-	msg += "<html><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8' /><title>Playtime Report</title></head><body>Playtime:<BR><UL>"
-	for(var/client/C in GLOB.clients)
+	msg += "<html><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8'><title>Playtime Report</title></head><body>Playtime:<BR><UL>"
+	var/list/clients_list_copy = GLOB.clients.Copy()
+	sortList(clients_list_copy)
+	for(var/client/C in clients_list_copy)
 		msg += "<LI> - [key_name_admin(C)]: <A href='?_src_=holder;[HrefToken()];getplaytimewindow=[REF(C.mob)]'>" + C.get_exp_living() + "</a></LI>"
 	msg += "</UL></BODY></HTML>"
 	src << browse(msg.Join(), "window=Player_playtime_check")

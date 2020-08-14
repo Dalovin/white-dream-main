@@ -27,8 +27,8 @@
 	damage_coeff = list(BRUTE = 1, BURN = 1.5, TOX = 1.5, CLONE = 0, STAMINA = 0, OXY = 1.5)
 	obj_damage = 20
 	environment_smash = ENVIRONMENT_SMASH_WALLS
-	attack_verb_continuous = "pummels"
-	attack_verb_simple = "pummel"
+	attack_verb_continuous = "хуярит"
+	attack_verb_simple = "хуярит"
 	attack_sound = 'sound/weapons/punch1.ogg'
 	dextrous = TRUE
 	held_items = list(null, null)
@@ -89,7 +89,7 @@
 
 /mob/living/simple_animal/hostile/gorilla/gib(no_brain)
 	if(!no_brain)
-		var/mob/living/brain/B = new(drop_location())
+		var/mob/living/brain/B = new(drop_location()[1])
 		B.name = real_name
 		B.real_name = real_name
 		if(mind)

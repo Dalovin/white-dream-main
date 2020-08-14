@@ -145,7 +145,7 @@
 					message_admins("[key_name(usr)] created an abductor team.")
 					log_admin("[key_name(usr)] created an abductor team.")
 				else
-					message_admins("[key_name_admin(usr)] tried to create an abductor team. Unfortunatly there were not enough candidates available.")
+					message_admins("[key_name_admin(usr)] tried to create an abductor team. Unfortunately there were not enough candidates available.")
 					log_admin("[key_name(usr)] failed to create an abductor team.")
 			if("revenant")
 				if(src.makeRevenant())
@@ -390,25 +390,25 @@
 			if("cat")
 				M.change_mob_type( /mob/living/simple_animal/pet/cat , null, null, delmob )
 			if("runtime")
-				M.change_mob_type( /mob/living/simple_animal/pet/cat/Runtime , null, null, delmob )
+				M.change_mob_type( /mob/living/simple_animal/pet/cat/runtime , null, null, delmob )
 			if("corgi")
 				M.change_mob_type( /mob/living/simple_animal/pet/dog/corgi , null, null, delmob )
 			if("ian")
-				M.change_mob_type( /mob/living/simple_animal/pet/dog/corgi/Ian , null, null, delmob )
+				M.change_mob_type( /mob/living/simple_animal/pet/dog/corgi/ian , null, null, delmob )
 			if("pug")
 				M.change_mob_type( /mob/living/simple_animal/pet/dog/pug , null, null, delmob )
 			if("crab")
 				M.change_mob_type( /mob/living/simple_animal/crab , null, null, delmob )
 			if("coffee")
-				M.change_mob_type( /mob/living/simple_animal/crab/Coffee , null, null, delmob )
+				M.change_mob_type( /mob/living/simple_animal/crab/coffee , null, null, delmob )
 			if("parrot")
 				M.change_mob_type( /mob/living/simple_animal/parrot , null, null, delmob )
 			if("polyparrot")
-				M.change_mob_type( /mob/living/simple_animal/parrot/Poly , null, null, delmob )
-			if("constructarmored")
-				M.change_mob_type( /mob/living/simple_animal/hostile/construct/armored , null, null, delmob )
-			if("constructbuilder")
-				M.change_mob_type( /mob/living/simple_animal/hostile/construct/builder , null, null, delmob )
+				M.change_mob_type( /mob/living/simple_animal/parrot/poly , null, null, delmob )
+			if("constructjuggernaut")
+				M.change_mob_type( /mob/living/simple_animal/hostile/construct/juggernaut , null, null, delmob )
+			if("constructartificer")
+				M.change_mob_type( /mob/living/simple_animal/hostile/construct/artificer , null, null, delmob )
 			if("constructwraith")
 				M.change_mob_type( /mob/living/simple_animal/hostile/construct/wraith , null, null, delmob )
 			if("shade")
@@ -575,8 +575,10 @@
 	else if(href_list["messageedits"])
 		if(!check_rights(R_ADMIN))
 			return
-		var/message_id = sanitizeSQL("[href_list["messageedits"]]")
-		var/datum/DBQuery/query_get_message_edits = SSdbcore.NewQuery("SELECT edits FROM [format_table_name("messages")] WHERE id = '[message_id]'")
+		var/datum/db_query/query_get_message_edits = SSdbcore.NewQuery(
+			"SELECT edits FROM [format_table_name("messages")] WHERE id = :message_id",
+			list("message_id" = href_list["messageedits"])
+		)
 		if(!query_get_message_edits.warn_execute())
 			qdel(query_get_message_edits)
 			return
@@ -846,25 +848,6 @@
 		message_admins("[key_name(usr)] set 'stacking_limit' to [GLOB.dynamic_stacking_limit].")
 		dynamic_mode_options(usr)
 
-	else if(href_list["f_dynamic_high_pop_limit"])
-		if(!check_rights(R_ADMIN))
-			return
-
-		if(SSticker && SSticker.mode)
-			return alert(usr, "The game has already started.", null, null, null, null)
-
-		if(GLOB.master_mode != "dynamic")
-			return alert(usr, "The game mode has to be dynamic mode!", null, null, null, null)
-
-		var/new_value = input(usr, "Enter the high-pop override threshold for dynamic mode.", "High pop override") as num
-		if (new_value < 0)
-			return alert(usr, "Only positive values allowed!", null, null, null, null)
-		GLOB.dynamic_high_pop_limit = new_value
-
-		log_admin("[key_name(usr)] set 'high_pop_limit' to [GLOB.dynamic_high_pop_limit].")
-		message_admins("[key_name(usr)] set 'high_pop_limit' to [GLOB.dynamic_high_pop_limit].")
-		dynamic_mode_options(usr)
-
 	else if(href_list["f_dynamic_forced_threat"])
 		if(!check_rights(R_ADMIN))
 			return
@@ -1126,8 +1109,8 @@
 		if(!check_rights(R_SPAWN))
 			return
 
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 
 		var/mob/living/L = locate(href_list["revive"])
 		if(!istype(L))
@@ -1282,7 +1265,13 @@
 
 		//Job + antagonist
 		if(M.mind)
-			special_role_description = "Role: <b>[M.mind.assigned_role]</b>; Antagonist: <font color='red'><b>[M.mind.special_role]</b></font>"
+			special_role_description = "Role: <b>[M.mind.assigned_role]</b>; Antagonist: <font color='red'><b>"
+			var/i = 0
+			for(var/datum/antagonist/A in M.mind.antag_datums)
+				special_role_description += "[A.name]"
+				if(++i != length(M.mind.antag_datums))
+					special_role_description += ", "
+			special_role_description += "</b></font>"
 		else
 			special_role_description = "Role: <i>Mind datum missing</i> Antagonist: <i>Mind datum missing</i>"
 
@@ -1572,6 +1561,26 @@
 		else
 			show_traitor_panel(M)
 
+	else if(href_list["skill"])
+		if(!check_rights(R_ADMIN))
+			return
+
+		if(!SSticker.HasRoundStarted())
+			alert("The game hasn't started yet!")
+			return
+
+		var/target = locate(href_list["skill"])
+		var/datum/mind/target_mind
+		if(ismob(target))
+			var/mob/target_mob = target
+			target_mind = target_mob.mind
+		else if (istype(target, /datum/mind))
+			target_mind = target
+		else
+			to_chat(usr, "This can only be used on instances of type /mob and /mind", confidential = TRUE)
+			return
+		show_skill_panel(target_mind)
+
 	else if(href_list["borgpanel"])
 		if(!check_rights(R_ADMIN))
 			return
@@ -1594,44 +1603,44 @@
 	else if(href_list["create_object"])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		return create_object(usr)
 
 	else if(href_list["quick_create_object"])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		return quick_create_object(usr)
 
 	else if(href_list["create_turf"])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		return create_turf(usr)
 
 	else if(href_list["create_mob"])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		return create_mob(usr)
 
 	else if(href_list["dupe_marked_datum"])
 		if(!check_rights(R_SPAWN))
 			return
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 		return DuplicateObject(marked_datum, perfectcopy=1, newloc=get_turf(usr))
 
 	else if(href_list["object_list"])			//this is the laggiest thing ever
 		if(!check_rights(R_SPAWN))
 			return
 
-		if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
-			return
+		//if(!check_rights(R_PERMISSIONS, FALSE) && !is_centcom_level(usr.z))
+		//	return
 
 		var/atom/loc = usr.loc
 
@@ -1738,7 +1747,7 @@
 										R.activate_module(I)
 
 		if(pod)
-			new /obj/effect/DPtarget(target, pod)
+			new /obj/effect/pod_landingzone(target, pod)
 
 		if (number == 1)
 			log_admin("[key_name(usr)] created a [english_list(paths)]")
@@ -2102,6 +2111,71 @@
 
 		usr << browse(dat.Join("<br>"), "window=related_[C];size=420x300")
 
+	else if(href_list["centcomlookup"])
+		if(!check_rights(R_ADMIN))
+			return
+
+		if(!CONFIG_GET(string/centcom_ban_db))
+			to_chat(usr, "<span class='warning'>Centcom Galactic Ban DB is disabled!</span>")
+			return
+
+		var/ckey = href_list["centcomlookup"]
+
+		// Make the request
+		var/datum/http_request/request = new()
+		request.prepare(RUSTG_HTTP_METHOD_GET, "[CONFIG_GET(string/centcom_ban_db)]/[ckey]", "", "")
+		request.begin_async()
+		UNTIL(request.is_complete() || !usr)
+		if (!usr)
+			return
+		var/datum/http_response/response = request.into_response()
+
+		var/list/bans
+
+		var/list/dat = list("<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'><body>")
+
+		if(response.errored)
+			dat += "<br>Failed to connect to CentCom."
+		else if(response.status_code != 200)
+			dat += "<br>Failed to connect to CentCom. Status code: [response.status_code]"
+		else
+			if(response.body == "[]")
+				dat += "<center><b>0 bans detected for [ckey]</b></center>"
+			else
+				bans = json_decode(response["body"])
+
+				//Ignore bans from non-whitelisted sources, if a whitelist exists
+				var/list/valid_sources
+				if(CONFIG_GET(string/centcom_source_whitelist))
+					valid_sources = splittext(CONFIG_GET(string/centcom_source_whitelist), ",")
+					dat += "<center><b>Bans detected for [ckey]</b></center>"
+				else
+					//Ban count is potentially inaccurate if they're using a whitelist
+					dat += "<center><b>[bans.len] ban\s detected for [ckey]</b></center>"
+
+				for(var/list/ban in bans)
+					if(valid_sources && !(ban["sourceName"] in valid_sources))
+						continue
+					dat += "<b>Server: </b> [sanitize(ban["sourceName"])]<br>"
+					dat += "<b>RP Level: </b> [sanitize(ban["sourceRoleplayLevel"])]<br>"
+					dat += "<b>Type: </b> [sanitize(ban["type"])]<br>"
+					dat += "<b>Banned By: </b> [sanitize(ban["bannedBy"])]<br>"
+					dat += "<b>Reason: </b> [sanitize(ban["reason"])]<br>"
+					dat += "<b>Datetime: </b> [sanitize(ban["bannedOn"])]<br>"
+					var/expiration = ban["expires"]
+					dat += "<b>Expires: </b> [expiration ? "[sanitize(expiration)]" : "Permanent"]<br>"
+					if(ban["type"] == "job")
+						dat += "<b>Jobs: </b> "
+						var/list/jobs = ban["jobs"]
+						dat += sanitize(jobs.Join(", "))
+						dat += "<br>"
+					dat += "<hr>"
+
+		dat += "<br></body>"
+		var/datum/browser/popup = new(usr, "centcomlookup-[ckey]", "<div align='center'>Central Command Galactic Ban Database</div>", 700, 600)
+		popup.set_content(dat.Join())
+		popup.open(0)
+
 	else if(href_list["modantagrep"])
 		if(!check_rights(R_ADMIN))
 			return
@@ -2110,6 +2184,18 @@
 		var/client/C = M.client
 		usr.client.cmd_admin_mod_antag_rep(C, href_list["modantagrep"])
 		show_player_panel(M)
+
+	else if(href_list["changemetacash"])
+		if(!check_rights(R_PERMISSIONS))
+			return
+
+		var/amount = input(usr, "Че ставим?") as null|num
+
+		if (amount)
+			var/mob/M = locate(href_list["changemetacash"]) in GLOB.mob_list
+			var/client/C = M.client
+			C.set_metacoin_count(amount)
+			message_admins("[key_name(usr)] изменяет баланс метакэша [key_name(C)] на [amount].")
 
 	else if(href_list["slowquery"])
 		if(!check_rights(R_ADMIN))
@@ -2241,6 +2327,64 @@
 
 	else if(href_list["beakerpanel"])
 		beaker_panel_act(href_list)
+
+	else if(href_list["reloadpolls"])
+		GLOB.polls.Cut()
+		GLOB.poll_options.Cut()
+		load_poll_data()
+		poll_list_panel()
+
+	else if(href_list["newpoll"])
+		poll_management_panel()
+
+	else if(href_list["editpoll"])
+		var/datum/poll_question/poll = locate(href_list["editpoll"]) in GLOB.polls
+		poll_management_panel(poll)
+
+	else if(href_list["deletepoll"])
+		var/datum/poll_question/poll = locate(href_list["deletepoll"]) in GLOB.polls
+		poll.delete_poll()
+		poll_list_panel()
+
+	else if(href_list["initializepoll"])
+		poll_parse_href(href_list)
+
+	else if(href_list["submitpoll"])
+		var/datum/poll_question/poll = locate(href_list["submitpoll"]) in GLOB.polls
+		poll_parse_href(href_list, poll)
+
+	else if(href_list["clearpollvotes"])
+		var/datum/poll_question/poll = locate(href_list["clearpollvotes"]) in GLOB.polls
+		poll.clear_poll_votes()
+		poll_management_panel(poll)
+
+	else if(href_list["addpolloption"])
+		var/datum/poll_question/poll = locate(href_list["addpolloption"]) in GLOB.polls
+		poll_option_panel(poll)
+
+	else if(href_list["editpolloption"])
+		var/datum/poll_option/option = locate(href_list["editpolloption"]) in GLOB.poll_options
+		var/datum/poll_question/poll = locate(href_list["parentpoll"]) in GLOB.polls
+		poll_option_panel(poll, option)
+
+	else if(href_list["deletepolloption"])
+		var/datum/poll_option/option = locate(href_list["deletepolloption"]) in GLOB.poll_options
+		var/datum/poll_question/poll = option.delete_option()
+		poll_management_panel(poll)
+
+	else if(href_list["submitoption"])
+		var/datum/poll_option/option = locate(href_list["submitoption"]) in GLOB.poll_options
+		var/datum/poll_question/poll = locate(href_list["submitoptionpoll"]) in GLOB.polls
+		poll_option_parse_href(href_list, poll, option)
+
+	else if(href_list["admincommend"])
+		if(!SSticker.IsRoundInProgress())
+			to_chat(usr, "<span class='warning'>The round must be in progress to use this!</span>")
+			return
+		var/mob/heart_recepient = locate(href_list["admincommend"])
+		if(tgalert(usr, "Are you sure you'd like to anonymously commend [heart_recepient.ckey]? NOTE: This is logged, please use this sparingly and only for actual kind behavior, not as a reward for your friends.", "<3?", "Yes", "No") == "No")
+			return
+		usr.nominate_heart(heart_recepient)
 
 /datum/admins/proc/HandleCMode()
 	if(!check_rights(R_ADMIN))

@@ -152,12 +152,12 @@
 /datum/antagonist/cult/admin_add(datum/mind/new_owner,mob/admin)
 	give_equipment = FALSE
 	new_owner.add_antag_datum(src)
-	message_admins("[key_name_admin(admin)] has cult'ed [key_name_admin(new_owner)].")
-	log_admin("[key_name(admin)] has cult'ed [key_name(new_owner)].")
+	message_admins("[key_name_admin(admin)] has cult-ed [key_name_admin(new_owner)].")
+	log_admin("[key_name(admin)] has cult-ed [key_name(new_owner)].")
 
 /datum/antagonist/cult/admin_remove(mob/user)
-	message_admins("[key_name_admin(user)] has decult'ed [key_name_admin(owner)].")
-	log_admin("[key_name(user)] has decult'ed [key_name(owner)].")
+	message_admins("[key_name_admin(user)] has decult-ed [key_name_admin(owner)].")
+	log_admin("[key_name(user)] has decult-ed [key_name(owner)].")
 	SSticker.mode.remove_cultist(owner,silent=TRUE) //disgusting
 
 /datum/antagonist/cult/get_admin_commands()
@@ -267,7 +267,7 @@
 	if(ratio > CULT_RISEN && !cult_risen)
 		for(var/datum/mind/B in members)
 			if(B.current)
-				SEND_SOUND(B.current, 'sound/hallucinations/i_see_you2.ogg')
+				SEND_SOUND(B.current, sound('sound/hallucinations/i_see_you2.ogg'))
 				to_chat(B.current, "<span class='cultlarge'>The veil weakens as your cult grows, your eyes begin to glow...</span>")
 				addtimer(CALLBACK(src, .proc/rise, B.current), 200)
 		cult_risen = TRUE
@@ -275,7 +275,7 @@
 	if(ratio > CULT_ASCENDENT && !cult_ascendent)
 		for(var/datum/mind/B in members)
 			if(B.current)
-				SEND_SOUND(B.current, 'sound/hallucinations/im_here1.ogg')
+				SEND_SOUND(B.current, sound('sound/hallucinations/im_here1.ogg'))
 				to_chat(B.current, "<span class='cultlarge'>Your cult is ascendent and the red harvest approaches - you cannot hide your true nature for much longer!!</span>")
 				addtimer(CALLBACK(src, .proc/ascend, B.current), 200)
 		cult_ascendent = TRUE
@@ -361,9 +361,9 @@
 	..()
 	var/sanity = 0
 	while(summon_spots.len < SUMMON_POSSIBILITIES && sanity < 100)
-		var/area/summon = pick(GLOB.sortedAreas - summon_spots)
-		if(summon && is_station_level(summon.z) && summon.valid_territory)
-			summon_spots += summon
+		var/area/summon_area = pick(GLOB.sortedAreas - summon_spots)
+		if(summon_area && is_station_level(summon_area.z) && (summon_area.area_flags & VALID_TERRITORY))
+			summon_spots += summon_area
 		sanity++
 	update_explanation_text()
 

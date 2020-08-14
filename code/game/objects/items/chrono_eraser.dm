@@ -5,13 +5,13 @@
 	desc = "The result of outlawed time-bluespace research, this device is capable of wiping a being from the timestream. They never are, they never were, they never will be."
 	icon = 'icons/obj/chronos.dmi'
 	icon_state = "chronobackpack"
-	item_state = "backpack"
+	inhand_icon_state = "backpack"
 	lefthand_file = 'icons/mob/inhands/equipment/backpack_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/backpack_righthand.dmi'
 	w_class = WEIGHT_CLASS_BULKY
 	slot_flags = ITEM_SLOT_BACK
 	slowdown = 1
-	actions_types = list(/datum/action/item_action/equip_unequip_TED_Gun)
+	actions_types = list(/datum/action/item_action/equip_unequip_ted_gun)
 	var/obj/item/gun/energy/chrono_gun/PA = null
 	var/list/erased_minds = list() //a collection of minds from the dead
 
@@ -46,7 +46,7 @@
 	desc = "It's as if they never existed in the first place."
 	icon = 'icons/obj/chronos.dmi'
 	icon_state = "chronogun"
-	item_state = "chronogun"
+	inhand_icon_state = "chronogun"
 	w_class = WEIGHT_CLASS_NORMAL
 	item_flags = DROPDEL
 	ammo_type = list(/obj/item/ammo_casing/energy/chrono_beam)
@@ -258,10 +258,9 @@
 
 /obj/structure/chrono_field/return_air() //we always have nominal air and temperature
 	var/datum/gas_mixture/GM = new
-	GM.add_gases(/datum/gas/oxygen, /datum/gas/nitrogen)
-	GM.gases[/datum/gas/oxygen][MOLES] = MOLES_O2STANDARD
-	GM.gases[/datum/gas/nitrogen][MOLES] = MOLES_N2STANDARD
-	GM.temperature = T20C
+	GM.set_moles(/datum/gas/oxygen, MOLES_O2STANDARD)
+	GM.set_moles(/datum/gas/nitrogen, MOLES_N2STANDARD)
+	GM.set_temperature(T20C)
 	return GM
 
 /obj/structure/chrono_field/singularity_act()

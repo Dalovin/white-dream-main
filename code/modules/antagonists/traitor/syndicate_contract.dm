@@ -18,7 +18,10 @@
 /datum/syndicate_contract/proc/generate(blacklist)
 	contract.find_target(null, blacklist)
 
-	var/datum/data/record/record = find_record("name", contract.target.name, GLOB.data_core.general)
+	var/datum/data/record/record
+	if (contract.target)
+		record = find_record("name", contract.target.name, GLOB.data_core.general)
+
 	if (record)
 		target_rank = record.fields["rank"]
 	else
@@ -42,7 +45,7 @@
 	var/location = pick_list_weighted(WANTED_FILE, "location")
 	wanted_message = "[base] [verb_string] [noun] [location]."
 
-/datum/syndicate_contract/proc/handle_extraction(var/mob/living/user)
+/datum/syndicate_contract/proc/handle_extraction(mob/living/user)
 	if (contract.target && contract.dropoff_check(user, contract.target.current))
 
 		var/turf/free_location = find_obstruction_free_location(3, user, contract.dropoff)
@@ -65,7 +68,7 @@
 	empty_pod.explosionSize = list(0,0,0,1)
 	empty_pod.leavingSound = 'sound/effects/podwoosh.ogg'
 
-	new /obj/effect/DPtarget(empty_pod_turf, empty_pod)
+	new /obj/effect/pod_landingzone(empty_pod_turf, empty_pod)
 
 /datum/syndicate_contract/proc/enter_check(datum/source, sent_mob)
 	if (istype(source, /obj/structure/closet/supplypod/extractionpod))
@@ -108,7 +111,7 @@
 			var/obj/structure/closet/supplypod/extractionpod/pod = source
 
 			// Handle the pod returning
-			pod.send_up(pod)
+			pod.startExitSequence(pod)
 
 			if (ishuman(M))
 				var/mob/living/carbon/human/target = M
@@ -130,8 +133,8 @@
 			else
 				D.adjust_money(-points_to_check)
 
-			priority_announce("One of your crew was captured by a rival organisation - we've needed to pay their ransom to bring them back. \
-							As is policy we've taken a portion of the station's funds to offset the overall cost.", null, 'sound/ai/attention.ogg', null, "Nanotrasen Asset Protection")
+			priority_announce("Один из членов экипажа был захвачена конкурирующей организацией - нам нужно заплатить выкуп, чтобы вернуть их. \
+							В соответствии с политикой мы взяли часть средств станции, чтобы компенсировать общую стоимость.", null, 'sound/ai/announcer/alert.ogg', null, "Защита Активов Нанотрейзен")
 
 			sleep(30)
 
@@ -146,11 +149,10 @@
 				if(C && C.registered_account)
 					C.registered_account.adjust_money(ransom * 0.35)
 
-					C.registered_account.bank_card_talk("We've processed the ransom, agent. Here's your cut - your balance is now \
-					[C.registered_account.account_balance] cr.", TRUE)
+					C.registered_account.bank_card_talk("Мы обработали выкуп, агент. Вот ваша доля в размере [C.registered_account.account_balance] кредитов.", TRUE)
 
 // They're off to holding - handle the return timer and give some text about what's going on.
-/datum/syndicate_contract/proc/handleVictimExperience(var/mob/living/M)
+/datum/syndicate_contract/proc/handleVictimExperience(mob/living/M)
 	// Ship 'em back - dead or alive, 4 minutes wait.
 	// Even if they weren't the target, we're still treating them the same.
 	addtimer(CALLBACK(src, .proc/returnVictim, M), (60 * 10) * 4)
@@ -161,36 +163,36 @@
 		M.reagents.add_reagent(/datum/reagent/medicine/omnizine, 20)
 
 		M.flash_act()
-		M.confused += 10
+		M.add_confusion(10)
 		M.blur_eyes(5)
-		to_chat(M, "<span class='warning'>You feel strange...</span>")
+		to_chat(M, "<span class='warning'>Ощущаю себя странно...</span>")
 		sleep(60)
-		to_chat(M, "<span class='warning'>That pod did something to you...</span>")
+		to_chat(M, "<span class='warning'>Эта капсула сделала что-то со мной...</span>")
 		M.Dizzy(35)
 		sleep(65)
-		to_chat(M, "<span class='warning'>Моя голова разрывается... It feels like it's going to burst out your skull!</span>")
+		to_chat(M, "<span class='warning'>Моя голова разрывается... Похоже мозг хочет вырваться из моей головы!</span>")
 		M.flash_act()
-		M.confused += 20
+		M.add_confusion(20)
 		M.blur_eyes(3)
 		sleep(30)
 		to_chat(M, "<span class='warning'>Моя голова разрывается...</span>")
 		sleep(100)
 		M.flash_act()
 		M.Unconscious(200)
-		to_chat(M, "<span class='reallybig hypnophrase'>A million voices echo in your head... <i>\"Your mind held many valuable secrets - \
-					we thank you for providing them. Your value is expended, and you will be ransomed back to your station. We always get paid, \
-					so it's only a matter of time before we ship you back...\"</i></span>")
+		to_chat(M, "<span class='reallybig hypnophrase'>Миллион голосов эхом звучит в голове... <i>\"В вашем уме много ценных секретов - \
+					мы благодарим вас за предоставление их нам. Ваша стоимость исчерпана, и вы будете возвращены обратно на свою станцию. Нам всегда платят, \
+					так что это только вопрос времени, когда мы отправим вас обратно...\"</i></span>")
 		M.blur_eyes(10)
 		M.Dizzy(15)
-		M.confused += 20
+		M.add_confusion(20)
 
 // We're returning the victim
-/datum/syndicate_contract/proc/returnVictim(var/mob/living/M)
+/datum/syndicate_contract/proc/returnVictim(mob/living/M)
 	var/list/possible_drop_loc = list()
 
 	for (var/turf/possible_drop in contract.dropoff.contents)
 		if (!isspaceturf(possible_drop) && !isclosedturf(possible_drop))
-			if (!is_blocked_turf(possible_drop))
+			if (!possible_drop.is_blocked_turf())
 				possible_drop_loc.Add(possible_drop)
 
 	if (possible_drop_loc.len > 0)
@@ -202,7 +204,7 @@
 		return_pod.style = STYLE_SYNDICATE
 
 		do_sparks(8, FALSE, M)
-		M.visible_message("<span class='notice'>[M] vanishes...</span>")
+		M.visible_message("<span class='notice'><b>[M]</b> исчезает...</span>")
 
 		for(var/obj/item/W in M)
 			if (ishuman(M))
@@ -221,14 +223,13 @@
 		M.flash_act()
 		M.blur_eyes(30)
 		M.Dizzy(35)
-		M.confused += 20
+		M.add_confusion(20)
 
-		new /obj/effect/DPtarget(possible_drop_loc[pod_rand_loc], return_pod)
+		new /obj/effect/pod_landingzone(possible_drop_loc[pod_rand_loc], return_pod)
 	else
-		to_chat(M, "<span class='reallybig hypnophrase'>A million voices echo in your head... <i>\"Seems where you got sent here from won't \
-					be able to handle our pod... You will die here instead.\"</i></span>")
+		to_chat(M, "<span class='reallybig hypnophrase'>Миллион голосов эхом звучит в голове... <i>\"Кажется, капсула, на которой вы сюда прибыли \
+					не в состоянии найти подходящее место для отправки вас назад... Вы умрете здесь вместо отправки.\"</i></span>")
 		if (iscarbon(M))
 			var/mob/living/carbon/C = M
 			if (C.can_heartattack())
 				C.set_heartattack(TRUE)
-

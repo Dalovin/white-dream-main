@@ -5,6 +5,12 @@
 	icon_state = "left"
 	layer = ABOVE_WINDOW_LAYER
 	closingLayer = ABOVE_WINDOW_LAYER
+
+	bound_height = 7
+	bound_width = 32
+	bound_x = 0
+	bound_y = 25
+
 	resistance_flags = ACID_PROOF
 	var/base_state = "left"
 	max_integrity = 150 //If you change this, consider changing ../door/window/brigdoor/ max_integrity at the bottom of this .dm file
@@ -54,7 +60,6 @@
 		icon_state = base_state
 	else
 		icon_state = "[base_state]open"
-	SSdemo.mark_dirty(src)
 
 /obj/machinery/door/window/proc/open_and_close()
 	if(!open())
@@ -102,38 +107,15 @@
 	. = ..()
 	if(istype(mover) && (mover.pass_flags & PASSGLASS))
 		return TRUE
-	if(get_dir(loc, target) == dir) //Make sure looking at appropriate border
-		return
-	if(istype(mover, /obj/structure/window))
-		var/obj/structure/window/W = mover
-		if(!valid_window_location(loc, W.ini_dir))
-			return FALSE
-	else if(istype(mover, /obj/structure/windoor_assembly))
-		var/obj/structure/windoor_assembly/W = mover
-		if(!valid_window_location(loc, W.ini_dir))
-			return FALSE
-	else if(istype(mover, /obj/machinery/door/window) && !valid_window_location(loc, mover.dir))
-		return FALSE
-	else
-		return TRUE
 
 /obj/machinery/door/window/CanAtmosPass(turf/T)
-	if(get_dir(loc, T) == dir)
-		return !density
-	else
-		return 1
+	. = ..()
+	if(anchored && density && get_dir(loc, T) == dir)
+		return FALSE
 
 //used in the AStar algorithm to determinate if the turf the door is on is passable
 /obj/machinery/door/window/CanAStarPass(obj/item/card/id/ID, to_dir)
 	return !density || (dir != to_dir) || (check_access(ID) && hasPower())
-
-/obj/machinery/door/window/CheckExit(atom/movable/mover as mob|obj, turf/target)
-	if(istype(mover) && (mover.pass_flags & PASSGLASS))
-		return 1
-	if(get_dir(loc, target) == dir)
-		return !density
-	else
-		return 1
 
 /obj/machinery/door/window/open(forced=FALSE)
 	if (operating) //doors can still open when emag-disabled
@@ -249,7 +231,7 @@
 							if("rightsecure")
 								WA.facing = "r"
 								WA.secure = TRUE
-						WA.setAnchored(TRUE)
+						WA.set_anchored(TRUE)
 						WA.state= "02"
 						WA.setDir(dir)
 						WA.ini_dir = dir
@@ -265,7 +247,7 @@
 
 						var/obj/item/electronics/airlock/ae
 						if(!electronics)
-							ae = new/obj/item/electronics/airlock(drop_location())
+							ae = new/obj/item/electronics/airlock(drop_location()[1])
 							if(req_one_access)
 								ae.one_access = 1
 								ae.accesses = req_one_access
@@ -334,6 +316,21 @@
 				INVOKE_ASYNC(src, .proc/close)
 		if("touch")
 			INVOKE_ASYNC(src, .proc/open_and_close)
+
+/obj/machinery/door/window/rcd_vals(mob/user, obj/item/construction/rcd/the_rcd)
+	switch(the_rcd.mode)
+		if(RCD_DECONSTRUCT)
+			return list("mode" = RCD_DECONSTRUCT, "delay" = 50, "cost" = 32)
+	return FALSE
+
+/obj/machinery/door/window/rcd_act(mob/user, obj/item/construction/rcd/the_rcd, passed_mode)
+	switch(passed_mode)
+		if(RCD_DECONSTRUCT)
+			to_chat(user, "<span class='notice'>You deconstruct the windoor.</span>")
+			qdel(src)
+			return TRUE
+	return FALSE
+
 
 /obj/machinery/door/window/brigdoor
 	name = "secure door"

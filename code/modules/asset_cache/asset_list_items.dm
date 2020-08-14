@@ -4,16 +4,6 @@
 	assets = list(
 		"tgui.bundle.js" = 'tgui/packages/tgui/public/tgui.bundle.js',
 		"tgui.bundle.css" = 'tgui/packages/tgui/public/tgui.bundle.css',
-		"shim-html5shiv.js" = 'tgui/packages/tgui/public/shim-html5shiv.js',
-		"shim-ie8.js" = 'tgui/packages/tgui/public/shim-ie8.js',
-		"shim-dom4.js" = 'tgui/packages/tgui/public/shim-dom4.js',
-		"shim-css-om.js" = 'tgui/packages/tgui/public/shim-css-om.js',
-	)
-
-/datum/asset/group/tgui
-	children = list(
-		/datum/asset/simple/tgui,
-		/datum/asset/simple/fontawesome
 	)
 
 /datum/asset/simple/headers
@@ -43,7 +33,15 @@
 		"smmon_3.gif" 				= 'icons/program_icons/smmon_3.gif',
 		"smmon_4.gif" 				= 'icons/program_icons/smmon_4.gif',
 		"smmon_5.gif" 				= 'icons/program_icons/smmon_5.gif',
-		"smmon_6.gif" 				= 'icons/program_icons/smmon_6.gif'
+		"smmon_6.gif" 				= 'icons/program_icons/smmon_6.gif',
+		"borg_mon.gif"				= 'icons/program_icons/borg_mon.gif'
+	)
+
+/datum/asset/simple/radar_assets
+	assets = list(
+		"ntosradarbackground.png"	= 'icons/UI_Icons/tgui/ntosradar_background.png',
+		"ntosradarpointer.png"		= 'icons/UI_Icons/tgui/ntosradar_pointer.png',
+		"ntosradarpointerS.png"		= 'icons/UI_Icons/tgui/ntosradar_pointer_S.png'
 	)
 
 /datum/asset/spritesheet/simple/pda
@@ -74,6 +72,7 @@
 		"refresh"		= 'icons/pda_icons/pda_refresh.png',
 		"scanner"		= 'icons/pda_icons/pda_scanner.png',
 		"signaler"		= 'icons/pda_icons/pda_signaler.png',
+		"skills"		= 'icons/pda_icons/pda_skills.png',
 		"status"		= 'icons/pda_icons/pda_status.png',
 		"dronephone"	= 'icons/pda_icons/pda_dronephone.png',
 		"emoji"			= 'icons/pda_icons/pda_emoji.png'
@@ -92,19 +91,23 @@
 		"stamp-rd" = 'icons/stamp_icons/large_stamp-rd.png',
 		"stamp-cap" = 'icons/stamp_icons/large_stamp-cap.png',
 		"stamp-qm" = 'icons/stamp_icons/large_stamp-qm.png',
-		"stamp-law" = 'icons/stamp_icons/large_stamp-law.png'
+		"stamp-law" = 'icons/stamp_icons/large_stamp-law.png',
+		"stamp-chap" = 'icons/stamp_icons/large_stamp-chap.png',
+		"stamp-mime" = 'icons/stamp_icons/large_stamp-mime.png',
+		"stamp-centcom" = 'icons/stamp_icons/large_stamp-centcom.png',
+		"stamp-syndicate" = 'icons/stamp_icons/large_stamp-syndicate.png'
 	)
 
 
-/datum/asset/simple/IRV
+/datum/asset/simple/irv
 	assets = list(
 		"jquery-ui.custom-core-widgit-mouse-sortable-min.js" = 'html/IRV/jquery-ui.custom-core-widgit-mouse-sortable-min.js',
 	)
 
-/datum/asset/group/IRV
+/datum/asset/group/irv
 	children = list(
 		/datum/asset/simple/jquery,
-		/datum/asset/simple/IRV
+		/datum/asset/simple/irv
 	)
 
 /datum/asset/simple/changelog
@@ -139,24 +142,21 @@
 	)
 
 /datum/asset/simple/jquery
-	verify = FALSE
 	assets = list(
 		"jquery.min.js"            = 'code/modules/goonchat/browserassets/js/jquery.min.js',
 	)
 
 /datum/asset/simple/goonchat
-	verify = FALSE
 	assets = list(
 		"json2.min.js"             = 'code/modules/goonchat/browserassets/js/json2.min.js',
 		"browserOutput.js"         = 'code/modules/goonchat/browserassets/js/browserOutput.js',
 		"browserOutput.css"	       = 'code/modules/goonchat/browserassets/css/browserOutput.css',
 		"browserOutput_white.css"  = 'code/modules/goonchat/browserassets/css/browserOutput_white.css',
-		"Avenir.woff"  			   = 'code/modules/goonchat/browserassets/fonts/Avenir.woff',
-		"Hooge.ttf"  			   = 'code/modules/goonchat/browserassets/fonts/Hooge.ttf'
+		"didact.ttf"  			   = 'code/modules/goonchat/browserassets/fonts/didact.ttf',
+		"miumiu.png"			   = 'html/miumiu.png'
 	)
 
 /datum/asset/simple/fontawesome
-	verify = FALSE
 	assets = list(
 		"fa-regular-400.eot"  = 'html/font-awesome/webfonts/fa-regular-400.eot',
 		"fa-regular-400.woff" = 'html/font-awesome/webfonts/fa-regular-400.woff',
@@ -232,6 +232,22 @@
 		"rule8" = 'icons/UI_Icons/Achievements/Misc/rule8.png',
 		"snail" = 'icons/UI_Icons/Achievements/Misc/snail.png',
 		"mining" = 'icons/UI_Icons/Achievements/Skills/mining.png',
+		"assistant" = 'icons/UI_Icons/Achievements/Mafia/assistant.png',
+		"changeling" = 'icons/UI_Icons/Achievements/Mafia/changeling.png',
+		"chaplain" = 'icons/UI_Icons/Achievements/Mafia/chaplain.png',
+		"clown" = 'icons/UI_Icons/Achievements/Mafia/clown.png',
+		"detective" = 'icons/UI_Icons/Achievements/Mafia/detective.png',
+		"fugitive" = 'icons/UI_Icons/Achievements/Mafia/fugitive.png',
+		"hated" = 'icons/UI_Icons/Achievements/Mafia/hated.png',
+		"hop" = 'icons/UI_Icons/Achievements/Mafia/hop.png',
+		"lawyer" = 'icons/UI_Icons/Achievements/Mafia/lawyer.png',
+		"md" = 'icons/UI_Icons/Achievements/Mafia/md.png',
+		"nightmare" = 'icons/UI_Icons/Achievements/Mafia/nightmare.png',
+		"obsessed" = 'icons/UI_Icons/Achievements/Mafia/obsessed.png',
+		"psychologist" = 'icons/UI_Icons/Achievements/Mafia/psychologist.png',
+		"thoughtfeeder" = 'icons/UI_Icons/Achievements/Mafia/thoughtfeeder.png',
+		"traitor" = 'icons/UI_Icons/Achievements/Mafia/traitor.png',
+		"basemafia" ='icons/UI_Icons/Achievements/basemafia.png'
 	)
 
 /datum/asset/spritesheet/simple/pills
@@ -375,3 +391,54 @@
 		"dna_undiscovered.gif"	= 'html/dna_undiscovered.gif',
 		"dna_extra.gif" 		= 'html/dna_extra.gif'
 	)
+
+/datum/asset/simple/game_kit
+	assets = list(
+		"board_BI.png"			= 'white/valtos/icons/gk/board_BI.png',
+		"board_BK.png"			= 'white/valtos/icons/gk/board_BK.png',
+		"board_BN.png" 			= 'white/valtos/icons/gk/board_BN.png',
+		"board_BP.png" 			= 'white/valtos/icons/gk/board_BP.png',
+		"board_BQ.png" 			= 'white/valtos/icons/gk/board_BQ.png',
+		"board_BR.png" 			= 'white/valtos/icons/gk/board_BR.png',
+		"board_CB.png" 			= 'white/valtos/icons/gk/board_CB.png',
+		"board_CR.png" 			= 'white/valtos/icons/gk/board_CR.png',
+		"board_none.png" 		= 'white/valtos/icons/gk/board_none.png',
+		"board_WI.png" 			= 'white/valtos/icons/gk/board_WI.png',
+		"board_WK.png" 			= 'white/valtos/icons/gk/board_WK.png',
+		"board_WN.png" 			= 'white/valtos/icons/gk/board_WN.png',
+		"board_WP.png" 			= 'white/valtos/icons/gk/board_WP.png',
+		"board_WQ.png" 			= 'white/valtos/icons/gk/board_WQ.png',
+		"board_WR.png" 			= 'white/valtos/icons/gk/board_WR.png'
+	)
+
+/datum/asset/simple/white_mix
+	assets = list(
+		"zdoh.png"				= 'white/valtos/icons/zdoh.png'
+	)
+
+/datum/asset/simple/orbit
+	assets = list(
+		"ghost.png"	= 'html/ghost.png'
+	)
+
+/datum/asset/simple/vv
+	assets = list(
+		"view_variables.css" = 'html/admin/view_variables.css'
+	)
+
+/datum/asset/spritesheet/sheetmaterials
+	name = "sheetmaterials"
+
+/datum/asset/spritesheet/sheetmaterials/register()
+	InsertAll("", 'icons/obj/stack_objects.dmi')
+
+	// Special case to handle Bluespace Crystals
+	Insert("polycrystal", 'icons/obj/telescience.dmi', "polycrystal")
+	..()
+
+/datum/asset/spritesheet/mafia
+	name = "mafia"
+
+/datum/asset/spritesheet/mafia/register()
+	InsertAll("", 'icons/obj/mafia.dmi')
+	..()

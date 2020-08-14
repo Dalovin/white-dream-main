@@ -23,8 +23,8 @@
 	harm_intent_damage = 5
 	melee_damage_lower = 5
 	melee_damage_upper = 5
-	attack_verb_continuous = "pecks"
-	attack_verb_simple = "peck"
+	attack_verb_continuous = "щипает"
+	attack_verb_simple = "щипает"
 	attack_sound = "goose"
 	speak_emote = list("honks")
 	faction = list("neutral")
@@ -151,7 +151,7 @@
 		return
 	if(prob(25))
 		visible_message("<span class='warning'>[src] is gagging on \the [plastic]!</span>")
-		emote("me", 1, "gags!")
+		manual_emote("gags!")
 		addtimer(CALLBACK(src, .proc/vomit), 300)
 	else
 		addtimer(CALLBACK(src, .proc/suffocate), 300)

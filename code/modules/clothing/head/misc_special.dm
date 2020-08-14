@@ -18,7 +18,7 @@
 	desc = "Установленная на голове крышка для лица, предназначенная для полной защиты пользователя от космической дуги."
 	icon_state = "welding"
 	flags_cover = HEADCOVERSEYES | HEADCOVERSMOUTH
-	item_state = "welding"
+	inhand_icon_state = "welding"
 	custom_materials = list(/datum/material/iron=1750, /datum/material/glass=400)
 	flash_protect = FLASH_PROTECTION_WELDER
 	tint = 2
@@ -40,7 +40,7 @@
 	name = "тортошляпа"
 	desc = "Ты кладешь торт себе на голову. Блестяще."
 	icon_state = "hardhat0_cakehat"
-	item_state = "hardhat0_cakehat"
+	inhand_icon_state = "hardhat0_cakehat"
 	hat_type = "cakehat"
 	lefthand_file = 'icons/mob/inhands/clothing_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/clothing_righthand.dmi'
@@ -91,7 +91,7 @@
 	name = "энергетический торт"
 	desc = "Ты положил энергетический меч на свой торт. Блестяще."
 	icon_state = "hardhat0_energycake"
-	item_state = "hardhat0_energycake"
+	inhand_icon_state = "hardhat0_energycake"
 	hat_type = "energycake"
 	hitsound = 'sound/weapons/tap.ogg'
 	hitsound_on = 'sound/weapons/blade1.ogg'
@@ -118,7 +118,7 @@
 	name = "ушанка"
 	desc = "Идеально подходит для зимы в Сибири, да?"
 	icon_state = "ushankadown"
-	item_state = "ushankadown"
+	inhand_icon_state = "ushankadown"
 	flags_inv = HIDEEARS|HIDEHAIR
 	var/earflaps = 1
 	cold_protection = HEAD
@@ -129,12 +129,12 @@
 /obj/item/clothing/head/ushanka/attack_self(mob/user)
 	if(earflaps)
 		src.icon_state = "ushankaup"
-		src.item_state = "ushankaup"
+		src.inhand_icon_state = "ushankaup"
 		earflaps = 0
 		to_chat(user, "<span class='notice'>Поднимаю ушки на Ушанке.</span>")
 	else
 		src.icon_state = "ushankadown"
-		src.item_state = "ushankadown"
+		src.inhand_icon_state = "ushankadown"
 		earflaps = 1
 		to_chat(user, "<span class='notice'>Опускаю ушки на Ушанке.</span>")
 
@@ -145,7 +145,7 @@
 	name = "резная тыква"
 	desc = "Домкрат фонаря! Верующий в отпугивание злых духов."
 	icon_state = "hardhat0_pumpkin"
-	item_state = "hardhat0_pumpkin"
+	inhand_icon_state = "hardhat0_pumpkin"
 	hat_type = "pumpkin"
 	clothing_flags = SNUG_FIT
 	flags_inv = HIDEMASK|HIDEEARS|HIDEEYES|HIDEFACE|HIDEHAIR|HIDEFACIALHAIR
@@ -182,7 +182,7 @@
 	name = "оригинальная оленья шапка"
 	desc = "Некоторые поддельные рога и очень поддельный красный нос."
 	icon_state = "hardhat0_reindeer"
-	item_state = "hardhat0_reindeer"
+	inhand_icon_state = "hardhat0_reindeer"
 	hat_type = "reindeer"
 	flags_inv = 0
 	armor = list("melee" = 0, "bullet" = 0, "laser" = 0,"energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 0, "acid" = 0)
@@ -195,7 +195,7 @@
 	name = "кардборговый шлем"
 	desc = "Шлем, сделанный из коробки."
 	icon_state = "cardborg_h"
-	item_state = "cardborg_h"
+	inhand_icon_state = "cardborg_h"
 	clothing_flags = SNUG_FIT
 	flags_cover = HEADCOVERSEYES
 	flags_inv = HIDEMASK|HIDEEARS|HIDEEYES|HIDEFACE|HIDEHAIR|HIDEFACIALHAIR
@@ -217,9 +217,10 @@
 /obj/item/clothing/head/wig
 	name = "парик"
 	desc = "Куча волос без головы."
-	icon = 'icons/mob/human_face.dmi'	  // default icon for all hairs
-	icon_state = "hair_vlong"
-	item_state = "pwig"
+	icon = 'icons/obj/clothing/hats.dmi'
+	icon_state = "blackwizard"
+	inhand_icon_state = "pwig"
+	worn_icon_state = "wig"
 	flags_inv = HIDEHAIR
 	color = "#000"
 	var/hairstyle = "Very Long Hair"
@@ -232,11 +233,10 @@
 /obj/item/clothing/head/wig/update_icon_state()
 	var/datum/sprite_accessory/S = GLOB.hairstyles_list[hairstyle]
 	if(!S)
-		icon = 'icons/obj/clothing/hats.dmi'
-		icon_state = "pwig"
+		return
 	else
-		icon = S.icon
 		icon_state = S.icon_state
+
 
 /obj/item/clothing/head/wig/worn_overlays(isinhands = FALSE, file2use)
 	. = list()
@@ -306,7 +306,7 @@
 	name = "шапочка из фольги"
 	desc = "Думаю, контрольные лучи, психотроническое сканирование. Не обращай внимания, я защищена, потому что я сделала эту шляпу."
 	icon_state = "foilhat"
-	item_state = "foilhat"
+	inhand_icon_state = "foilhat"
 	armor = list("melee" = 0, "bullet" = 0, "laser" = -5,"energy" = -15, "bomb" = 0, "bio" = 0, "rad" = -5, "fire" = 0, "acid" = 0)
 	equip_delay_other = 140
 	clothing_flags = ANTI_TINFOIL_MANEUVER
@@ -356,8 +356,8 @@
 	if(target.get_item_by_slot(ITEM_SLOT_HEAD) != src)
 		return
 	QDEL_NULL(paranoia)
-	if(!target.IsUnconscious())
-		to_chat(target, "<span class='warning'>Ваш ревностный заговор быстро рассеивается по мере того, как надетая шляпа погружается в разрушенный беспорядок. Все эти теории начинают звучать как просто смешная фанфара.</span>")
+	if(target.stat < UNCONSCIOUS)
+		to_chat(target, "<span class='warning'>Мой ревностный заговор быстро рассеивается по мере того, как надетая шляпа погружается в разрушенный беспорядок. Все эти теории начинают звучать как просто смешная фанфара.</span>")
 
 /obj/item/clothing/head/foilhat/attack_hand(mob/user)
 	if(!warped && iscarbon(user))

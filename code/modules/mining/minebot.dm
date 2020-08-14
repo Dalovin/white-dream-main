@@ -15,7 +15,7 @@
 	a_intent = INTENT_HARM
 	atmos_requirements = list("min_oxy" = 0, "max_oxy" = 0, "min_tox" = 0, "max_tox" = 0, "min_co2" = 0, "max_co2" = 0, "min_n2" = 0, "max_n2" = 0)
 	minbodytemp = 0
-	move_to_delay = 10
+	move_to_delay = 0.5
 	health = 125
 	maxHealth = 125
 	melee_damage_lower = 15
@@ -24,8 +24,8 @@
 	environment_smash = ENVIRONMENT_SMASH_NONE
 	check_friendly_fire = TRUE
 	stop_automated_movement_when_pulled = TRUE
-	attack_verb_continuous = "drills"
-	attack_verb_simple = "drill"
+	attack_verb_continuous = "дреллирует"
+	attack_verb_simple = "дреллирует"
 	attack_sound = 'sound/weapons/circsawhit.ogg'
 	sentience_type = SENTIENCE_MINEBOT
 	speak_emote = list("констатирует")
@@ -35,8 +35,8 @@
 	healable = 0
 	loot = list(/obj/effect/decal/cleanable/robot_debris)
 	del_on_death = TRUE
+	light_on = FALSE
 	var/mode = MINEDRONE_COLLECT
-	var/light_on = 0
 	var/obj/item/gun/energy/kinetic_accelerator/minebot/stored_gun
 
 /mob/living/simple_animal/hostile/mining_drone/Initialize()
@@ -146,7 +146,7 @@
 
 /mob/living/simple_animal/hostile/mining_drone/proc/SetCollectBehavior()
 	mode = MINEDRONE_COLLECT
-	vision_range = 9
+	vision_range = 288
 	search_objects = 2
 	wander = TRUE
 	ranged = FALSE
@@ -157,7 +157,7 @@
 
 /mob/living/simple_animal/hostile/mining_drone/proc/SetOffenseBehavior()
 	mode = MINEDRONE_ATTACK
-	vision_range = 7
+	vision_range = 224
 	search_objects = 0
 	wander = FALSE
 	ranged = TRUE

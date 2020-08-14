@@ -1,8 +1,6 @@
 /datum/job/clown
 	title = "Clown"
-	flag = CLOWN
 	department_head = list("Head of Personnel")
-	department_flag = CIVILIAN
 	faction = "Station"
 	total_positions = 1
 	spawn_positions = 1
@@ -34,6 +32,7 @@
 	mask = /obj/item/clothing/mask/gas/clown_hat
 	l_pocket = /obj/item/bikehorn
 	backpack_contents = list(
+		/obj/item/modular_computer/tablet/preset/cheap=1,
 		/obj/item/stamp/clown = 1,
 		/obj/item/reagent_containers/spray/waterflower = 1,
 		/obj/item/reagent_containers/food/snacks/grown/banana = 1,
@@ -60,3 +59,5 @@
 	H.dna.add_mutation(CLOWNMUT)
 	for(var/datum/mutation/human/clumsy/M in H.dna.mutations)
 		M.mutadone_proof = TRUE
+	var/datum/atom_hud/fan = GLOB.huds[DATA_HUD_FAN]
+	fan.add_hud_to(H)

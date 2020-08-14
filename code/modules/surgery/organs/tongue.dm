@@ -11,6 +11,7 @@
 	var/modifies_speech = FALSE
 	var/static/list/languages_possible_base = typecacheof(list(
 		/datum/language/common,
+		/datum/language/uncommon,
 		/datum/language/draconic,
 		/datum/language/codespeak,
 		/datum/language/monkey,
@@ -59,10 +60,14 @@
 /obj/item/organ/tongue/lizard/handle_speech(datum/source, list/speech_args)
 	var/static/regex/lizard_hiss = new("с+", "g")
 	var/static/regex/lizard_hiSS = new("С+", "g")
+	var/static/regex/lizard_kss = new("к+", "g")
+	var/static/regex/lizard_kSS = new("К+", "g")
 	var/message = speech_args[SPEECH_MESSAGE]
 	if(message[1] != "*")
 		message = lizard_hiss.Replace_char(message, "ссс")
-		message = lizard_hiSS.Replace_char(message, "ССС")
+		message = lizard_hiSS.Replace_char(message, "КСС")
+		message = lizard_kss.Replace_char(message, "ксс")
+		message = lizard_kSS.Replace_char(message, "КСС")
 	speech_args[SPEECH_MESSAGE] = message
 
 /obj/item/organ/tongue/fly
@@ -121,7 +126,7 @@
 	if(T.mothership == mothership)
 		to_chat(H, "<span class='notice'>[src] is already attuned to the same channel as your own.</span>")
 
-	H.visible_message("<span class='notice'>[H] holds [src] in their hands, and concentrates for a moment.</span>", "<span class='notice'>You attempt to modify the attunation of [src].</span>")
+	H.visible_message("<span class='notice'>[H] holds [src] in their hands, and concentrates for a moment.</span>", "<span class='notice'>You attempt to modify the attenuation of [src].</span>")
 	if(do_after(H, delay=15, target=src))
 		to_chat(H, "<span class='notice'>You attune [src] to your own channel.</span>")
 		mothership = T.mothership
@@ -137,7 +142,7 @@
 /obj/item/organ/tongue/abductor/handle_speech(datum/source, list/speech_args)
 	//Hacks
 	var/message = speech_args[SPEECH_MESSAGE]
-	var/mob/living/carbon/human/user = usr
+	var/mob/living/carbon/human/user = source
 	var/rendered = "<span class='abductor'><b>[user.real_name]:</b> [message]</span>"
 	user.log_talk(message, LOG_SAY, tag="abductor")
 	for(var/mob/living/carbon/human/H in GLOB.alive_mob_list)
@@ -173,7 +178,7 @@
 			message_list[insertpos] = inserttext + "..."
 
 		if(prob(20) && message_list.len > 3)
-			message_list.Insert(insertpos, "[pick("BRAINS", "Brains", "Braaaiinnnsss", "BRAAAIIINNSSS")]...")
+			message_list.Insert(insertpos, "[pick("МОЗГИ", "Мозги", "Мооозгиииии", "МОООЗГИИИИИ")]...")
 
 	speech_args[SPEECH_MESSAGE] = jointext(message_list, " ")
 
@@ -268,8 +273,8 @@
 /obj/item/organ/tongue/snail/handle_speech(datum/source, list/speech_args)
 	var/new_message
 	var/message = speech_args[SPEECH_MESSAGE]
-	for(var/i in 1 to length(message))
-		if(findtext("ABCDEFGHIJKLMNOPWRSTUVWXYZabcdefghijklmnopqrstuvwxyz", message[i])) //Im open to suggestions
+	for(var/i in 1 to length_char(message))
+		if(findtext_char("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя", message[i])) //Im open to suggestions
 			new_message += message[i] + message[i] + message[i] //aaalllsssooo ooopppeeennn tttooo sssuuuggggggeeessstttiiiooonsss
 		else
 			new_message += message[i]

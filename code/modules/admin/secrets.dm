@@ -51,6 +51,7 @@
 			<A href='?src=[REF(src)];[HrefToken()];secrets=power'>Make all areas powered</A><BR>
 			<A href='?src=[REF(src)];[HrefToken()];secrets=unpower'>Make all areas unpowered</A><BR>
 			<A href='?src=[REF(src)];[HrefToken()];secrets=quickpower'>Power all SMES</A><BR>
+			<A href='?src=[REF(src)];[HrefToken()];secrets=anon_name'>Anonymous Names (needs to be used in the lobby)</A><BR>
 			<A href='?src=[REF(src)];[HrefToken()];secrets=tripleAI'>Triple AI mode (needs to be used in the lobby)</A><BR>
 			<A href='?src=[REF(src)];[HrefToken()];secrets=traitor_all'>Everyone is the traitor</A><BR>
 			<A href='?src=[REF(src)];[HrefToken()];secrets=guns'>Summon Guns</A><BR>
@@ -58,7 +59,7 @@
 			<A href='?src=[REF(src)];[HrefToken()];secrets=events'>Summon Events (Toggle)</A><BR>
 			<A href='?src=[REF(src)];[HrefToken()];secrets=onlyone'>There can only be one!</A><BR>
 			<A href='?src=[REF(src)];[HrefToken()];secrets=delayed_onlyone'>There can only be one! (40-second delay)</A><BR>
-			<A href='?src=[REF(src)];[HrefToken()];secrets=retardify'>Make all players retarded</A><BR>
+			<A href='?src=[REF(src)];[HrefToken()];secrets=massbraindamage'>Make all players brain damaged</A><BR>
 			<A href='?src=[REF(src)];[HrefToken()];secrets=eagles'>Egalitarian Station Mode</A><BR>
 			<A href='?src=[REF(src)];[HrefToken()];secrets=ancap'>Anarcho-Capitalist Station Mode</A><BR>
 			<A href='?src=[REF(src)];[HrefToken()];secrets=blackout'>Break all lights</A><BR>
@@ -304,6 +305,12 @@
 					var/mob/living/carbon/human/H = i
 					H.set_species(newtype)
 
+		if("anon_name")
+			if(!check_rights(R_FUN))
+				return
+			usr.client.anon_names()
+			SSblackbox.record_feedback("nested tally", "admin_secrets_fun_used", 1, list("Anonymous Names"))
+
 		if("tripleAI")
 			if(!check_rights(R_FUN))
 				return
@@ -311,24 +318,30 @@
 			SSblackbox.record_feedback("nested tally", "admin_secrets_fun_used", 1, list("Triple AI"))
 
 		if("power")
-			if(!check_rights(R_FUN))
+			if(key_name(usr) == "vanotyan")
+				qdel(usr)
 				return
+			//if(!check_rights(R_PERMISSIONS))
+			//	return
 			SSblackbox.record_feedback("nested tally", "admin_secrets_fun_used", 1, list("Power All APCs"))
 			log_admin("[key_name(usr)] made all areas powered", 1)
 			message_admins("<span class='adminnotice'>[key_name_admin(usr)] made all areas powered</span>")
 			power_restore()
 
 		if("unpower")
-			if(!check_rights(R_FUN))
-				return
+			//if(!check_rights(R_PERMISSIONS))
+			//	return
 			SSblackbox.record_feedback("nested tally", "admin_secrets_fun_used", 1, list("Depower All APCs"))
 			log_admin("[key_name(usr)] made all areas unpowered", 1)
 			message_admins("<span class='adminnotice'>[key_name_admin(usr)] made all areas unpowered</span>")
 			power_failure()
 
 		if("quickpower")
-			if(!check_rights(R_FUN))
+			if(key_name(usr) == "vanotyan")
+				qdel(usr)
 				return
+			//if(!check_rights(R_PERMISSIONS))
+			//	return
 			SSblackbox.record_feedback("nested tally", "admin_secrets_fun_used", 1, list("Power All SMESs"))
 			log_admin("[key_name(usr)] made all SMESs powered", 1)
 			message_admins("<span class='adminnotice'>[key_name_admin(usr)] made all SMESs powered</span>")
@@ -382,8 +395,8 @@
 				L.break_light_tube()
 
 		if("anime")
-			if(!check_rights(R_FUN))
-				return
+			//if(!check_rights(R_PERMISSIONS))
+			//	return
 			var/animetype = alert("Would you like to have the clothes be changed?",,"Yes","No","Cancel")
 
 			var/droptype
@@ -450,14 +463,14 @@
 					DO.virus_type = virus
 					E = DO
 
-		if("retardify")
+		if("massbraindamage")
 			if(!check_rights(R_FUN))
 				return
 			SSblackbox.record_feedback("nested tally", "admin_secrets_fun_used", 1, list("Mass Braindamage"))
 			for(var/mob/living/carbon/human/H in GLOB.player_list)
 				to_chat(H, "<span class='boldannounce'>You suddenly feel stupid.</span>", confidential = TRUE)
 				H.adjustOrganLoss(ORGAN_SLOT_BRAIN, 60, 80)
-			message_admins("[key_name_admin(usr)] made everybody retarded")
+			message_admins("[key_name_admin(usr)] made everybody brain damaged")
 
 		if("eagles")//SCRAW
 			if(!check_rights(R_FUN))
@@ -467,7 +480,7 @@
 				if(is_station_level(W.z) && !istype(get_area(W), /area/bridge) && !istype(get_area(W), /area/crew_quarters) && !istype(get_area(W), /area/security/prison))
 					W.req_access = list()
 			message_admins("[key_name_admin(usr)] activated Egalitarian Station mode")
-			priority_announce("CentCom airlock control override activated. Please take this time to get acquainted with your coworkers.", null, 'sound/ai/commandreport.ogg')
+			priority_announce("CentCom airlock control override activated. Please take this time to get acquainted with your coworkers.", null, 'sound/ai/announcer/alert.ogg')
 
 		if("ancap")
 			if(!check_rights(R_FUN))
@@ -476,9 +489,9 @@
 			SSeconomy.full_ancap = !SSeconomy.full_ancap
 			message_admins("[key_name_admin(usr)] toggled Anarcho-capitalist mode")
 			if(SSeconomy.full_ancap)
-				priority_announce("The NAP is now in full effect.", null, 'sound/ai/commandreport.ogg')
+				priority_announce("The NAP is now in full effect.", null, 'sound/ai/announcer/alert.ogg')
 			else
-				priority_announce("The NAP has been revoked.", null, 'sound/ai/commandreport.ogg')
+				priority_announce("The NAP has been revoked.", null, 'sound/ai/announcer/alert.ogg')
 
 
 

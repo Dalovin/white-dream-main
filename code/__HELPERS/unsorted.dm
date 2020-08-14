@@ -229,62 +229,8 @@ Turf and target are separate in case you want to teleport some distance from a t
 
 
 //Picks a string of symbols to display as the law number for hacked or ion laws
-/proc/ionnum()
-	return "[pick("!","@","#","$","%","^","&")][pick("!","@","#","$","%","^","&","*")][pick("!","@","#","$","%","^","&","*")][pick("!","@","#","$","%","^","&","*")]"
-
-//Returns a list of unslaved cyborgs
-/proc/active_free_borgs()
-	. = list()
-	for(var/mob/living/silicon/robot/R in GLOB.alive_mob_list)
-		if(R.connected_ai || R.shell)
-			continue
-		if(R.stat == DEAD)
-			continue
-		if(R.emagged || R.scrambledcodes)
-			continue
-		. += R
-
-//Returns a list of AI's
-/proc/active_ais(check_mind=0)
-	. = list()
-	for(var/mob/living/silicon/ai/A in GLOB.alive_mob_list)
-		if(A.stat == DEAD)
-			continue
-		if(A.control_disabled)
-			continue
-		if(check_mind)
-			if(!A.mind)
-				continue
-		. += A
-	return .
-
-//Find an active ai with the least borgs. VERBOSE PROCNAME HUH!
-/proc/select_active_ai_with_fewest_borgs()
-	var/mob/living/silicon/ai/selected
-	var/list/active = active_ais()
-	for(var/mob/living/silicon/ai/A in active)
-		if(!selected || (selected.connected_robots.len > A.connected_robots.len))
-			selected = A
-
-	return selected
-
-/proc/select_active_free_borg(mob/user)
-	var/list/borgs = active_free_borgs()
-	if(borgs.len)
-		if(user)
-			. = input(user,"Unshackled cyborg signals detected:", "Cyborg Selection", borgs[1]) in sortList(borgs)
-		else
-			. = pick(borgs)
-	return .
-
-/proc/select_active_ai(mob/user)
-	var/list/ais = active_ais()
-	if(ais.len)
-		if(user)
-			. = input(user,"AI signals detected:", "AI Selection", ais[1]) in sortList(ais)
-		else
-			. = pick(ais)
-	return .
+/proc/ionnum() //! is at the start to prevent us from changing say modes via get_message_mode()
+	return "![pick("!","@","#","$","%","^","&")][pick("!","@","#","$","%","^","&","*")][pick("!","@","#","$","%","^","&","*")][pick("!","@","#","$","%","^","&","*")]"
 
 //Returns a list of all items of interest with their name
 /proc/getpois(mobs_only=0,skip_mindless=0)
@@ -437,6 +383,30 @@ Turf and target are separate in case you want to teleport some distance from a t
 
 	return locate(x,y,A.z)
 
+/**
+  * Get ranged target turf, but with direct targets as opposed to directions
+  *
+  * Starts at atom A and gets the exact angle between A and target
+  * Moves from A with that angle, Range amount of times, until it stops, bound to map size
+  * Arguments:
+  * * A - Initial Firer / Position
+  * * target - Target to aim towards
+  * * range - Distance of returned target turf from A
+  * * offset - Angle offset, 180 input would make the returned target turf be in the opposite direction
+  */
+/proc/get_ranged_target_turf_direct(atom/A, atom/target, range, offset)
+	var/angle = ATAN2(target.x - A.x, target.y - A.y)
+	if(offset)
+		angle += offset
+	var/turf/T = get_turf(A)
+	for(var/i in 1 to range)
+		var/turf/check = locate(A.x + cos(angle) * i, A.y + sin(angle) * i, A.z)
+		if(!check)
+			break
+		T = check
+
+	return T
+
 
 // returns turf relative to A offset in dx and dy tiles
 // bound to map limits
@@ -449,7 +419,7 @@ Turf and target are separate in case you want to teleport some distance from a t
 	Gets all contents of contents and returns them all in a list.
 */
 
-/atom/proc/GetAllContents(var/T)
+/atom/proc/GetAllContents(T, ignore_flag_1)
 	var/list/processing_list = list(src)
 	if(T)
 		. = list()
@@ -458,14 +428,16 @@ Turf and target are separate in case you want to teleport some distance from a t
 			var/atom/A = processing_list[++i]
 			//Byond does not allow things to be in multiple contents, or double parent-child hierarchies, so only += is needed
 			//This is also why we don't need to check against assembled as we go along
-			processing_list += A.contents
-			if(istype(A,T))
-				. += A
+			if (!(A.flags_1 & ignore_flag_1))
+				processing_list += A.contents
+				if(istype(A,T))
+					. += A
 	else
 		var/i = 0
 		while(i < length(processing_list))
 			var/atom/A = processing_list[++i]
-			processing_list += A.contents
+			if (!(A.flags_1 & ignore_flag_1))
+				processing_list += A.contents
 		return processing_list
 
 /atom/proc/GetAllContentsIgnoring(list/ignore_typecache)
@@ -500,63 +472,6 @@ Turf and target are separate in case you want to teleport some distance from a t
 			steps++
 
 	return 1
-
-/proc/is_blocked_turf(turf/T, exclude_mobs)
-	if(T.density)
-		return 1
-	for(var/i in T)
-		var/atom/A = i
-		if(A.density && (!exclude_mobs || !ismob(A)))
-			return 1
-	return 0
-
-/proc/is_anchored_dense_turf(turf/T) //like the older version of the above, fails only if also anchored
-	if(T.density)
-		return 1
-	for(var/i in T)
-		var/atom/movable/A = i
-		if(A.density && A.anchored)
-			return 1
-	return 0
-
-/proc/get_step_towards2(atom/ref , atom/trg)
-	var/base_dir = get_dir(ref, get_step_towards(ref,trg))
-	var/turf/temp = get_step_towards(ref,trg)
-
-	if(is_blocked_turf(temp))
-		var/dir_alt1 = turn(base_dir, 90)
-		var/dir_alt2 = turn(base_dir, -90)
-		var/turf/turf_last1 = temp
-		var/turf/turf_last2 = temp
-		var/free_tile = null
-		var/breakpoint = 0
-
-		while(!free_tile && breakpoint < 10)
-			if(!is_blocked_turf(turf_last1))
-				free_tile = turf_last1
-				break
-			if(!is_blocked_turf(turf_last2))
-				free_tile = turf_last2
-				break
-			turf_last1 = get_step(turf_last1,dir_alt1)
-			turf_last2 = get_step(turf_last2,dir_alt2)
-			breakpoint++
-
-		if(!free_tile)
-			return get_step(ref, base_dir)
-		else
-			return get_step_towards(ref,free_tile)
-
-	else
-		return get_step(ref, base_dir)
-
-//Takes: Anything that could possibly have variables and a varname to check.
-//Returns: 1 if found, 0 if not.
-/proc/hasvar(datum/A, varname)
-	if(A.vars.Find(lowertext(varname)))
-		return 1
-	else
-		return 0
 
 //Repopulates sortedAreas list
 /proc/repopulate_sorted_areas()
@@ -660,6 +575,14 @@ Turf and target are separate in case you want to teleport some distance from a t
 		return "левая ступня"
 	else if (zone == BODY_ZONE_PRECISE_R_FOOT)
 		return "правая ступня"
+	else if (zone == "chest")
+		return "грудь"
+	else if (zone == "mouth")
+		return "рот"
+	else if (zone == "groin")
+		return "пах"
+	else if (zone == "head")
+		return "голова"
 	else
 		return zone
 
@@ -680,14 +603,70 @@ Turf and target are separate in case you want to teleport some distance from a t
 		return "левую ступню"
 	else if (zone == "правая ступня")
 		return "правую ступню"
-	else if (zone == "chest")
+	else if (zone == "грудь")
 		return "грудь"
-	else if (zone == "mouth")
+	else if (zone == "рот")
 		return "рот"
-	else if (zone == "groin")
+	else if (zone == "пах")
 		return "пах"
-	else if (zone == "head")
+	else if (zone == "голова")
 		return "голову"
+	else
+		return zone
+
+/proc/ru_gde_zone(zone)
+	if(zone == "правая кисть")
+		return "правой кисти"
+	else if (zone == "левая кисть")
+		return "левой кисти"
+	else if (zone == "левая рука")
+		return "левой руке"
+	else if (zone == "правая рука")
+		return "правой руке"
+	else if (zone == "левая нога")
+		return "левой ноге"
+	else if (zone == "правая нога")
+		return "правой ноге"
+	else if (zone == "левая ступня")
+		return "левой ступне"
+	else if (zone == "правая ступня")
+		return "правой ступне"
+	else if (zone == "грудь")
+		return "груди"
+	else if (zone == "рот")
+		return "ротовой полости"
+	else if (zone == "пах")
+		return "паховой области"
+	else if (zone == "голова")
+		return "голове"
+	else
+		return zone
+
+/proc/ru_otkuda_zone(zone)
+	if(zone == "правая кисть")
+		return "правой кисти"
+	else if (zone == "левая кисть")
+		return "левой кисти"
+	else if (zone == "левая рука")
+		return "левой руки"
+	else if (zone == "правая рука")
+		return "правой руки"
+	else if (zone == "левая нога")
+		return "левой ноги"
+	else if (zone == "правая нога")
+		return "правой ноги"
+	else if (zone == "левая ступня")
+		return "левой ступни"
+	else if (zone == "правая ступня")
+		return "правой ступни"
+	else if (zone == "грудь")
+		return "груди"
+	else if (zone == "рот")
+		return "ротовой полости"
+	else if (zone == "пах")
+		return "паховой области"
+	else if (zone == "голова")
+		return "головы"
 	else
 		return zone
 
@@ -769,22 +748,6 @@ Turf and target are separate in case you want to teleport some distance from a t
 	return null
 
 
-//For objects that should embed, but make no sense being is_sharp or is_pointed()
-//e.g: rods
-GLOBAL_LIST_INIT(can_embed_types, typecacheof(list(
-	/obj/item/stack/rods,
-	/obj/item/pipe)))
-
-/proc/can_embed(obj/item/W)
-	if(W.get_sharpness())
-		return 1
-	if(is_pointed(W))
-		return 1
-
-	if(is_type_in_typecache(W, GLOB.can_embed_types))
-		return 1
-
-
 /*
 Checks if that loc and dir has an item on the wall
 */
@@ -796,7 +759,7 @@ GLOBAL_LIST_INIT(WALLITEMS, typecacheof(list(
 	/obj/machinery/computer/security/telescreen, /obj/machinery/embedded_controller/radio/simple_vent_controller,
 	/obj/item/storage/secure/safe, /obj/machinery/door_timer, /obj/machinery/flasher, /obj/machinery/keycard_auth,
 	/obj/structure/mirror, /obj/structure/fireaxecabinet, /obj/machinery/computer/security/telescreen/entertainment,
-	/obj/structure/sign/picture_frame
+	/obj/structure/sign/picture_frame, /obj/machinery/bounty_board
 	)))
 
 GLOBAL_LIST_INIT(WALLITEMS_EXTERNAL, typecacheof(list(
@@ -962,7 +925,7 @@ B --><-- A
 // eg: center_image(I, 32,32)
 // eg2: center_image(I, 96,96)
 
-/proc/center_image(var/image/I, x_dimension = 0, y_dimension = 0)
+/proc/center_image(image/I, x_dimension = 0, y_dimension = 0)
 	if(!I)
 		return
 
@@ -1119,7 +1082,7 @@ B --><-- A
 
 	return L
 
-/atom/proc/contains(var/atom/A)
+/atom/proc/contains(atom/A)
 	if(!A)
 		return 0
 	for(var/atom/location = A.loc, location, location = location.loc)
@@ -1147,7 +1110,7 @@ B --><-- A
 			var/I = rand(1, L.len)
 			var/turf/T = L[I]
 			var/area/X = get_area(T)
-			if(!T.density && X.valid_territory)
+			if(!T.density && (X.area_flags & VALID_TERRITORY))
 				var/clear = TRUE
 				for(var/obj/O in T)
 					if(O.density)
@@ -1178,12 +1141,18 @@ B --><-- A
 	return closest_atom
 
 
-proc/pick_closest_path(value, list/matches = get_fancy_list_of_atom_types())
+/proc/pick_closest_path(value, list/matches = get_fancy_list_of_atom_types())
 	if (value == FALSE) //nothing should be calling us with a number, so this is safe
 		value = input("Enter type to find (blank for all, cancel to cancel)", "Search for type") as null|text
 		if (isnull(value))
 			return
 	value = trim(value)
+
+	var/random = FALSE
+	if(findtext(value, "?"))
+		value = replacetext(value, "?", "")
+		random = TRUE
+
 	if(!isnull(value) && value != "")
 		matches = filter_fancy_list(matches, value)
 
@@ -1193,10 +1162,12 @@ proc/pick_closest_path(value, list/matches = get_fancy_list_of_atom_types())
 	var/chosen
 	if(matches.len==1)
 		chosen = matches[1]
+	else if(random)
+		chosen = pick(matches) || null
 	else
 		chosen = input("Select a type", "Pick Type", matches[1]) as null|anything in sortList(matches)
-		if(!chosen)
-			return
+	if(!chosen)
+		return
 	chosen = matches[chosen]
 	return chosen
 
@@ -1274,14 +1245,14 @@ GLOBAL_REAL_VAR(list/stack_trace_storage)
 	pixel_x = initialpixelx
 	pixel_y = initialpixely
 
-/proc/weightclass2text(var/w_class)
+/proc/weightclass2text(w_class)
 	switch(w_class)
 		if(WEIGHT_CLASS_TINY)
 			. = "маленького"
 		if(WEIGHT_CLASS_SMALL)
 			. = "небольшого"
 		if(WEIGHT_CLASS_NORMAL)
-			. = "средннего"
+			. = "среднего"
 		if(WEIGHT_CLASS_BULKY)
 			. = "большого"
 		if(WEIGHT_CLASS_HUGE)
@@ -1350,6 +1321,10 @@ GLOBAL_DATUM_INIT(dview_mob, /mob/dview, new)
 		if(istype(O, /obj/structure/window))
 			var/obj/structure/window/W = O
 			if(W.ini_dir == dir_to_check || W.ini_dir == FULLTILE_WINDOW_DIR || dir_to_check == FULLTILE_WINDOW_DIR)
+				return FALSE
+		if(istype(O, /obj/structure/railing))
+			var/obj/structure/railing/rail = O
+			if(rail.ini_dir == dir_to_check || rail.ini_dir == FULLTILE_WINDOW_DIR || dir_to_check == FULLTILE_WINDOW_DIR)
 				return FALSE
 	return TRUE
 
@@ -1593,33 +1568,11 @@ GLOBAL_DATUM_INIT(dview_mob, /mob/dview, new)
 	for(var/i in L)
 		if(condition.Invoke(i))
 			. |= i
-/proc/generate_items_inside(list/items_list,var/where_to)
+/proc/generate_items_inside(list/items_list,where_to)
 	for(var/each_item in items_list)
 		for(var/i in 1 to items_list[each_item])
 			new each_item(where_to)
 
-//sends a message to chat
-//config_setting should be one of the following
-//null - noop
-//empty string - use TgsTargetBroadcast with admin_only = FALSE
-//other string - use TgsChatBroadcast with the tag that matches config_setting, only works with TGS4, if using TGS3 the above method is used
-/proc/send2chat(message, config_setting)
-	if(config_setting == null || !world.TgsAvailable())
-		return
-
-	var/datum/tgs_version/version = world.TgsVersion()
-	if(config_setting == "" || version.suite == 3)
-		world.TgsTargetedChatBroadcast(message, FALSE)
-		return
-
-	var/list/channels_to_use = list()
-	for(var/I in world.TgsChatChannelInfo())
-		var/datum/tgs_chat_channel/channel = I
-		if(channel.tag == config_setting)
-			channels_to_use += channel
-
-	if(channels_to_use.len)
-		world.TgsChatBroadcast()
 
 /proc/num2sign(numeric)
 	if(numeric > 0)

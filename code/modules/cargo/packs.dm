@@ -15,7 +15,7 @@
 	var/special_enabled = FALSE
 	var/DropPodOnly = FALSE//only usable by the Bluespace Drop Pod via the express cargo console
 	var/admin_spawned = FALSE
-	var/small_item = FALSE //Small items can be grouped into a single crate.
+	var/goody = FALSE //Goodies can only be purchased by private accounts and can have coupons apply to them. They also come in a lockbox instead of a full crate, so the 700 min doesn't apply
 
 /datum/supply_pack/proc/generate(atom/A, datum/bank_account/paying_account)
 	var/obj/structure/closet/crate/C
@@ -49,7 +49,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/emergency
-	group = "Emergency"
+	group = "Аварийное"
 
 /datum/supply_pack/emergency/vehicle
 	name = "Biker Gang Kit" //TUNNEL SNAKES OWN THIS TOWN
@@ -93,11 +93,11 @@
 					/obj/item/tank/internals/emergency_oxygen,
 					/obj/item/tank/internals/emergency_oxygen,
 					/obj/item/tank/internals/emergency_oxygen,
-					/obj/item/clothing/mask/breath,
-					/obj/item/clothing/mask/breath,
-					/obj/item/clothing/mask/breath,
-					/obj/item/clothing/mask/breath,
-					/obj/item/clothing/mask/breath)
+					/obj/item/clothing/mask/breath/cheap,
+					/obj/item/clothing/mask/breath/cheap,
+					/obj/item/clothing/mask/breath/cheap,
+					/obj/item/clothing/mask/breath/cheap,
+					/obj/item/clothing/mask/breath/cheap)
 	crate_name = "emergency crate"
 	crate_type = /obj/structure/closet/crate/internals
 
@@ -275,7 +275,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/security
-	group = "Security"
+	group = "Охрана"
 	access = ACCESS_SECURITY
 	crate_type = /obj/structure/closet/crate/secure/gear
 
@@ -344,6 +344,8 @@
 					/obj/item/gun/energy/laser)
 	crate_name = "laser crate"
 
+
+
 /datum/supply_pack/security/securitybarriers
 	name = "Security Barrier Grenades"
 	desc = "Stem the tide with four Security Barrier grenades. Requires Security access to open."
@@ -371,6 +373,13 @@
 					/obj/item/clothing/suit/security/hos,
 					/obj/item/clothing/head/beret/sec/navyhos)
 	crate_name = "security clothing crate"
+
+/datum/supply_pack/security/stingpack
+	name = "Stingbang Grenade Pack"
+	desc = "Contains five \"stingbang\" grenades, perfect for stopping riots and playing morally unthinkable pranks. Requires Security access to open."
+	cost = 2500
+	contains = list(/obj/item/storage/box/stingbangs)
+	crate_name = "stingbang grenade pack crate"
 
 /datum/supply_pack/security/supplies
 	name = "Security Supplies Crate"
@@ -449,7 +458,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/security/armory
-	group = "Armory"
+	group = "Арсенал"
 	access = ACCESS_ARMORY
 	crate_type = /obj/structure/closet/crate/secure/weapon
 
@@ -478,13 +487,6 @@
 	contains = list(/obj/item/storage/box/chemimp)
 	crate_name = "chemical implant crate"
 
-/datum/supply_pack/security/armory/combatknives_single
-	name = "Combat Knife Single-Pack"
-	desc = "Contains one sharpened combat knive. Guaranteed to fit snugly inside any Nanotrasen-standard boot. Requires Armory access to open."
-	cost = 1200
-	small_item = TRUE
-	contains = list(/obj/item/kitchen/knife/combat)
-
 /datum/supply_pack/security/armory/combatknives
 	name = "Combat Knives Crate"
 	desc = "Contains three sharpened combat knives. Each knife guaranteed to fit snugly inside any Nanotrasen-standard boot. Requires Armory access to open."
@@ -493,14 +495,6 @@
 					/obj/item/kitchen/knife/combat,
 					/obj/item/kitchen/knife/combat)
 	crate_name = "combat knife crate"
-
-/datum/supply_pack/security/armory/ballistic_single
-	name = "Combat Shotgun Single-Pack"
-	desc = "For when the enemy absolutely needs to be replaced with lead. Contains one Aussec-designed Combat Shotgun, and one Shotgun Bandolier. Requires Armory access to open."
-	cost = 7000
-	small_item = TRUE
-	contains = list(/obj/item/gun/ballistic/shotgun/automatic/combat,
-					/obj/item/storage/belt/bandolier)
 
 /datum/supply_pack/security/armory/ballistic
 	name = "Combat Shotguns Crate"
@@ -522,13 +516,6 @@
 					/obj/item/gun/energy/e_gun/dragnet,
 					/obj/item/gun/energy/e_gun/dragnet)
 	crate_name = "\improper DRAGnet crate"
-
-/datum/supply_pack/security/armory/energy_single
-	name = "Energy Guns Single-Pack"
-	desc = "Contains one Energy Gun, capable of firing both nonlethal and lethal blasts of light. Requires Armory access to open."
-	cost = 1500
-	small_item = TRUE
-	contains = list(/obj/item/gun/energy/e_gun)
 
 /datum/supply_pack/security/armory/energy
 	name = "Energy Guns Crate"
@@ -657,13 +644,6 @@
 					/obj/item/clothing/gloves/tackler/combat)
 	crate_name = "swat crate"
 
-/datum/supply_pack/security/armory/wt550_single
-	name = "WT-550 Auto Rifle Single-Pack"
-	desc = "Contains one high-powered, semiautomatic rifles chambered in 4.6x30mm. Requires Armory access to open."
-	cost = 2000
-	contains = list(/obj/item/gun/ballistic/automatic/wt550)
-	small_item = TRUE
-
 /datum/supply_pack/security/armory/wt550
 	name = "WT-550 Auto Rifle Crate"
 	desc = "Contains two high-powered, semiautomatic rifles chambered in 4.6x30mm. Requires Armory access to open."
@@ -681,19 +661,13 @@
 					/obj/item/ammo_box/magazine/wt550m9,
 					/obj/item/ammo_box/magazine/wt550m9)
 
-/datum/supply_pack/security/armory/wt550ammo_single
-	name = "WT-550 Auto Rifle Ammo Single-Pack"
-	desc = "Contains a 20-round magazine for the WT-550 Auto Rifle. Each magazine is designed to facilitate rapid tactical reloads. Requires Armory access to open."
-	cost = 750 //one of the few single-pack items that who's price per unit is the exact same as the bulk
-	contains = list(/obj/item/ammo_box/magazine/wt550m9)
-	small_item = TRUE
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////// Engineering /////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/engineering
-	group = "Engineering"
+	group = "Инженерная"
 	crate_type = /obj/structure/closet/crate/engineering
 
 /datum/supply_pack/engineering/shieldgen
@@ -750,13 +724,6 @@
 					/obj/item/clothing/glasses/meson/engine,
 					/obj/item/clothing/glasses/meson/engine)
 	crate_name = "engineering gear crate"
-
-/datum/supply_pack/engineering/sologamermitts
-	name = "Insulated Gloves Single-Pack"
-	desc = "The backbone of modern society. Barely ever ordered for actual engineering. Single Order."
-	cost = 800
-	small_item = TRUE
-	contains = list(/obj/item/clothing/gloves/color/yellow)
 
 /datum/supply_pack/engineering/powergamermitts
 	name = "Insulated Gloves Crate"
@@ -919,7 +886,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/engine
-	group = "Engine Construction"
+	group = "Создание генератора"
 	crate_type = /obj/structure/closet/crate/engineering
 
 /datum/supply_pack/engine/emitter
@@ -952,7 +919,7 @@
 	crate_name = "grounding rod crate"
 	crate_type = /obj/structure/closet/crate/engineering/electrical
 
-/datum/supply_pack/engine/PA
+/datum/supply_pack/engine/particle_accelerator
 	name = "Particle Accelerator Crate"
 	desc = "A supermassive black hole or hyper-powered teslaball are the perfect way to spice up any party! This \"My First Apocalypse\" kit contains everything you need to build your own Particle Accelerator! Ages 10 and up."
 	cost = 3000
@@ -1045,7 +1012,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/materials
-	group = "Canisters & Materials"
+	group = "Канистры и материалы"
 
 /datum/supply_pack/materials/cardboard50
 	name = "50 Cardboard Sheets"
@@ -1114,7 +1081,7 @@
 	name = "BZ Canister Crate"
 	desc = "Contains a canister of BZ. Requires Toxins access to open."
 	cost = 8000
-	access = ACCESS_TOX_STORAGE
+	access = ACCESS_TOXINS
 	contains = list(/obj/machinery/portable_atmospherics/canister/bz)
 	crate_name = "BZ canister crate"
 	crate_type = /obj/structure/closet/crate/secure/science
@@ -1149,6 +1116,14 @@
 	cost = 1200
 	contains = list(/obj/structure/reagent_dispensers/watertank/high)
 	crate_name = "high-capacity water tank crate"
+	crate_type = /obj/structure/closet/crate/large
+
+/datum/supply_pack/materials/hightankfuel
+	name = "Large Fuel Tank Crate"
+	desc = "Contains a high-capacity fuel tank. Keep contents away from open flame."
+	cost = 2000
+	contains = list(/obj/structure/reagent_dispensers/fueltank/large)
+	crate_name = "high-capacity fuel tank crate"
 	crate_type = /obj/structure/closet/crate/large
 
 /datum/supply_pack/materials/nitrogen
@@ -1197,7 +1172,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/medical
-	group = "Medical"
+	group = "Медицина"
 	crate_type = /obj/structure/closet/crate/medical
 
 /datum/supply_pack/medical/bloodpacks
@@ -1206,30 +1181,31 @@
 	cost = 3500
 	contains = list(/obj/item/reagent_containers/blood,
 					/obj/item/reagent_containers/blood,
-					/obj/item/reagent_containers/blood/APlus,
-					/obj/item/reagent_containers/blood/AMinus,
-					/obj/item/reagent_containers/blood/BPlus,
-					/obj/item/reagent_containers/blood/BMinus,
-					/obj/item/reagent_containers/blood/OPlus,
-					/obj/item/reagent_containers/blood/OMinus,
+					/obj/item/reagent_containers/blood/a_plus,
+					/obj/item/reagent_containers/blood/a_minus,
+					/obj/item/reagent_containers/blood/b_plus,
+					/obj/item/reagent_containers/blood/b_minus,
+					/obj/item/reagent_containers/blood/o_plus,
+					/obj/item/reagent_containers/blood/o_minus,
 					/obj/item/reagent_containers/blood/lizard,
 					/obj/item/reagent_containers/blood/ethereal)
 	crate_name = "blood freezer"
 	crate_type = /obj/structure/closet/crate/freezer
 
-/datum/supply_pack/medical/firstaidbruises_single
-	name = "Bruise Treatment Kit Single-Pack"
-	desc = "Contains one first aid kit focused on healing bruises and broken bones."
-	cost = 500
-	small_item = TRUE
-	contains = list(/obj/item/storage/firstaid/brute)
-
-/datum/supply_pack/medical/firstaidburns_single
-	name = "Burn Treatment Kit Single-Pack"
-	desc = "Contains one first aid kit focused on healing severe burns."
-	cost = 500
-	small_item = TRUE
-	contains = list(/obj/item/storage/firstaid/fire)
+/datum/supply_pack/medical/medipen_variety
+	name = "Medipen Variety-Pak"
+	desc = "Contains eight different medipens in three different varieties, to assist in quickly treating seriously injured patients."
+	cost = 2000
+	contains = list(/obj/item/reagent_containers/hypospray/medipen/,
+					/obj/item/reagent_containers/hypospray/medipen/,
+					/obj/item/reagent_containers/hypospray/medipen/ekit,
+					/obj/item/reagent_containers/hypospray/medipen/ekit,
+					/obj/item/reagent_containers/hypospray/medipen/ekit,
+					/obj/item/reagent_containers/hypospray/medipen/blood_loss,
+					/obj/item/reagent_containers/hypospray/medipen/blood_loss,
+					/obj/item/reagent_containers/hypospray/medipen/blood_loss
+)
+	crate_name = "medipen crate"
 
 /datum/supply_pack/medical/chemical
 	name = "Chemical Starter Kit Crate"
@@ -1261,14 +1237,6 @@
 					/obj/item/defibrillator/loaded)
 	crate_name = "defibrillator crate"
 
-
-/datum/supply_pack/medical/firstaid_single
-	name = "First Aid Kit Single-Pack"
-	desc = "Contains one first aid kit for healing most types of wounds."
-	cost = 500
-	small_item = TRUE
-	contains = list(/obj/item/storage/firstaid/regular)
-
 /datum/supply_pack/medical/iv_drip
 	name = "IV Drip Crate"
 	desc = "Contains a single IV drip for administering blood to patients."
@@ -1297,9 +1265,11 @@
 					/obj/item/storage/firstaid/brute,
 					/obj/item/storage/firstaid/fire,
 					/obj/item/defibrillator/loaded,
-					/obj/item/reagent_containers/blood/OMinus,
+					/obj/item/reagent_containers/blood/o_minus,
 					/obj/item/storage/pill_bottle/mining,
 					/obj/item/reagent_containers/pill/neurine,
+					/obj/item/stack/medical/bone_gel,
+					/obj/item/stack/medical/bone_gel,
 					/obj/item/vending_refill/medical)
 	crate_name = "medical supplies crate"
 
@@ -1307,13 +1277,6 @@
 	for(var/i in 1 to 10)
 		var/item = pick(contains)
 		new item(C)
-
-/datum/supply_pack/medical/firstaidoxygen_single
-	name = "Oxygen Deprivation Kit Single-Pack"
-	desc = "Contains three first aid kits focused on helping oxygen deprivation victims."
-	cost = 500
-	small_item = TRUE
-	contains = list(/obj/item/storage/firstaid/o2)
 
 /datum/supply_pack/medical/surgery
 	name = "Surgical Supplies Crate"
@@ -1323,13 +1286,6 @@
 					/obj/item/reagent_containers/medigel/sterilizine,
 					/obj/item/roller)
 	crate_name = "surgical supplies crate"
-
-/datum/supply_pack/medical/firstaidtoxins_single
-	name = "Toxin Treatment Kit Single-Pack"
-	desc = "Contains one first aid kit focused on healing damage dealt by heavy toxins."
-	cost = 500
-	small_item = TRUE
-	contains = list(/obj/item/storage/firstaid/toxin)
 
 /datum/supply_pack/medical/salglucanister
 	name = "Heavy-Duty Saline Canister"
@@ -1375,14 +1331,14 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/science
-	group = "Science"
+	group = "Наука"
 	crate_type = /obj/structure/closet/crate/science
 
 /datum/supply_pack/science/plasma
 	name = "Plasma Assembly Crate"
 	desc = "Everything you need to burn something to the ground, this contains three plasma assembly sets. Each set contains a plasma tank, igniter, proximity sensor, and timer! Warranty void if exposed to high temperatures. Requires Toxins access to open."
 	cost = 1000
-	access = ACCESS_TOX_STORAGE
+	access = ACCESS_TOXINS
 	contains = list(/obj/item/tank/internals/plasma,
 					/obj/item/tank/internals/plasma,
 					/obj/item/tank/internals/plasma,
@@ -1397,6 +1353,51 @@
 					/obj/item/assembly/timer)
 	crate_name = "plasma assembly crate"
 	crate_type = /obj/structure/closet/crate/secure/plasma
+
+/datum/supply_pack/science/raw_flux_anomaly
+	name = "Raw Flux Anomaly"
+	desc = "The raw core of a flux anomaly, ready to be implosion-compressed into a powerful artifact."
+	cost = 5000
+	access = ACCESS_TOXINS
+	contains = list(/obj/item/raw_anomaly_core/flux)
+	crate_name = "raw flux anomaly"
+	crate_type = /obj/structure/closet/crate/secure/science
+
+/datum/supply_pack/science/raw_grav_anomaly
+	name = "Raw Gravitational Anomaly"
+	desc = "The raw core of a gravitational anomaly, ready to be implosion-compressed into a powerful artifact."
+	cost = 5000
+	access = ACCESS_TOXINS
+	contains = list(/obj/item/raw_anomaly_core/grav)
+	crate_name = "raw pyro anomaly"
+	crate_type = /obj/structure/closet/crate/secure/science
+
+/datum/supply_pack/science/raw_vortex_anomaly
+	name = "Raw Vortex Anomaly"
+	desc = "The raw core of a vortex anomaly, ready to be implosion-compressed into a powerful artifact."
+	cost = 5000
+	access = ACCESS_TOXINS
+	contains = list(/obj/item/raw_anomaly_core/vortex)
+	crate_name = "raw vortex anomaly"
+	crate_type = /obj/structure/closet/crate/secure/science
+
+/datum/supply_pack/science/raw_bluespace_anomaly
+	name = "Raw Bluespace Anomaly"
+	desc = "The raw core of a bluespace anomaly, ready to be implosion-compressed into a powerful artifact."
+	cost = 5000
+	access = ACCESS_TOXINS
+	contains = list(/obj/item/raw_anomaly_core/bluespace)
+	crate_name = "raw bluespace anomaly"
+	crate_type = /obj/structure/closet/crate/secure/science
+
+/datum/supply_pack/science/raw_pyro_anomaly
+	name = "Raw Pyro Anomaly"
+	desc = "The raw core of a pyro anomaly, ready to be implosion-compressed into a powerful artifact."
+	cost = 5000
+	access = ACCESS_TOXINS
+	contains = list(/obj/item/raw_anomaly_core/pyro)
+	crate_name = "raw pyro anomaly"
+	crate_type = /obj/structure/closet/crate/secure/science
 
 /datum/supply_pack/science/robotics
 	name = "Robotics Assembly Crate"
@@ -1457,12 +1458,20 @@
 	crate_type = /obj/structure/closet/crate/secure/science
 	dangerous = TRUE
 
+/datum/supply_pack/science/monkey_helmets
+	name = "Monkey Mind Magnification Helmet crate"
+	desc = "Some research is best done with monkeys, yet sometimes they're just too dumb to complete more complicated tasks. These helmets should help."
+	cost = 1500
+	contains = list(/obj/item/clothing/head/helmet/monkey_sentience,
+					/obj/item/clothing/head/helmet/monkey_sentience)
+	crate_name = "monkey mind magnification crate"
+
 //////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Service //////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/service
-	group = "Service"
+	group = "Сервис"
 
 /datum/supply_pack/service/cargo_supples
 	name = "Cargo Supplies Crate"
@@ -1471,14 +1480,14 @@
 	contains = list(/obj/item/stamp,
 					/obj/item/stamp/denied,
 					/obj/item/export_scanner,
-					/obj/item/destTagger,
+					/obj/item/dest_tagger,
 					/obj/item/hand_labeler,
-					/obj/item/stack/packageWrap)
+					/obj/item/stack/package_wrap)
 	crate_name = "cargo supplies crate"
 
 /datum/supply_pack/service/noslipfloor
 	name = "High-traction Floor Tiles"
-	desc = "Make slipping a thing of the past with thirty industrial-grade anti-slip floortiles!"
+	desc = "Make slipping a thing of the past with thirty industrial-grade anti-slip floor tiles!"
 	cost = 2000
 	contains = list(/obj/item/stack/tile/noslip/thirty)
 	crate_name = "high-traction floor tiles crate"
@@ -1697,7 +1706,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/organic
-	group = "Food & Hydroponics"
+	group = "Еда и Гидропоника"
 	crate_type = /obj/structure/closet/crate/freezer
 
 /datum/supply_pack/organic/hydroponics/beekeeping_suits
@@ -1819,8 +1828,7 @@
 					/obj/item/cultivator,
 					/obj/item/plant_analyzer,
 					/obj/item/clothing/gloves/botanic_leather,
-					/obj/item/clothing/suit/apron,
-					/obj/item/storage/box/disks_plantgene)
+					/obj/item/clothing/suit/apron)
 	crate_name = "hydroponics crate"
 	crate_type = /obj/structure/closet/crate/hydroponics
 
@@ -1877,7 +1885,7 @@
 					/obj/item/kirbyplants/random,
 					/obj/item/kirbyplants/random)
 	crate_name = "potted plants crate"
-	crate_type = /obj/structure/closet/crate/hydroponics
+	crate_type = /obj/structure/closet/crate/wooden
 
 /datum/supply_pack/organic/seeds
 	name = "Seeds Crate"
@@ -1916,7 +1924,7 @@
 
 /datum/supply_pack/organic/vending/hydro_refills
 	name = "Hydroponics Vending Machines Refills"
-	desc = "When the clown takes all the banana seeds. Contains a NutriMax refill and an MegaSeed Servitor refill."
+	desc = "When the clown takes all the banana seeds. Contains a NutriMax refill and a MegaSeed Servitor refill."
 	cost = 2000
 	crate_type = /obj/structure/closet/crate
 	contains = list(/obj/item/vending_refill/hydroseeds,
@@ -1949,7 +1957,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/critter
-	group = "Livestock"
+	group = "Живность"
 	crate_type = /obj/structure/closet/crate/critter
 
 /datum/supply_pack/critter/parrot
@@ -1991,7 +1999,7 @@
 	if(prob(50))
 		var/mob/living/simple_animal/pet/cat/C = locate() in .
 		qdel(C)
-		new /mob/living/simple_animal/pet/cat/Proc(.)
+		new /mob/living/simple_animal/pet/cat/_proc(.)
 
 /datum/supply_pack/critter/chick
 	name = "Chicken Crate"
@@ -2014,7 +2022,7 @@
 		var/mob/living/simple_animal/pet/dog/corgi/D = locate() in .
 		if(D.gender == FEMALE)
 			qdel(D)
-			new /mob/living/simple_animal/pet/dog/corgi/Lisa(.)
+			new /mob/living/simple_animal/pet/dog/corgi/lisa(.)
 
 /datum/supply_pack/critter/cow
 	name = "Cow Crate"
@@ -2089,7 +2097,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/costumes_toys
-	group = "Costumes & Toys"
+	group = "Костюмы и игрушки"
 
 /datum/supply_pack/costumes_toys/randomised
 	name = "коллекционный Hats Crate"
@@ -2108,8 +2116,8 @@
 					/obj/item/clothing/head/collectable/rabbitears,
 					/obj/item/clothing/head/collectable/wizard,
 					/obj/item/clothing/head/collectable/hardhat,
-					/obj/item/clothing/head/collectable/HoS,
-					/obj/item/clothing/head/collectable/HoP,
+					/obj/item/clothing/head/collectable/hos,
+					/obj/item/clothing/head/collectable/hop,
 					/obj/item/clothing/head/collectable/thunderdome,
 					/obj/item/clothing/head/collectable/swat,
 					/obj/item/clothing/head/collectable/slime,
@@ -2300,21 +2308,20 @@
 /datum/supply_pack/costumes_toys/randomised/toys
 	name = "Toy Crate"
 	desc = "Who cares about pride and accomplishment? Skip the gaming and get straight to the sweet rewards with this product! Contains five random toys. Warranty void if used to prank research directors."
-	cost = 5000 // or play the arcade machines ya lazy bum
+	cost = 4000 // or play the arcade machines ya lazy bum
 	num_contained = 5
 	contains = list()
 	crate_name = "toy crate"
 	crate_type = /obj/structure/closet/crate/wooden
 
-/datum/supply_pack/costumes_toys/randomised/toys/generate()
-	. = ..()
+/datum/supply_pack/costumes_toys/randomised/toys/fill(obj/structure/closet/crate/C)
 	var/the_toy
 	for(var/i in 1 to num_contained)
 		if(prob(50))
 			the_toy = pickweight(GLOB.arcade_prize_pool)
 		else
-			the_toy = pick(subtypesof(/obj/item/toy/plush) - typesof(/obj/item/toy/plush/goatplushie/angry/kinggoat))
-		new the_toy(.)
+			the_toy = pick(subtypesof(/obj/item/toy/plush))
+		new the_toy(C)
 
 /datum/supply_pack/costumes_toys/wizard
 	name = "Wizard Costume Crate"
@@ -2415,12 +2422,25 @@
 	if(prob(10)) //A little extra sugar every now and then to shake things up.
 		new	/obj/item/switchblade(C)
 
+/datum/supply_pack/costumes_toys/randomised/tcg
+	name = "Big-Ass Booster Pack Pack"
+	desc = "A bumper load of NT TCG Booster Packs of varying series. Collect them all!"
+	cost = 1000
+	contains = list()
+	crate_name = "booster pack pack"
+
+/datum/supply_pack/costumes_toys/randomised/tcg/fill(obj/structure/closet/crate/C)
+	var/cardpacktype
+	for(var/i in 1 to 10)
+		cardpacktype = pick(subtypesof(/obj/item/cardpack))
+		new cardpacktype(C)
+
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////// Miscellaneous ///////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/misc
-	group = "Miscellaneous Supplies"
+	group = "Прочее"
 
 /datum/supply_pack/misc/artsupply
 	name = "Art Supplies"
@@ -2463,13 +2483,15 @@
 
 /datum/supply_pack/misc/book_crate
 	name = "Book Crate"
-	desc = "Surplus from the Nanotrasen Archives, these five books are sure to be good reads."
+	desc = "Surplus from the Nanotrasen Archives, these seven books are sure to be good reads."
 	cost = 1500
 	contains = list(/obj/item/book/codex_gigas,
 					/obj/item/book/manual/random/,
 					/obj/item/book/manual/random/,
 					/obj/item/book/manual/random/,
-					/obj/item/book/random/triple)
+					/obj/item/book/random,
+					/obj/item/book/random,
+					/obj/item/book/random)
 	crate_type = /obj/structure/closet/crate/wooden
 
 /datum/supply_pack/misc/paper
@@ -2529,7 +2551,7 @@
 /datum/supply_pack/misc/religious_supplies
 	name = "Religious Supplies Crate"
 	desc = "Keep your local chaplain happy and well-supplied, lest they call down judgement upon your cargo bay. Contains two bottles of holywater, bibles, chaplain robes, and burial garmets."
-	cost = 4000	// it costs so much because the Space Church is ran by Space Jews
+	cost = 4000	// it costs so much because the Space Church needs funding to build a cathedral
 	contains = list(/obj/item/reagent_containers/food/drinks/bottle/holywater,
 					/obj/item/reagent_containers/food/drinks/bottle/holywater,
 					/obj/item/storage/book/bible/booze,

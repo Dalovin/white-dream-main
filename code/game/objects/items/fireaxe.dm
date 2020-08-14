@@ -5,18 +5,20 @@
 	icon_state = "fireaxe0"
 	lefthand_file = 'icons/mob/inhands/weapons/axes_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/weapons/axes_righthand.dmi'
-	name = "fire axe"
-	desc = "Truly, the weapon of a madman. Who would think to fight fire with an axe?"
+	name = "пожарный топор"
+	desc = "Воистину, оружие сумасшедшего. Кто бы мог подумать, что можно бороться с огнем топором?"
 	force = 5
 	throwforce = 15
 	w_class = WEIGHT_CLASS_BULKY
 	slot_flags = ITEM_SLOT_BACK
-	attack_verb = list("attacked", "chopped", "cleaved", "torn", "cut")
+	attack_verb = list("attacked", "chopped", "cleaved", "tore", "lacerated", "cut")
 	hitsound = 'sound/weapons/bladeslice.ogg'
-	sharpness = IS_SHARP
+	sharpness = SHARP_EDGED
 	max_integrity = 200
 	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 100, "acid" = 30)
 	resistance_flags = FIRE_PROOF
+	wound_bonus = -15
+	bare_wound_bonus = 20
 	var/wielded = FALSE // track wielded status on item
 
 /obj/item/fireaxe/Initialize()
@@ -58,8 +60,8 @@
  */
 /obj/item/fireaxe/boneaxe  // Blatant imitation of the fireaxe, but made out of bone.
 	icon_state = "bone_axe0"
-	name = "bone axe"
-	desc = "A large, vicious axe crafted out of several sharpened bone plates and crudely tied together. Made of monsters, by killing monsters, for killing monsters."
+	name = "костяной топор"
+	desc = "Большой злобный топор, сложенный из нескольких заостренных костных пластин и грубо связанный вместе. Сделано из монстров, убивая монстров, для убийства монстров."
 
 /obj/item/fireaxe/boneaxe/ComponentInitialize()
 	. = ..()

@@ -1,8 +1,6 @@
 /datum/job/lawyer
 	title = "Lawyer"
-	flag = LAWYER
 	department_head = list("Head of Personnel")
-	department_flag = CIVILIAN
 	faction = "Station"
 	total_positions = 2
 	spawn_positions = 2
@@ -32,6 +30,7 @@
 	l_hand = /obj/item/storage/briefcase/lawyer
 	l_pocket = /obj/item/laser_pointer
 	r_pocket = /obj/item/clothing/accessory/lawyers_badge
+	backpack_contents = list(/obj/item/modular_computer/tablet/preset/cheap=1)
 
 	chameleon_extras = /obj/item/stamp/law
 

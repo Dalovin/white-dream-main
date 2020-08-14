@@ -80,6 +80,9 @@ SUBSYSTEM_DEF(shuttle)
 		WARNING("No /obj/docking_port/mobile/emergency/backup placed on the map!")
 	if(!supply)
 		WARNING("No /obj/docking_port/mobile/supply placed on the map!")
+
+	SStitle.set_load_state("shuttle")
+
 	return ..()
 
 /datum/controller/subsystem/shuttle/proc/initial_load()
@@ -174,7 +177,7 @@ SUBSYSTEM_DEF(shuttle)
 /datum/controller/subsystem/shuttle/proc/canEvac(mob/user)
 	var/srd = CONFIG_GET(number/shuttle_refuel_delay)
 	if(world.time - SSticker.round_start_time < srd)
-		to_chat(user, "<span class='alert'>The emergency shuttle is refueling. Please wait [DisplayTimeText(srd - (world.time - SSticker.round_start_time))] before trying again.</span>")
+		to_chat(user, "<span class='alert'>Эвакуационный шаттл всё ещё готовится. Подождите [DisplayTimeText(srd - (world.time - SSticker.round_start_time))] перед очередной попыткой.</span>")
 		return FALSE
 
 	switch(emergency.mode)
@@ -196,6 +199,16 @@ SUBSYSTEM_DEF(shuttle)
 		if(SHUTTLE_STRANDED)
 			to_chat(user, "<span class='alert'>The emergency shuttle has been disabled by CentCom.</span>")
 			return FALSE
+
+	if(world.time - SSticker.round_start_time > 36000)
+		return TRUE
+
+	var/datum/station_state/end_state = new /datum/station_state()
+	end_state.count()
+	var/station_integrity = min(PERCENT(GLOB.start_state.score(end_state)), 100)
+	if(station_integrity > 98)
+		to_chat(user, "<span class='alert'>Состояние станции удовлетворительное. Улетать пока нет смысла.</span>")
+		return FALSE
 
 	return TRUE
 
@@ -757,13 +770,14 @@ SUBSYSTEM_DEF(shuttle)
 		preview_shuttle.jumpToNullSpace()
 	preview_shuttle = null
 
+/datum/controller/subsystem/shuttle/ui_state(mob/user)
+	return GLOB.admin_state
 
-/datum/controller/subsystem/shuttle/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, datum/tgui/master_ui = null, datum/ui_state/state = GLOB.admin_state)
-	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+/datum/controller/subsystem/shuttle/ui_interact(mob/user, datum/tgui/ui)
+	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
-		ui = new(user, src, ui_key, "shuttle_manipulator", name, 800, 600, master_ui, state)
+		ui = new(user, src, "ShuttleManipulator")
 		ui.open()
-
 
 /datum/controller/subsystem/shuttle/ui_data(mob/user)
 	var/list/data = list()
@@ -895,3 +909,4 @@ SUBSYSTEM_DEF(shuttle)
 					message_admins("[key_name_admin(usr)] loaded [mdp] with the shuttle manipulator.")
 					log_admin("[key_name(usr)] loaded [mdp] with the shuttle manipulator.</span>")
 					SSblackbox.record_feedback("text", "shuttle_manipulator", 1, "[mdp.name]")
+

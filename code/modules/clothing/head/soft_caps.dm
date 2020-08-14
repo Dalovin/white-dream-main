@@ -2,7 +2,7 @@
 	name = "кепка грузчика"
 	desc = "Это бейсбольная кепка безвкусного желтого цвета."
 	icon_state = "cargosoft"
-	item_state = "helmet"
+	inhand_icon_state = "helmet"
 	var/soft_type = "cargo"
 
 	dog_fashion = /datum/dog_fashion/head/cargo_tech
@@ -15,7 +15,7 @@
 	..()
 
 /obj/item/clothing/head/soft/verb/flipcap()
-	set category = "ОБЪЕКТ"
+	set category = "Объект"
 	set name = "Flip cap"
 
 	flip(usr)
@@ -115,7 +115,7 @@
 	dog_fashion = null
 
 /obj/item/clothing/head/soft/sec
-	name = "кепка секьюрити"
+	name = "кепка офицера"
 	desc = "Это прочная бейсбольная шапка со вкусом красного цвета."
 	icon_state = "secsoft"
 	soft_type = "sec"

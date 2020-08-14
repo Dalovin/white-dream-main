@@ -86,7 +86,7 @@
 		var/datum/antagonist/cult/C = owner.mind.has_antag_datum(/datum/antagonist/cult,TRUE)
 		pollCultists(owner,C.cult_team)
 
-/proc/pollCultists(var/mob/living/Nominee,datum/team/cult/team) //Cult Master Poll
+/proc/pollCultists(mob/living/Nominee,datum/team/cult/team) //Cult Master Poll
 	if(world.time < CULT_POLL_WAIT)
 		to_chat(Nominee, "It would be premature to select a leader while everyone is still settling in, try again in [DisplayTimeText(CULT_POLL_WAIT-world.time)].")
 		return
@@ -95,13 +95,13 @@
 		if(B.current)
 			B.current.update_action_buttons_icon()
 			if(!B.current.incapacitated())
-				SEND_SOUND(B.current, 'sound/hallucinations/im_here1.ogg')
+				SEND_SOUND(B.current, sound('sound/hallucinations/im_here1.ogg'))
 				to_chat(B.current, "<span class='cultlarge'>Acolyte [Nominee] has asserted that [Nominee.p_theyre()] worthy of leading the cult. A vote will be called shortly.</span>")
 	sleep(100)
 	var/list/asked_cultists = list()
 	for(var/datum/mind/B in team.members)
 		if(B.current && B.current != Nominee && !B.current.incapacitated())
-			SEND_SOUND(B.current, 'sound/magic/exit_blood.ogg')
+			SEND_SOUND(B.current, sound('sound/magic/exit_blood.ogg'))
 			asked_cultists += B.current
 	var/list/yes_voters = pollCandidates("[Nominee] seeks to lead your cult, do you support [Nominee.p_them()]?", poll_time = 300, group = asked_cultists)
 	if(QDELETED(Nominee) || Nominee.incapacitated())
@@ -153,11 +153,16 @@
 	var/datum/antagonist/cult/antag = owner.mind.has_antag_datum(/datum/antagonist/cult,TRUE)
 	if(!antag)
 		return
+	var/place = get_area(owner)
+	var/datum/objective/eldergod/summon_objective = locate() in antag.cult_team.objectives
+	if(place in summon_objective.summon_spots)//cant do final reckoning in the summon area to prevent abuse, you'll need to get everyone to stand on the circle!
+		to_chat(owner, "<span class='cultlarge'>The veil is too weak here! Move to an area where it is strong enough to support this magic.</span>")
+		return
 	for(var/i in 1 to 4)
 		chant(i)
 		var/list/destinations = list()
 		for(var/turf/T in orange(1, owner))
-			if(!is_blocked_turf(T, TRUE))
+			if(!T.is_blocked_turf(TRUE))
 				destinations += T
 		if(!LAZYLEN(destinations))
 			to_chat(owner, "<span class='warning'>You need more space to summon your cult!</span>")
@@ -327,7 +332,7 @@
 		desc = "Marks whatever you are orbitting - for the entire cult to track."
 		button_icon_state = "cult_mark"
 		owner.update_action_buttons_icon()
-		SEND_SOUND(owner, 'sound/magic/enter_blood.ogg')
+		SEND_SOUND(owner, sound('sound/magic/enter_blood.ogg'))
 		to_chat(owner,"<span class='cultbold'>Your previous mark is gone - you are now ready to create a new blood mark.</span>")
 
 /datum/action/innate/cult/ghostmark/Activate()

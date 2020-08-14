@@ -55,7 +55,7 @@ SUBSYSTEM_DEF(mapping)
 #endif
 
 /datum/controller/subsystem/mapping/Initialize(timeofday)
-	SStitle.set_image_state("blank")
+	SStitle.set_load_state("blank")
 	HACK_LoadMapConfig()
 	if(initialized)
 		return
@@ -63,7 +63,7 @@ SUBSYSTEM_DEF(mapping)
 		var/old_config = config
 		config = global.config.defaultmap
 		if(!config || config.defaulted)
-			to_chat(world, "<span class='boldannounce'>Unable to load next or default map config, defaulting to Box Station</span>")
+			to_chat(world, "<span class='boldannounce'>Unable to load next or default map config, defaulting to Meta Station</span>")
 			config = old_config
 	loadWorld()
 	repopulate_sorted_areas()
@@ -105,13 +105,22 @@ SUBSYSTEM_DEF(mapping)
 		// needs to be whitelisted for underground too so place_below ruins work
 		seedRuins(ice_ruins, CONFIG_GET(number/icemoon_budget), list(/area/icemoon/surface/outdoors/unexplored, /area/icemoon/underground/unexplored), ice_ruins_templates)
 		for (var/ice_z in ice_ruins)
-			spawn_rivers(ice_z, 4, /turf/open/openspace/icemoon, /area/icemoon/surface/outdoors/unexplored)
+			spawn_rivers(ice_z, 4, /turf/open/transparent/openspace/icemoon, /area/icemoon/surface/outdoors/unexplored/rivers)
 
 	var/list/ice_ruins_underground = levels_by_trait(ZTRAIT_ICE_RUINS_UNDERGROUND)
 	if (ice_ruins_underground.len)
 		seedRuins(ice_ruins_underground, CONFIG_GET(number/icemoon_budget), list(/area/icemoon/underground/unexplored), ice_ruins_underground_templates)
 		for (var/ice_z in ice_ruins_underground)
-			spawn_rivers(ice_z, 4, /turf/open/lava/plasma/ice_moon, /area/icemoon/underground/unexplored)
+			spawn_rivers(ice_z, 4, level_trait(ice_z, ZTRAIT_BASETURF), /area/icemoon/underground/unexplored/rivers)
+
+	/*
+	var/list/planet_ruins = levels_by_trait(ZTRAIT_STATION)
+	if (planet_ruins.len)
+		// needs to be whitelisted for underground too so place_below ruins work
+		seedRuins(planet_ruins, CONFIG_GET(number/lavaland_budget), list(/area/boxplanet/underground/unexplored), lava_ruins_templates)
+		for (var/ice_z in planet_ruins)
+			spawn_rivers(ice_z, 6, /turf/open/floor/plating/asteroid/boxplanet/caves, /area/boxplanet/underground/unexplored)
+	*/
 
 	// Generate deep space ruins
 	var/list/space_ruins = levels_by_trait(ZTRAIT_SPACE_RUINS)
@@ -159,7 +168,7 @@ SUBSYSTEM_DEF(mapping)
 		qdel(T, TRUE)
 
 /* Nuke threats, for making the blue tiles on the station go RED
-   Used by the AI doomsday and the self destruct nuke.
+   Used by the AI doomsday and the self-destruct nuke.
 */
 
 /datum/controller/subsystem/mapping/proc/add_nuke_threat(datum/nuke)
@@ -201,7 +210,7 @@ SUBSYSTEM_DEF(mapping)
 
 	z_list = SSmapping.z_list
 
-#define INIT_ANNOUNCE(X) message_admins("<span class='boldannounce'>[X]</span>"); log_world(X)
+#define INIT_ANNOUNCE(X) to_chat(world, "<span class='green'> > [X]</span>"); log_world(X)
 /datum/controller/subsystem/mapping/proc/LoadGroup(list/errorList, name, path, files, list/traits, list/default_traits, silent = FALSE)
 	. = list()
 	var/start_time = REALTIMEOFDAY
@@ -245,7 +254,12 @@ SUBSYSTEM_DEF(mapping)
 		if (!pm.load(1, 1, start_z + parsed_maps[P], no_changeturf = TRUE))
 			errorList |= pm.original_path
 	if(!silent)
-		INIT_ANNOUNCE("Вспомнили про [name] за [(REALTIMEOFDAY - start_time)/10]s!")
+		switch(name)
+			if("Station")
+				name = "станцию"
+			if("Lavaland")
+				name = "Лаваленд"
+		INIT_ANNOUNCE("Загружаю в память [name] за [(REALTIMEOFDAY - start_time)/10]s!")
 	return parsed_maps
 
 /datum/controller/subsystem/mapping/proc/loadWorld()
@@ -257,11 +271,13 @@ SUBSYSTEM_DEF(mapping)
 
 	// load the station
 	station_start = world.maxz + 1
-	INIT_ANNOUNCE("Перемещаемся к [config.map_name]...")
+	INIT_ANNOUNCE("Начинаю настраивать [config.map_name]...")
 	LoadGroup(FailedZs, "Station", config.map_path, config.map_file, config.traits, ZTRAITS_STATION)
 
 	if(SSdbcore.Connect())
-		var/datum/DBQuery/query_round_map_name = SSdbcore.NewQuery("UPDATE [format_table_name("round")] SET map_name = '[config.map_name]' WHERE id = [GLOB.round_id]")
+		var/datum/db_query/query_round_map_name = SSdbcore.NewQuery({"
+			UPDATE [format_table_name("round")] SET map_name = :map_name WHERE id = :round_id
+		"}, list("map_name" = config.map_name, "round_id" = GLOB.round_id))
 		query_round_map_name.Execute()
 		qdel(query_round_map_name)
 
@@ -289,11 +305,13 @@ SUBSYSTEM_DEF(mapping)
 	else if (config.minetype == "icemoon")
 		LoadGroup(FailedZs, "Ice moon Underground", "map_files/Mining", "IcemoonUnderground.dmm", default_traits = ZTRAITS_ICEMOON_UNDERGROUND)
 		LoadGroup(FailedZs, "Ice moon", "map_files/Mining", "Icemoon.dmm", default_traits = ZTRAITS_ICEMOON)
+	else if (config.minetype == "nothing")
+		current_mining = "nothing"
 	else if (!isnull(config.minetype))
 		INIT_ANNOUNCE("WARNING: An unknown minetype '[config.minetype]' was set! This is being ignored! Update the maploader code!")
 
 	// reset the mining map to random so if an admin sets the mining map it isn't stuck to that forever
-	GLOB.next_mining_map = "random"
+	GLOB.next_mining_map = "lavaland"
 	var/datum/map_config/VM = load_map_config()
 	SSmapping.changemap(VM)
 #endif
@@ -312,7 +330,7 @@ SUBSYSTEM_DEF(mapping)
 		fdel("_maps/custom/[config.map_file]")
 		// And as the file is now removed set the next map to default.
 		next_map_config = load_map_config(default_to_box = TRUE)
-	SStitle.set_image_state("init2")
+	SStitle.set_load_state("init2")
 
 GLOBAL_LIST_EMPTY(the_station_areas)
 
@@ -321,7 +339,7 @@ GLOBAL_LIST_EMPTY(the_station_areas)
 	for(var/area/A in world)
 		if (is_type_in_typecache(A, station_areas_blacklist))
 			continue
-		if (!A.contents.len || !A.unique)
+		if (!A.contents.len || !(A.area_flags & UNIQUE_AREA))
 			continue
 		var/turf/picked = A.contents[1]
 		if (is_station_level(picked.z))
@@ -394,7 +412,7 @@ GLOBAL_LIST_EMPTY(the_station_areas)
 		maprotate()
 	SSvote.initiate_vote("map", "automatic map rotation")
 
-/datum/controller/subsystem/mapping/proc/changemap(var/datum/map_config/VM)
+/datum/controller/subsystem/mapping/proc/changemap(datum/map_config/VM)
 	if(!VM.MakeNextMap())
 		next_map_config = load_map_config(default_to_box = TRUE)
 		message_admins("Failed to set new map with next_map.json for [VM.map_name]! Using default as backup!")
@@ -473,7 +491,7 @@ GLOBAL_LIST_EMPTY(the_station_areas)
 //Manual loading of away missions.
 /client/proc/admin_away()
 	set name = "Load Away Mission"
-	set category = "ФАН"
+	set category = "Фан"
 
 	if(!holder ||!check_rights(R_FUN))
 		return
@@ -575,7 +593,7 @@ GLOBAL_LIST_EMPTY(the_station_areas)
 			qdel(TR, TRUE)
 	UNSETEMPTY(turf_reservations)
 	var/list/clearing = list()
-	for(var/l in unused_turfs)			//unused_turfs is a assoc list by z = list(turfs)
+	for(var/l in unused_turfs)			//unused_turfs is an assoc list by z = list(turfs)
 		if(islist(unused_turfs[l]))
 			clearing |= unused_turfs[l]
 	clearing |= used_turfs		//used turfs is an associative list, BUT, reserve_turfs() can still handle it. If the code above works properly, this won't even be needed as the turfs would be freed already.

@@ -7,12 +7,14 @@
 	move_force = MOVE_FORCE_VERY_STRONG
 	move_resist = MOVE_FORCE_EXTREMELY_STRONG
 	resistance_flags = FIRE_PROOF | ACID_PROOF
+	appearance_flags = PIXEL_SCALE // no tile bound because we want complex visibility checks
 	layer = BELOW_MOB_LAYER//icon draw layer
 	infra_luminosity = 15 //byond implementation is bugged.
 	force = 5
 	flags_1 = HEAR_1
+	step_size = 4
+	can_sidestep = TRUE
 	var/ruin_mecha = FALSE //if the mecha starts on a ruin, don't automatically give it a tracking beacon to prevent metagaming.
-	var/can_move = 0 //time of next allowed movement
 	var/mob/living/carbon/occupant = null
 	var/step_in = 10 //make a step in step_in/10 sec.
 	var/dir_in = 2//What direction will the mech face when entered/powered on? Defaults to South.
@@ -109,6 +111,7 @@
 	var/smoke_cooldown = 100
 	var/phasing = FALSE
 	var/phasing_energy_drain = 200
+	var/last_phase = 0 // last time we phased through an object
 	var/phase_state = "" //icon_state when phasing
 	var/strafe = FALSE //If we are strafing
 	var/canstrafe = TRUE //if we can turn on strafing
@@ -119,8 +122,10 @@
 
 	var/occupant_sight_flags = 0 //sight flags to give to the occupant (e.g. mech mining scanner gives meson-like vision)
 	var/mouse_pointer
+	COOLDOWN_DECLARE(sound_cooldown)
+	COOLDOWN_DECLARE(turn_cooldown)
 
-	hud_possible = list (DIAG_STAT_HUD, DIAG_BATT_HUD, DIAG_MECH_HUD, DIAG_TRACK_HUD)
+	hud_possible = list (DIAG_STAT_HUD, DIAG_BATT_HUD, DIAG_MECH_HUD, DIAG_TRACK_HUD, HACKER_HUD)
 
 /obj/item/radio/mech //this has to go somewhere
 
@@ -155,6 +160,9 @@
 
 /obj/mecha/get_cell()
 	return cell
+
+/obj/mecha/rust_heretic_act()
+	take_damage(500,  BRUTE)
 
 /obj/mecha/Destroy()
 	if(occupant)
@@ -237,7 +245,7 @@
 	return internal_tank
 
 ///Adds a cell, for use in Map-spawned mechs, Nuke Ops mechs, and admin-spawned mechs. Mechs built by hand will replace this.
-/obj/mecha/proc/add_cell(var/obj/item/stock_parts/cell/C=null)
+/obj/mecha/proc/add_cell(obj/item/stock_parts/cell/C=null)
 	QDEL_NULL(cell)
 	if(C)
 		C.forceMove(src)
@@ -246,7 +254,7 @@
 	cell = new /obj/item/stock_parts/cell/high/plus(src)
 
 ///Adds a scanning module, for use in Map-spawned mechs, Nuke Ops mechs, and admin-spawned mechs. Mechs built by hand will replace this.
-/obj/mecha/proc/add_scanmod(var/obj/item/stock_parts/scanning_module/sm=null)
+/obj/mecha/proc/add_scanmod(obj/item/stock_parts/scanning_module/sm=null)
 	QDEL_NULL(scanmod)
 	if(sm)
 		sm.forceMove(src)
@@ -255,7 +263,7 @@
 	scanmod = new /obj/item/stock_parts/scanning_module(src)
 
 ///Adds a capacitor, for use in Map-spawned mechs, Nuke Ops mechs, and admin-spawned mechs. Mechs built by hand will replace this.
-/obj/mecha/proc/add_capacitor(var/obj/item/stock_parts/capacitor/cap=null)
+/obj/mecha/proc/add_capacitor(obj/item/stock_parts/capacitor/cap=null)
 	QDEL_NULL(capacitor)
 	if(cap)
 		cap.forceMove(src)
@@ -265,11 +273,10 @@
 
 /obj/mecha/proc/add_cabin()
 	cabin_air = new
-	cabin_air.temperature = T20C
-	cabin_air.volume = 200
-	cabin_air.add_gases(/datum/gas/oxygen, /datum/gas/nitrogen)
-	cabin_air.gases[/datum/gas/oxygen][MOLES] = O2STANDARD*cabin_air.volume/(R_IDEAL_GAS_EQUATION*cabin_air.temperature)
-	cabin_air.gases[/datum/gas/nitrogen][MOLES] = N2STANDARD*cabin_air.volume/(R_IDEAL_GAS_EQUATION*cabin_air.temperature)
+	cabin_air.set_temperature(T20C)
+	cabin_air.set_volume(200)
+	cabin_air.set_moles(/datum/gas/oxygen, O2STANDARD*cabin_air.return_volume()/(R_IDEAL_GAS_EQUATION*cabin_air.return_temperature()))
+	cabin_air.set_moles(/datum/gas/nitrogen, N2STANDARD*cabin_air.return_volume()/(R_IDEAL_GAS_EQUATION*cabin_air.return_temperature()))
 	return cabin_air
 
 /obj/mecha/proc/add_radio()
@@ -335,9 +342,9 @@
 				if(int_tank_air.return_pressure() > internal_tank.maximum_pressure && !(internal_damage & MECHA_INT_TANK_BREACH))
 					setInternalDamage(MECHA_INT_TANK_BREACH)
 				if(int_tank_air && int_tank_air.return_volume() > 0) //heat the air_contents
-					int_tank_air.temperature = min(6000+T0C, int_tank_air.temperature+rand(10,15))
+					int_tank_air.set_temperature(min(6000+T0C, int_tank_air.return_temperature()+rand(10,15)))
 			if(cabin_air && cabin_air.return_volume()>0)
-				cabin_air.temperature = min(6000+T0C, cabin_air.return_temperature()+rand(10,15))
+				cabin_air.set_temperature(min(6000+T0C, cabin_air.return_temperature()+rand(10,15)))
 				if(cabin_air.return_temperature() > max_temperature/2)
 					take_damage(4/round(max_temperature/cabin_air.return_temperature(),0.1), BURN, 0, 0)
 
@@ -362,8 +369,8 @@
 
 	if(internal_temp_regulation)
 		if(cabin_air && cabin_air.return_volume() > 0)
-			var/delta = cabin_air.temperature - T20C
-			cabin_air.temperature -= max(-10, min(10, round(delta/4,0.1)))
+			var/delta = cabin_air.return_temperature() - T20C
+			cabin_air.set_temperature(cabin_air.return_temperature() - max(-10, min(10, round(delta/4,0.1))))
 
 	if(internal_tank)
 		var/datum/gas_mixture/tank_air = internal_tank.return_air()
@@ -454,11 +461,11 @@
 /obj/mecha/proc/drop_item()//Derpfix, but may be useful in future for engineering exosuits.
 	return
 
-/obj/mecha/Hear(message, atom/movable/speaker, message_language, raw_message, radio_freq, list/spans, message_mode)
+/obj/mecha/Hear(message, atom/movable/speaker, message_language, raw_message, radio_freq, list/spans, list/message_mods = list())
 	. = ..()
 	if(speaker == occupant)
 		if(radio?.broadcasting)
-			radio.talk_into(speaker, text, , spans, message_language)
+			radio.talk_into(speaker, text, , spans, message_language, message_mods)
 		//flick speech bubble
 		var/list/speech_bubble_recipients = list()
 		for(var/mob/M in get_hearers_in_view(7,src))
@@ -537,7 +544,8 @@
 
 ///Plays the mech step sound effect. Split from movement procs so that other mechs (HONK) can override this one specific part.
 /obj/mecha/proc/play_stepsound()
-	if(stepsound)
+	if(stepsound && COOLDOWN_FINISHED(src, sound_cooldown))
+		COOLDOWN_START(src, sound_cooldown, 0.5 SECONDS)
 		playsound(src,stepsound,40,1)
 
 /obj/mecha/Move(atom/newloc, direct)
@@ -546,7 +554,7 @@
 		occupant_message("<span class='warning'>Air port connection has been severed!</span>")
 		log_message("Lost connection to gas port.", LOG_MECHA)
 
-/obj/mecha/Process_Spacemove(var/movement_dir = 0)
+/obj/mecha/Process_Spacemove(movement_dir = 0)
 	. = ..()
 	if(.)
 		return TRUE
@@ -556,11 +564,9 @@
 		if(istype(backup) && movement_dir && !backup.anchored)
 			if(backup.newtonian_move(turn(movement_dir, 180)))
 				step_silent = TRUE
-				if(occupant)
-					to_chat(occupant, "<span class='info'>You push off [backup] to propel yourself.</span>")
 		return TRUE
 
-	if(can_move <= world.time && active_thrusters && movement_dir && active_thrusters.thrust(movement_dir))
+	if(active_thrusters && movement_dir && active_thrusters.thrust(movement_dir))
 		step_silent = TRUE
 		return TRUE
 
@@ -588,45 +594,42 @@
 	return domove(direction)
 
 /obj/mecha/proc/domove(direction)
-	if(can_move >= world.time)
-		return 0
 	if(!Process_Spacemove(direction))
-		return 0
-	if(!has_charge(step_energy_drain))
-		return 0
+		return FALSE
+	if(!has_charge(step_energy_drain / step_size))
+		return FALSE
 	if(zoom_mode)
 		if(world.time - last_message > 20)
 			occupant_message("<span class='warning'>Unable to move while in zoom mode!</span>")
 			last_message = world.time
-		return 0
+		return FALSE
 	if(!cell)
 		if(world.time - last_message > 20)
 			occupant_message("<span class='warning'>Missing power cell.</span>")
 			last_message = world.time
-		return 0
+		return FALSE
 	if(!scanmod || !capacitor)
 		if(world.time - last_message > 20)
 			occupant_message("<span class='warning'>Missing [scanmod? "capacitor" : "scanning module"].</span>")
 			last_message = world.time
-		return 0
+		return FALSE
 
 	var/move_result = 0
-	var/oldloc = loc
 	if(internal_damage & MECHA_INT_CONTROL_LOST)
 		move_result = mechsteprand()
 	else if(dir != direction && (!strafe || occupant.client.keys_held["Alt"]))
 		move_result = mechturn(direction)
 	else
 		move_result = mechstep(direction)
-	if(move_result || loc != oldloc)// halfway done diagonal move still returns false
-		use_power(step_energy_drain)
-		can_move = world.time + step_in
+	if(move_result)// halfway done diagonal move still returns false
+		use_power(step_energy_drain / step_size)
 		return 1
 	return 0
 
 /obj/mecha/proc/mechturn(direction)
 	setDir(direction)
-	if(turnsound)
+	if(turnsound && COOLDOWN_FINISHED(src, turn_cooldown))
+		COOLDOWN_START(src, turn_cooldown, 0.25 SECONDS)
 		playsound(src,turnsound,40,TRUE)
 	return 1
 
@@ -645,16 +648,16 @@
 		play_stepsound()
 	step_silent = FALSE
 
-/obj/mecha/Bump(var/atom/obstacle)
-	if(phasing && get_charge() >= phasing_energy_drain && !throwing)
-		if(!can_move)
-			return
-		can_move = 0
+/obj/mecha/Bump(atom/obstacle)
+	if(phasing && get_charge() >= phasing_energy_drain && !throwing && world.time > last_phase)
+		last_phase = world.time + 0.2 SECONDS
 		if(phase_state)
 			flick(phase_state, src)
-		forceMove(get_step(src,dir))
-		use_power(phasing_energy_drain)
-		addtimer(VARSET_CALLBACK(src, can_move, TRUE), step_in*3)
+		var/oldflags = pass_flags
+		pass_flags = PASSALL
+		step(src, dir, 4)
+		pass_flags = oldflags
+		use_power(phasing_energy_drain / 8) //we phased 1/8th of a tile
 	else
 		if(..()) //mech was thrown
 			return
@@ -667,11 +670,11 @@
 		if(isobj(obstacle))
 			var/obj/O = obstacle
 			if(!O.anchored && O.move_resist <= move_force)
-				step(obstacle, dir)
+				step(obstacle, dir, step_size)
 		else if(ismob(obstacle))
 			var/mob/M = obstacle
 			if(M.move_resist <= move_force)
-				step(obstacle, dir)
+				step(obstacle, dir, step_size)
 
 
 
@@ -711,7 +714,7 @@
 			if(MECHA_INT_TEMP_CONTROL)
 				occupant_message("<span class='boldnotice'>Life support system reactivated.</span>")
 			if(MECHA_INT_FIRE)
-				occupant_message("<span class='boldnotice'>Internal fire extinquished.</span>")
+				occupant_message("<span class='boldnotice'>Internal fire extinguished.</span>")
 			if(MECHA_INT_TANK_BREACH)
 				occupant_message("<span class='boldnotice'>Damaged internal tank has been sealed.</span>")
 	internal_damage &= ~int_dam_flag
@@ -778,7 +781,7 @@
 			to_chat(user, "<span class='boldnotice'>Transfer successful</span>: [AI.name] ([rand(1000,9999)].exe) removed from [name] and stored within local memory.")
 
 		if(AI_MECH_HACK) //Called by AIs on the mech
-			AI.linked_core = new /obj/structure/AIcore/deactivated(AI.loc)
+			AI.linked_core = new /obj/structure/ai_core/deactivated(AI.loc)
 			if(AI.can_dominate_mechs)
 				if(occupant) //Oh, I am sorry, were you using that?
 					to_chat(AI, "<span class='warning'>Pilot detected! Forced ejection initiated!</span>")
@@ -1080,7 +1083,7 @@
 
 	if(L && L.client)
 		L.update_mouse_pointer()
-		L.client.change_view(CONFIG_GET(string/default_view))
+		L.client.view_size.resetToDefault()
 		zoom_mode = 0
 
 /////////////////////////
@@ -1146,7 +1149,7 @@ GLOBAL_VAR_INIT(year_integer, text2num(year)) // = 2013???
 ////// Ammo stuff /////
 ///////////////////////
 
-/obj/mecha/proc/ammo_resupply(var/obj/item/mecha_ammo/A, mob/user,var/fail_chat_override = FALSE)
+/obj/mecha/proc/ammo_resupply(obj/item/mecha_ammo/A, mob/user,fail_chat_override = FALSE)
 	if(!A.rounds)
 		if(!fail_chat_override)
 			to_chat(user, "<span class='warning'>This box of ammo is empty!</span>")

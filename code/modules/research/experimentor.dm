@@ -72,8 +72,8 @@
 /obj/machinery/rnd/experimentor/Initialize()
 	. = ..()
 
-	trackedIan = locate(/mob/living/simple_animal/pet/dog/corgi/Ian) in GLOB.mob_living_list
-	trackedRuntime = locate(/mob/living/simple_animal/pet/cat/Runtime) in GLOB.mob_living_list
+	trackedIan = locate(/mob/living/simple_animal/pet/dog/corgi/ian) in GLOB.mob_living_list
+	trackedRuntime = locate(/mob/living/simple_animal/pet/cat/runtime) in GLOB.mob_living_list
 	SetTypeReactions()
 
 	critical_items_typecache = typecacheof(list(
@@ -141,7 +141,7 @@
 		dat += "<b><a href='byond://?src=[REF(src)];function=eject'>Eject</A>"
 		var/list/listin = techweb_item_boost_check(src)
 		if(listin)
-			var/list/output = list("<b><font color='purple'>Research Boost Data:</font></b>")
+			var/list/output = list("<b><font color='pink'>Research Boost Data:</font></b>")
 			var/list/res = list("<b><font color='blue'>Already researched:</font></b>")
 			var/list/boosted = list("<b><font color='red'>Already boosted:</font></b>")
 			for(var/node_id in listin)
@@ -229,7 +229,7 @@
 			return
 		var/turf/dropturf = get_turf(pick(view(1,src)))
 		if(!dropturf) //Failsafe to prevent the object being lost in the void forever.
-			dropturf = drop_location()
+			dropturf = drop_location()[1]
 		loaded_item.forceMove(dropturf)
 		if(delete)
 			qdel(loaded_item)
@@ -378,7 +378,7 @@
 				var/heat_capacity = removed.heat_capacity()
 				if(heat_capacity == 0 || heat_capacity == null)
 					heat_capacity = 1
-				removed.temperature = min((removed.temperature*heat_capacity + 100000)/heat_capacity, 1000)
+				removed.set_temperature(min((removed.return_temperature()*heat_capacity + 100000)/heat_capacity, 1000))
 			env.merge(removed)
 			air_update_turf()
 			investigate_log("Experimentor has released hot air.", INVESTIGATE_EXPERIMENTOR)
@@ -424,7 +424,7 @@
 				var/heat_capacity = removed.heat_capacity()
 				if(heat_capacity == 0 || heat_capacity == null)
 					heat_capacity = 1
-				removed.temperature = (removed.temperature*heat_capacity - 75000)/heat_capacity
+				removed.set_temperature((removed.return_temperature()*heat_capacity - 75000)/heat_capacity)
 			env.merge(removed)
 			air_update_turf()
 			investigate_log("Experimentor has released cold air.", INVESTIGATE_EXPERIMENTOR)

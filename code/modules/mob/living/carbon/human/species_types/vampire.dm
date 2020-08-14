@@ -2,7 +2,7 @@
 	name = "Vampire"
 	id = "vampire"
 	default_color = "FFFFFF"
-	species_traits = list(EYECOLOR,HAIR,FACEHAIR,LIPS,DRINKSBLOOD)
+	species_traits = list(EYECOLOR,HAIR,FACEHAIR,LIPS,DRINKSBLOOD, HAS_FLESH, HAS_BONE)
 	inherent_traits = list(TRAIT_NOHUNGER,TRAIT_NOBREATH)
 	inherent_biotypes = MOB_UNDEAD|MOB_HUMANOID
 	default_features = list("mcolor" = "FFF", "tail_human" = "None", "ears" = "None", "wings" = "None")
@@ -123,7 +123,7 @@
 
 /mob/living/carbon/Stat()
 	..()
-	if(statpanel("ИГРА"))
+	if(statpanel("Игра"))
 		var/obj/item/organ/heart/vampire/darkheart = getorgan(/obj/item/organ/heart/vampire)
 		if(darkheart)
 			stat(null, "<span class='notice'>Уровень крови: [blood_volume]/[BLOOD_VOLUME_MAXIMUM].</span>")

@@ -66,7 +66,7 @@
 	mob_size = MOB_SIZE_SMALL
 	has_unlimited_silicon_privilege = 1
 	damage_coeff = list(BRUTE = 1, BURN = 1, TOX = 0, CLONE = 0, STAMINA = 0, OXY = 0)
-	hud_possible = list(DIAG_STAT_HUD, DIAG_HUD, ANTAG_HUD)
+	hud_possible = list(DIAG_STAT_HUD, DIAG_HUD, ANTAG_HUD, HACKER_HUD)
 	unique_name = TRUE
 	faction = list("neutral","silicon","turret")
 	dextrous = TRUE
@@ -113,14 +113,16 @@
 	var/hacked = FALSE
 	/// Flavor text announced to drones on [/mob/proc/Login]
 	var/flavortext = \
-	"\n<big><span class='warning'>DO NOT INTERFERE WITH THE ROUND AS A DRONE OR YOU WILL BE DRONE BANNED</span></big>\n"+\
-	"<span class='notice'>Drones are a ghost role that are allowed to fix the station and build things. Interfering with the round as a drone is against the rules.</span>\n"+\
-	"<span class='notice'>Actions that constitute interference include, but are not limited to:</span>\n"+\
-	"<span class='notice'>     - Interacting with round critical objects (IDs, weapons, contraband, powersinks, bombs, etc.)</span>\n"+\
-	"<span class='notice'>     - Interacting with living beings (communication, attacking, healing, etc.)</span>\n"+\
-	"<span class='notice'>     - Interacting with non-living beings (dragging bodies, looting bodies, etc.)</span>\n"+\
-	"<span class='warning'>These rules are at admin discretion and will be heavily enforced.</span>\n"+\
-	"<span class='warning'><u>If you do not have the regular drone laws, follow your laws to the best of your ability.</u></span>"
+	"\n<big><span class='warning'>Не нарушайте правила для дронов указанные ниже. Нарушение данных правил карается пермой дронов </span></big>\n"+\
+	"<span class='notice'>Будучи дроном вы ДОЛЖНЫ И ТОЛЬКО ДОЛЖНЫ производить ремонт станции. Любое вмешательство дрона в раунд карается пермой</span>\n"+\
+	"<span class='notice'>Действия по которым дают по попе</span>\n"+\
+	"<span class='notice'>     - Использование критически важных вещей (ИД-карты, оружия, контрабанда, вещи синдиката и прочее.)</span>\n"+\
+	"<span class='notice'>     - Взаимодействие с живыми существами (общение, лечение, избиение и прочее.)</span>\n"+\
+	"<span class='notice'>     - Взаимодействие с НЕ живыми существами (перенос трупов, лутание вещей мертвого человека и прочее)</span>\n"+\
+	"<span class='warning'>За любой ваш проёб администрация в праве пермануть вам дрона. Разбан дрона производится отправкой фото себя в чулках с табличкой своего сикея</span>\n"+\
+	"<span class='warning'>ЕРП с дронами разрешено\n"+\
+	"<span class='warning'>ЕРП с живыми существами запрещено\n"+\
+	"<span class='warning'><u>Даже если ты умудрился заспавнится без правил для силиконов ты должен подчинятся правилам которые указаны выше.</u></span>"
 
 /mob/living/simple_animal/drone/Initialize()
 	. = ..()
@@ -166,7 +168,9 @@
 	return ..()
 
 /mob/living/simple_animal/drone/Login()
-	..()
+	. = ..()
+	if(!. || !client)
+		return FALSE
 	check_laws()
 
 	if(flavortext)
@@ -196,7 +200,7 @@
 	dust()
 
 /mob/living/simple_animal/drone/examine(mob/user)
-	. = list("<span class='info'>*---------*\nThis is [icon2html(src, user)] \a <b>[src]</b>!")
+	. = list("<div class='examine_block'><span class='info'>This is [icon2html(src, user)] \a <b>[src]</b>!")
 
 	//Hands
 	for(var/obj/item/I in held_items)
@@ -232,7 +236,7 @@
 			. += "<span class='deadsay'>A message repeatedly flashes on its display: \"REBOOT -- REQUIRED\".</span>"
 		else
 			. += "<span class='deadsay'>A message repeatedly flashes on its display: \"ERROR -- OFFLINE\".</span>"
-	. += "*---------*</span>"
+	. += "</span></div>"
 
 
 /mob/living/simple_animal/drone/assess_threat(judgement_criteria, lasercolor = "", datum/callback/weaponcheck=null) //Secbots won't hunt maintenance drones.

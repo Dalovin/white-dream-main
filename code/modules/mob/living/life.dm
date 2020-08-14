@@ -45,6 +45,8 @@
 
 		handle_diseases()// DEAD check is in the proc itself; we want it to spread even if the mob is dead, but to handle its disease-y properties only if you're not.
 
+		handle_wounds()
+
 		if (QDELETED(src)) // diseases can qdel the mob via transformations
 			return
 
@@ -81,6 +83,9 @@
 /mob/living/proc/handle_diseases()
 	return
 
+/mob/living/proc/handle_wounds()
+	return
+
 /mob/living/proc/handle_random_events()
 	return
 
@@ -105,7 +110,7 @@
 		ExtinguishMob()
 		return TRUE //mob was put out, on_fire = FALSE via ExtinguishMob(), no need to update everything down the chain.
 	var/datum/gas_mixture/G = loc.return_air() // Check if we're standing in an oxygenless environment
-	if(!G.gases[/datum/gas/oxygen] || G.gases[/datum/gas/oxygen][MOLES] < 1)
+	if(G.get_moles(/datum/gas/oxygen) < 1)
 		ExtinguishMob() //If there's no oxygen in the tile we're on, put out the fire
 		return TRUE
 	var/turf/location = get_turf(src)
@@ -113,8 +118,6 @@
 
 //this updates all special effects: knockdown, druggy, stuttering, etc..
 /mob/living/proc/handle_status_effects()
-	if(confused)
-		confused = max(0, confused - 1)
 
 /mob/living/proc/handle_traits()
 	//Eyes

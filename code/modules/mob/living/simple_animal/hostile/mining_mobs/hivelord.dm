@@ -9,18 +9,18 @@
 	icon_gib = "syndicate_gib"
 	mob_biotypes = MOB_ORGANIC
 	mouse_opacity = MOUSE_OPACITY_OPAQUE
-	move_to_delay = 14
+	move_to_delay = 0.7
 	ranged = 1
-	vision_range = 5
-	aggro_vision_range = 9
+	vision_range = 160
+	aggro_vision_range = 288
 	speed = 3
 	maxHealth = 75
 	health = 75
 	harm_intent_damage = 5
 	melee_damage_lower = 0
 	melee_damage_upper = 0
-	attack_verb_continuous = "lashes out at"
-	attack_verb_simple = "lash out at"
+	attack_verb_continuous = "набрасывается на"
+	attack_verb_simple = "набрасывается на"
 	speak_emote = list("telepathically cries")
 	attack_sound = 'sound/weapons/pierce.ogg'
 	throw_message = "falls right through the strange body of the"
@@ -66,10 +66,10 @@
 	icon_dead = "Hivelordbrood"
 	icon_gib = "syndicate_gib"
 	mouse_opacity = MOUSE_OPACITY_OPAQUE
-	move_to_delay = 1
+	move_to_delay = 0.1
 	friendly_verb_continuous = "buzzes near"
 	friendly_verb_simple = "buzz near"
-	vision_range = 10
+	vision_range = 320
 	speed = 3
 	maxHealth = 1
 	health = 1
@@ -77,8 +77,8 @@
 	harm_intent_damage = 5
 	melee_damage_lower = 2
 	melee_damage_upper = 2
-	attack_verb_continuous = "slashes"
-	attack_verb_simple = "slash"
+	attack_verb_continuous = "разрывает"
+	attack_verb_simple = "разрывает"
 	speak_emote = list("telepathically cries")
 	attack_sound = 'sound/weapons/pierce.ogg'
 	throw_message = "falls right through the strange body of the"
@@ -108,8 +108,8 @@
 	obj_damage = 60
 	melee_damage_lower = 15
 	melee_damage_upper = 15
-	attack_verb_continuous = "lashes out at"
-	attack_verb_simple = "lash out at"
+	attack_verb_continuous = "набрасывается на"
+	attack_verb_simple = "набрасывается на"
 	speak_emote = list("echoes")
 	attack_sound = 'sound/weapons/pierce.ogg'
 	throw_message = "bounces harmlessly off of"
@@ -172,14 +172,14 @@
 	icon_gib = "syndicate_gib"
 	friendly_verb_continuous = "buzzes near"
 	friendly_verb_simple = "buzz near"
-	vision_range = 10
+	vision_range = 320
 	maxHealth = 1
 	health = 5
 	harm_intent_damage = 5
 	melee_damage_lower = 12
 	melee_damage_upper = 12
-	attack_verb_continuous = "bites"
-	attack_verb_simple = "bite"
+	attack_verb_continuous = "кусает"
+	attack_verb_simple = "кусает"
 	speak_emote = list("echoes")
 	attack_sound = 'sound/weapons/pierce.ogg'
 	throw_message = "is shrugged off by"
@@ -187,6 +187,10 @@
 	stat_attack = UNCONSCIOUS
 	robust_searching = 1
 	var/can_infest_dead = FALSE
+	bound_width = 8
+	bound_height = 8
+	bound_x = 12
+	bound_y = 12
 
 /mob/living/simple_animal/hostile/asteroid/hivelordbrood/legion/Life()
 	if(isturf(loc))
@@ -246,9 +250,9 @@
 	del_on_death = TRUE
 	sentience_type = SENTIENCE_BOSS
 	loot = list(/obj/item/organ/regenerative_core/legion = 3, /obj/effect/mob_spawn/human/corpse/damaged/legioninfested = 5)
-	move_to_delay = 14
-	vision_range = 5
-	aggro_vision_range = 9
+	move_to_delay = 0.4
+	vision_range = 160
+	aggro_vision_range = 288
 	speed = 3
 	faction = list("mining")
 	weather_immunities = list("lava","ash")
@@ -352,8 +356,11 @@
 			shoes = /obj/item/clothing/shoes/laceup
 			head = /obj/item/clothing/head/helmet/knight
 			suit = /obj/item/clothing/suit/armor/riot/knight
-			back = /obj/item/shield/riot/buckler
-			belt = /obj/item/nullrod/claymore
+			if(prob(30))
+				back = /obj/item/nullrod/scythe/talking
+			else
+				back = /obj/item/shield/riot/buckler
+				belt = /obj/item/nullrod/claymore
 			r_pocket = /obj/item/tank/internals/emergency_oxygen
 			mask = /obj/item/clothing/mask/breath
 		if("Operative")
@@ -378,3 +385,26 @@
 			glasses =  /obj/item/clothing/glasses/hud/health/night/cultblind
 			backpack_contents = list(/obj/item/reagent_containers/glass/beaker/unholywater = 1, /obj/item/cult_shift = 1, /obj/item/flashlight/flare/culttorch = 1, /obj/item/stack/sheet/runed_metal = 15)
 	. = ..()
+
+// Snow Legion
+/mob/living/simple_animal/hostile/asteroid/hivelord/legion/snow
+	name = "snow legion"
+	desc = "You can still see what was once a human under the shifting snowy mass, clearly decorated by a clown."
+	icon = 'icons/mob/icemoon/icemoon_monsters.dmi'
+	icon_state = "snowlegion"
+	icon_living = "snowlegion"
+	icon_aggro = "snowlegion_alive"
+	icon_dead = "snowlegion"
+	crusher_loot = /obj/item/crusher_trophy/legion_skull
+	loot = list(/obj/item/organ/regenerative_core/legion)
+	brood_type = /mob/living/simple_animal/hostile/asteroid/hivelordbrood/legion/snow
+
+// Snow Legion skull
+/mob/living/simple_animal/hostile/asteroid/hivelordbrood/legion/snow
+	name = "snow legion"
+	desc = "One of many."
+	icon = 'icons/mob/icemoon/icemoon_monsters.dmi'
+	icon_state = "snowlegion_head"
+	icon_living = "snowlegion_head"
+	icon_aggro = "snowlegion_head"
+	icon_dead = "snowlegion_head"

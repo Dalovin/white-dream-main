@@ -42,9 +42,8 @@
 /obj/effect/proc_holder/spell/targeted/olfaction/cast(list/targets, mob/living/user = usr)
 	//can we sniff? is there miasma in the air?
 	var/datum/gas_mixture/air = user.loc.return_air()
-	var/list/cached_gases = air.gases
 
-	if(cached_gases[/datum/gas/miasma])
+	if(air.get_moles(/datum/gas/miasma))
 		user.adjust_disgust(sensitivity * 45)
 		to_chat(user, "<span class='warning'>With your overly sensitive nose, you get a whiff of stench and feel sick! Try moving to a cleaner area!</span>")
 		return
@@ -180,7 +179,7 @@
 	clothes_req = FALSE
 	charge_max = 600
 	invocation = "DOOOOOOOOOOOOOOOOOOOOM!!!"
-	invocation_type = "shout"
+	invocation_type = INVOCATION_SHOUT
 	action_icon_state = "void_magnet"
 
 /obj/effect/proc_holder/spell/self/void/can_cast(mob/user = usr)
@@ -284,9 +283,11 @@
 	throw_speed = 4
 	embedding = list("embedded_pain_multiplier" = 4, "embed_chance" = 100, "embedded_fall_chance" = 0, "embedded_ignore_throwspeed_threshold" = TRUE)
 	w_class = WEIGHT_CLASS_SMALL
-	sharpness = IS_SHARP
+	sharpness = SHARP_POINTY
 	custom_materials = list(/datum/material/biomass = 500)
 	var/mob/living/carbon/human/fired_by
+	/// if we missed our target
+	var/missed = TRUE
 
 /obj/item/hardened_spike/Initialize(mapload, firedby)
 	. = ..()
@@ -294,13 +295,12 @@
 	addtimer(CALLBACK(src, .proc/checkembedded), 5 SECONDS)
 
 /obj/item/hardened_spike/proc/checkembedded()
-	if(ishuman(loc))
-		var/mob/living/carbon/human/embedtest = loc
-		for(var/l in embedtest.bodyparts)
-			var/obj/item/bodypart/limb = l
-			if(src in limb.embedded_objects)
-				return limb
-	unembedded()
+	if(missed)
+		unembedded()
+
+/obj/item/hardened_spike/embedded(atom/target)
+	if(isbodypart(target))
+		missed = FALSE
 
 /obj/item/hardened_spike/unembedded()
 	var/turf/T = get_turf(src)
@@ -366,19 +366,14 @@
 		return
 	var/mob/living/carbon/human/transferer = owner
 
-	to_chat(transfered, "<span class='warning'>You feel a tiny prick!</span>")
+	to_chat(transfered, "<span class='warning'>Чувствую небольшое покалывание!</span>")
 	transferer.reagents.trans_to(transfered, transferer.reagents.total_volume, 1, 1, 0, transfered_by = transferer)
 
 	var/obj/item/bodypart/L = spikey.checkembedded()
 
-	L.embedded_objects -= spikey
 	//this is where it would deal damage, if it transfers chems it removes itself so no damage
 	spikey.forceMove(get_turf(L))
 	transfered.visible_message("<span class='notice'>[spikey] falls out of [transfered]!</span>")
-	if(!transfered.has_embedded_objects())
-		transfered.clear_alert("embeddedobject")
-		SEND_SIGNAL(transfered, COMSIG_CLEAR_MOOD_EVENT, "embedded")
-	spikey.unembedded()
 
 //spider webs
 /datum/mutation/human/webbing

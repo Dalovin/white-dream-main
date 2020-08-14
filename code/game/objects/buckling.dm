@@ -20,6 +20,18 @@
 			if(user_unbuckle_mob(buckled_mobs[1],user))
 				return 1
 
+/atom/movable/attackby(obj/item/W, mob/user, params)
+	if(!can_buckle || !istype(W, /obj/item/riding_offhand) || !user.Adjacent(src))
+		return ..()
+
+	var/obj/item/riding_offhand/riding_item = W
+	var/mob/living/carried_mob = riding_item.rider
+	if(carried_mob == user) //Piggyback user.
+		return
+	user.unbuckle_mob(carried_mob)
+	carried_mob.forceMove(get_turf(src))
+	return mouse_buckle_handling(carried_mob, user)
+
 //literally just the above extension of attack_hand(), but for silicons instead (with an adjacency check, since attack_robot() being called doesn't mean that you're adjacent to something)
 /atom/movable/attack_robot(mob/living/user)
 	. = ..()
@@ -57,7 +69,7 @@
 	if(!istype(M))
 		return FALSE
 
-	if(check_loc && M.loc != loc)
+	if(check_loc && nearest_turf(M) != nearest_turf(src))
 		return FALSE
 
 	if((!can_buckle && !force) || M.buckled || (buckled_mobs.len >= max_buckled_mobs) || (buckle_requires_restraints && !M.restrained()) || M == src)
@@ -79,14 +91,16 @@
 			L.reset_pull_offsets(M, TRUE)
 
 	if(!check_loc && M.loc != loc)
-		M.forceMove(loc)
+		M.forceMove(loc, step_x, step_y)
 
+	M.forceStep(null, step_x, step_y)
 	M.buckling = null
-	M.buckled = src
+	M.set_buckled(src)
 	M.setDir(dir)
 	buckled_mobs |= M
 	M.update_mobility()
 	M.throw_alert("buckled", /obj/screen/alert/restrained/buckled)
+	M.update_movespeed()
 	post_buckle_mob(M)
 
 	SEND_SIGNAL(src, COMSIG_MOVABLE_BUCKLE, M, force)
@@ -102,11 +116,12 @@
 /atom/movable/proc/unbuckle_mob(mob/living/buckled_mob, force=FALSE)
 	if(istype(buckled_mob) && buckled_mob.buckled == src && (buckled_mob.can_unbuckle() || force))
 		. = buckled_mob
-		buckled_mob.buckled = null
-		buckled_mob.anchored = initial(buckled_mob.anchored)
+		buckled_mob.set_buckled(null)
+		buckled_mob.set_anchored(initial(buckled_mob.anchored))
 		buckled_mob.update_mobility()
 		buckled_mob.clear_alert("buckled")
 		buckled_mobs -= buckled_mob
+		buckled_mob.update_movespeed()
 		SEND_SIGNAL(src, COMSIG_MOVABLE_UNBUCKLE, buckled_mob, force)
 
 		post_unbuckle_mob(.)

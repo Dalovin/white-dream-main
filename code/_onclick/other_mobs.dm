@@ -5,8 +5,12 @@
 	Otherwise pretty standard.
 */
 /mob/living/carbon/human/UnarmedAttack(atom/A, proximity)
-
 	if(!has_active_hand()) //can't attack without a hand.
+		var/obj/item/bodypart/check_arm = get_active_hand()
+		if(check_arm && check_arm.is_disabled() == BODYPART_DISABLED_WOUND)
+			to_chat(src, "<span class='warning'>Моя [check_arm.name] слишком сильно повреждена! Надо бы поскорее починить её или хотя бы перевязать!</span>")
+			return
+
 		to_chat(src, "<span class='notice'>Смотрю на свою руку и вздыхаю.</span>")
 		return
 
@@ -36,7 +40,7 @@
 
 //Return a non FALSE value to cancel whatever called this from propagating, if it respects it.
 /atom/proc/_try_interact(mob/user)
-	if(IsAdminGhost(user))		//admin abuse
+	if(isAdminGhostAI(user))		//admin abuse
 		return interact(user)
 	if(can_interact(user))
 		return interact(user)
@@ -88,8 +92,8 @@
 		if(istype(G) && G.Touch(A,0)) // for magic gloves
 			return
 
-	if(isturf(A) && get_dist(src,A) <= 1)
-		src.Move_Pulled(A)
+	if(isturf(A) && bounds_dist(src, A) <= 32)
+		Move_Pulled(A, mouseparams)
 		return
 
 /*
@@ -178,9 +182,13 @@
 	Nothing happening here
 */
 /mob/living/simple_animal/slime/UnarmedAttack(atom/A)
+	if(isturf(A))
+		return ..()
 	A.attack_slime(src)
+
 /atom/proc/attack_slime(mob/user)
 	return
+
 /mob/living/simple_animal/slime/RestrainedClickOn(atom/A)
 	return
 

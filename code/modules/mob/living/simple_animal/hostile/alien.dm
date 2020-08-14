@@ -16,8 +16,8 @@
 	obj_damage = 60
 	melee_damage_lower = 25
 	melee_damage_upper = 25
-	attack_verb_continuous = "slashes"
-	attack_verb_simple = "slash"
+	attack_verb_continuous = "режет"
+	attack_verb_simple = "режет"
 	speak_emote = list("hisses")
 	bubble_icon = "alien"
 	a_intent = INTENT_HARM
@@ -85,7 +85,7 @@
 	ranged = 1
 	retreat_distance = 5
 	minimum_distance = 5
-	move_to_delay = 4
+	move_to_delay = 0.4
 	butcher_results = list(/obj/item/reagent_containers/food/snacks/meat/slab/xeno = 4,
 							/obj/item/stack/sheet/animalhide/xeno = 1)
 	projectiletype = /obj/projectile/neurotox
@@ -134,7 +134,7 @@
 	icon_dead = "alienq_dead"
 	health_doll_icon = "alienq"
 	bubble_icon = "alienroyal"
-	move_to_delay = 4
+	move_to_delay = 0.4
 	maxHealth = 400
 	health = 400
 	butcher_results = list(/obj/item/reagent_containers/food/snacks/meat/slab/xeno = 10,
@@ -177,11 +177,9 @@
 
 /mob/living/simple_animal/hostile/alien/maid/AttackingTarget()
 	if(ismovable(target))
+		target.wash(CLEAN_WASH)
 		if(istype(target, /obj/effect/decal/cleanable))
 			visible_message("<span class='notice'>[src] cleans up \the [target].</span>")
-			qdel(target)
-			return TRUE
-		var/atom/movable/M = target
-		SEND_SIGNAL(M, COMSIG_COMPONENT_CLEAN_ACT, CLEAN_STRENGTH_BLOOD)
-		visible_message("<span class='notice'>[src] polishes \the [target].</span>")
+		else
+			visible_message("<span class='notice'>[src] polishes \the [target].</span>")
 		return TRUE

@@ -1,8 +1,6 @@
 /datum/job/hydro
 	title = "Botanist"
-	flag = BOTANIST
 	department_head = list("Head of Personnel")
-	department_flag = CIVILIAN
 	faction = "Station"
 	total_positions = 3
 	spawn_positions = 2
@@ -16,6 +14,7 @@
 	paycheck = PAYCHECK_EASY
 	paycheck_department = ACCOUNT_SRV
 	display_order = JOB_DISPLAY_ORDER_BOTANIST
+	bounty_types = CIV_JOB_GROW
 
 /datum/outfit/job/botanist
 	name = "Botanist"
@@ -27,6 +26,7 @@
 	suit = /obj/item/clothing/suit/apron
 	gloves  =/obj/item/clothing/gloves/botanic_leather
 	suit_store = /obj/item/plant_analyzer
+	backpack_contents = list(/obj/item/modular_computer/tablet/preset/cheap=1)
 
 	backpack = /obj/item/storage/backpack/botany
 	satchel = /obj/item/storage/backpack/satchel/hyd

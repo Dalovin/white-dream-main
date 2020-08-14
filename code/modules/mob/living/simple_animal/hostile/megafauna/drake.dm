@@ -4,6 +4,11 @@
 #define SWOOP_DAMAGEABLE 1
 #define SWOOP_INVULNERABLE 2
 
+///used whenever the drake generates a hotspot
+#define DRAKE_FIRE_TEMP 500
+///used whenever the drake generates a hotspot
+#define DRAKE_FIRE_EXPOSURE 50
+
 /*
 
 ASH DRAKE
@@ -31,26 +36,26 @@ Difficulty: Medium
 */
 
 /mob/living/simple_animal/hostile/megafauna/dragon
-	name = "ash drake"
-	desc = "Guardians of the necropolis."
+	name = "Пепельный дракон"
+	desc = "Один из стражей Некрополя."
 	health = 2500
 	maxHealth = 2500
-	attack_verb_continuous = "chomps"
-	attack_verb_simple = "chomp"
+	attack_verb_continuous = "грызёт"
+	attack_verb_simple = "грызёт"
 	attack_sound = 'sound/magic/demon_attack1.ogg'
 	icon = 'icons/mob/lavaland/64x64megafauna.dmi'
 	icon_state = "dragon"
 	icon_living = "dragon"
 	icon_dead = "dragon_dead"
 	health_doll_icon = "dragon"
-	friendly_verb_continuous = "stares down"
-	friendly_verb_simple = "stare down"
+	friendly_verb_continuous = "гениально смотрит на"
+	friendly_verb_simple = "гениально смотрит на"
 	speak_emote = list("roars")
 	armour_penetration = 40
 	melee_damage_lower = 40
 	melee_damage_upper = 40
 	speed = 5
-	move_to_delay = 5
+	move_to_delay = 0.5
 	ranged = TRUE
 	pixel_x = -16
 	crusher_loot = list(/obj/structure/closet/crate/necropolis/dragon/crusher)
@@ -59,11 +64,11 @@ Difficulty: Medium
 	guaranteed_butcher_results = list(/obj/item/stack/sheet/animalhide/ashdrake = 10)
 	var/swooping = NONE
 	var/player_cooldown = 0
-	gps_name = "Fiery Signal"
+	gps_name = "Огненный Сигнал"
 	achievement_type = /datum/award/achievement/boss/drake_kill
 	crusher_achievement_type = /datum/award/achievement/boss/drake_crusher
 	score_achievement_type = /datum/award/score/drake_score
-	deathmessage = "collapses into a pile of bones, its flesh sloughing away."
+	deathmessage = "рушится в груду костей, его плоть расслаивается."
 	deathsound = 'sound/magic/demon_dies.ogg'
 	footstep_type = FOOTSTEP_MOB_HEAVY
 	attack_action_types = list(/datum/action/innate/megafauna_attack/fire_cone,
@@ -73,31 +78,31 @@ Difficulty: Medium
 	small_sprite_type = /datum/action/small_sprite/megafauna/drake
 
 /datum/action/innate/megafauna_attack/fire_cone
-	name = "Fire Cone"
+	name = "Огненный конус"
 	icon_icon = 'icons/obj/wizard.dmi'
 	button_icon_state = "fireball"
-	chosen_message = "<span class='colossus'>You are now shooting fire at your target.</span>"
+	chosen_message = "<span class='colossus'>Буду дышать огнём на жертву.</span>"
 	chosen_attack_num = 1
 
 /datum/action/innate/megafauna_attack/fire_cone_meteors
-	name = "Fire Cone With Meteors"
+	name = "Огненный конус с метеорами"
 	icon_icon = 'icons/mob/actions/actions_items.dmi'
 	button_icon_state = "sniper_zoom"
-	chosen_message = "<span class='colossus'>You are now shooting fire at your target and raining fire around you.</span>"
+	chosen_message = "<span class='colossus'>Буду дышать огнём на жертву призывать падающие метеоры вокруг.</span>"
 	chosen_attack_num = 2
 
 /datum/action/innate/megafauna_attack/mass_fire
-	name = "Mass Fire Attack"
+	name = "Массовая огненная атака"
 	icon_icon = 'icons/effects/fire.dmi'
 	button_icon_state = "1"
-	chosen_message = "<span class='colossus'>You are now shooting mass fire at your target.</span>"
+	chosen_message = "<span class='colossus'>Буду стрелять массовым сожжением, жаль только без газа.</span>"
 	chosen_attack_num = 3
 
 /datum/action/innate/megafauna_attack/lava_swoop
-	name = "Lava Swoop"
+	name = "Лавовый угар"
 	icon_icon = 'icons/effects/effects.dmi'
 	button_icon_state = "lavastaff_warn"
-	chosen_message = "<span class='colossus'>You are now swooping and raining lava at your target.</span>"
+	chosen_message = "<span class='colossus'>Буду создавать лаву пока жертва пытается убежать от меня.</span>"
 	chosen_attack_num = 4
 
 /mob/living/simple_animal/hostile/megafauna/dragon/OpenFire()
@@ -136,7 +141,7 @@ Difficulty: Medium
 /mob/living/simple_animal/hostile/megafauna/dragon/proc/fire_rain()
 	if(!target)
 		return
-	target.visible_message("<span class='boldwarning'>Fire rains from the sky!</span>")
+	target.visible_message("<span class='boldwarning'>Огненный дождь опускается с неба!</span>")
 	for(var/turf/turf in range(9,get_turf(target)))
 		if(prob(11))
 			new /obj/effect/temp_visual/target(turf)
@@ -144,7 +149,7 @@ Difficulty: Medium
 /mob/living/simple_animal/hostile/megafauna/dragon/proc/lava_pools(amount, delay = 0.8)
 	if(!target)
 		return
-	target.visible_message("<span class='boldwarning'>Lava starts to pool up around you!</span>")
+	target.visible_message("<span class='boldwarning'>Лава начинает кучковаться вокруг меня!</span>")
 
 	while(amount > 0)
 		if(QDELETED(target))
@@ -184,7 +189,7 @@ Difficulty: Medium
 /mob/living/simple_animal/hostile/megafauna/dragon/proc/lava_arena()
 	if(!target)
 		return
-	target.visible_message("<span class='boldwarning'>[src] encases you in an arena of fire!</span>")
+	target.visible_message("<span class='boldwarning'><b>[src]</b> заключает меня в огненную арену!</span>")
 	var/amount = 3
 	var/turf/center = get_turf(target)
 	var/list/walled = RANGE_TURFS(3, center) - RANGE_TURFS(2, center)
@@ -229,7 +234,7 @@ Difficulty: Medium
 /mob/living/simple_animal/hostile/megafauna/dragon/proc/arena_escape_enrage() // you ran somehow / teleported away from my arena attack now i'm mad fucker
 	SLEEP_CHECK_DEATH(0)
 	SetRecoveryTime(80)
-	visible_message("<span class='boldwarning'>[src] starts to glow vibrantly as its wounds close up!</span>")
+	visible_message("<span class='boldwarning'><b>[src]</b> начинает ярко светиться, когда его раны заживляются!</span>")
 	adjustBruteLoss(-250) // yeah you're gonna pay for that, don't run nerd
 	add_atom_colour(rgb(255, 255, 0), TEMPORARY_COLOUR_PRIORITY)
 	move_to_delay = move_to_delay / 2
@@ -257,33 +262,27 @@ Difficulty: Medium
 /mob/living/simple_animal/hostile/megafauna/dragon/proc/line_target(offset, range, atom/at = target)
 	if(!at)
 		return
-	var/angle = ATAN2(at.x - src.x, at.y - src.y) + offset
-	var/turf/T = get_turf(src)
-	for(var/i in 1 to range)
-		var/turf/check = locate(src.x + cos(angle) * i, src.y + sin(angle) * i, src.z)
-		if(!check)
-			break
-		T = check
+	var/turf/T = get_ranged_target_turf_direct(src, at, range, offset)
 	return (getline(src, T) - get_turf(src))
 
-/mob/living/simple_animal/hostile/megafauna/dragon/proc/fire_line(var/list/turfs)
+/mob/living/simple_animal/hostile/megafauna/dragon/proc/fire_line(list/turfs)
 	SLEEP_CHECK_DEATH(0)
 	dragon_fire_line(src, turfs)
 
 //fire line keeps going even if dragon is deleted
-/proc/dragon_fire_line(source, list/turfs)
+/proc/dragon_fire_line(atom/source, list/turfs)
 	var/list/hit_list = list()
 	for(var/turf/T in turfs)
 		if(istype(T, /turf/closed))
 			break
 		new /obj/effect/hotspot(T)
-		T.hotspot_expose(700,50,1)
+		T.hotspot_expose(DRAKE_FIRE_TEMP,DRAKE_FIRE_EXPOSURE,1)
 		for(var/mob/living/L in T.contents)
-			if(L in hit_list || L == source)
+			if(L in hit_list || istype(L, source.type))
 				continue
 			hit_list += L
 			L.adjustFireLoss(20)
-			to_chat(L, "<span class='userdanger'>You're hit by [source]'s fire breath!</span>")
+			to_chat(L, "<span class='userdanger'>В меня попадает волна огня исходящая от <b>дракона</b>!</span>")
 
 		// deals damage to mechs
 		for(var/obj/mecha/M in T.contents)
@@ -304,7 +303,7 @@ Difficulty: Medium
 	swooping |= SWOOP_DAMAGEABLE
 	density = FALSE
 	icon_state = "shadow"
-	visible_message("<span class='boldwarning'>[src] swoops up high!</span>")
+	visible_message("<span class='boldwarning'><b>[src]</b> высоко взлетает!</span>")
 
 	var/negative
 	var/initial_x = x
@@ -362,7 +361,7 @@ Difficulty: Medium
 	playsound(loc, 'sound/effects/meteorimpact.ogg', 200, TRUE)
 	for(var/mob/living/L in orange(1, src))
 		if(L.stat)
-			visible_message("<span class='warning'>[src] slams down on [L], crushing [L.p_them()]!</span>")
+			visible_message("<span class='warning'><b>[src]</b> приземляется на <b>[L]</b>, раздавливая [L.ru_ego()]!</span>")
 			L.gib()
 		else
 			L.adjustBruteLoss(75)
@@ -372,7 +371,7 @@ Difficulty: Medium
 					throw_dir = pick(GLOB.alldirs)
 				var/throwtarget = get_edge_target_turf(src, throw_dir)
 				L.throw_at(throwtarget, 3)
-				visible_message("<span class='warning'>[L] is thrown clear of [src]!</span>")
+				visible_message("<span class='warning'><b>[L]</b> вылетает из под <b>дракона</b>!</span>")
 	for(var/obj/mecha/M in orange(1, src))
 		M.take_damage(75, BRUTE, "melee", 1)
 
@@ -396,7 +395,7 @@ Difficulty: Medium
 		return FALSE
 	return ..()
 
-/mob/living/simple_animal/hostile/megafauna/dragon/visible_message(message, self_message, blind_message, vision_distance = DEFAULT_MESSAGE_RANGE, list/ignored_mobs)
+/mob/living/simple_animal/hostile/megafauna/dragon/visible_message(message, self_message, blind_message, vision_distance = DEFAULT_MESSAGE_RANGE, list/ignored_mobs, visible_message_flags = NONE)
 	if(swooping & SWOOP_INVULNERABLE) //to suppress attack messages without overriding every single proc that could send a message saying we got hit
 		return
 	return ..()
@@ -432,7 +431,7 @@ Difficulty: Medium
 	src.alpha = 63.75
 	animate(src, alpha = 255, time = duration)
 
-/obj/effect/temp_visual/lava_warning/proc/fall(var/reset_time)
+/obj/effect/temp_visual/lava_warning/proc/fall(reset_time)
 	var/turf/T = get_turf(src)
 	playsound(T,'sound/magic/fleshtostone.ogg', 80, TRUE)
 	sleep(duration)
@@ -442,7 +441,7 @@ Difficulty: Medium
 		if(istype(L, /mob/living/simple_animal/hostile/megafauna/dragon))
 			continue
 		L.adjustFireLoss(10)
-		to_chat(L, "<span class='userdanger'>You fall directly into the pool of lava!</span>")
+		to_chat(L, "<span class='userdanger'>Падаю прямо в лужу лавы!</span>")
 
 	// deals damage to mechs
 	for(var/obj/mecha/M in T.contents)
@@ -456,8 +455,8 @@ Difficulty: Medium
 		addtimer(CALLBACK(T, /turf.proc/ChangeTurf, reset_turf, null, CHANGETURF_INHERIT_AIR), reset_time, TIMER_OVERRIDE|TIMER_UNIQUE)
 
 /obj/effect/temp_visual/drakewall
-	desc = "An ash drakes true flame."
-	name = "Fire Barrier"
+	desc = "Пепел истощает настоящее пламя."
+	name = "Огненный барьер"
 	icon = 'icons/effects/fire.dmi'
 	icon_state = "1"
 	anchored = TRUE
@@ -475,8 +474,8 @@ Difficulty: Medium
 	duration = 13
 
 /obj/effect/temp_visual/dragon_swoop
-	name = "certain death"
-	desc = "Don't just stand there, move!"
+	name = "верная смерть"
+	desc = "Не стой тут, двигайся!"
 	icon = 'icons/effects/96x96.dmi'
 	icon_state = "landing"
 	layer = BELOW_MOB_LAYER
@@ -521,11 +520,11 @@ Difficulty: Medium
 	else
 		animate(src, pixel_x = -16, pixel_z = 0, time = 5)
 
-obj/effect/temp_visual/fireball
+/obj/effect/temp_visual/fireball
 	icon = 'icons/obj/wizard.dmi'
 	icon_state = "fireball"
-	name = "fireball"
-	desc = "Get out of the way!"
+	name = "огненный шар"
+	desc = "Ты ебанутый?"
 	layer = FLY_LAYER
 	randomdir = FALSE
 	duration = 9
@@ -559,19 +558,19 @@ obj/effect/temp_visual/fireball
 		M.gets_drilled()
 	playsound(T, "explosion", 80, TRUE)
 	new /obj/effect/hotspot(T)
-	T.hotspot_expose(700, 50, 1)
+	T.hotspot_expose(DRAKE_FIRE_TEMP, DRAKE_FIRE_EXPOSURE, 1)
 	for(var/mob/living/L in T.contents)
 		if(istype(L, /mob/living/simple_animal/hostile/megafauna/dragon))
 			continue
 		if(islist(flame_hit) && !flame_hit[L])
 			L.adjustFireLoss(40)
-			to_chat(L, "<span class='userdanger'>You're hit by the drake's fire breath!</span>")
+			to_chat(L, "<span class='userdanger'>В меня попадает волна огня исходящая от <b>дракона</b>!</span>")
 			flame_hit[L] = TRUE
 		else
 			L.adjustFireLoss(10) //if we've already hit them, do way less damage
 
 /mob/living/simple_animal/hostile/megafauna/dragon/lesser
-	name = "lesser ash drake"
+	name = "Младший пепельный дракон"
 	maxHealth = 200
 	health = 200
 	faction = list("neutral")
@@ -589,7 +588,7 @@ obj/effect/temp_visual/fireball
 	if(!istype(A))
 		return
 	if(player_cooldown >= world.time)
-		to_chat(src, "<span class='warning'>You need to wait [(player_cooldown - world.time) / 10] seconds before swooping again!</span>")
+		to_chat(src, "<span class='warning'>Хочу подождать [(player_cooldown - world.time) / 10] секунд перед прыжком!</span>")
 		return
 	swoop_attack(FALSE, A)
 	lava_pools(10, 2) // less pools but longer delay before spawns

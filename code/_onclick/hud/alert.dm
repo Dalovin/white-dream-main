@@ -231,7 +231,7 @@ or something covering your eyes."
 		return
 	to_chat(L, "<span class='mind_control'>[command]</span>")
 
-/obj/screen/alert/drunk //Not implemented
+/obj/screen/alert/drunk
 	name = "Drunk"
 	desc = "All that alcohol you've been drinking is impairing your speech, motor skills, and mental cognition. Make sure to act like it."
 	icon_state = "drunk"
@@ -244,7 +244,7 @@ If you're feeling frisky, examine yourself and click the underlined item to pull
 
 /obj/screen/alert/embeddedobject/Click()
 	if(isliving(usr) && usr == owner)
-		var/mob/living/carbon/human/M = usr
+		var/mob/living/carbon/M = usr
 		return M.help_shake_act(M)
 
 /obj/screen/alert/weightless
@@ -278,6 +278,40 @@ or shoot a gun to move around via Newton's 3rd Law of Motion."
 	if(L.mobility_flags & MOBILITY_MOVE)
 		return L.resist_fire() //I just want to start a flame in your hearrrrrrtttttt.
 
+/obj/screen/alert/give // information set when the give alert is made
+	icon_state = "default"
+	var/mob/living/carbon/giver
+	var/obj/item/receiving
+
+/**
+  * Handles assigning most of the variables for the alert that pops up when an item is offered
+  *
+  * Handles setting the name, description and icon of the alert and tracking the person giving
+  * and the item being offered, also registers a signal that removes the alert from anyone who moves away from the giver
+  * Arguments:
+  * * taker - The person receiving the alert
+  * * giver - The person giving the alert and item
+  * * receiving - The item being given by the giver
+  */
+/obj/screen/alert/give/proc/setup(mob/living/carbon/taker, mob/living/carbon/giver, obj/item/receiving)
+	name = "[giver] is offering [receiving]"
+	desc = "[giver] is offering [receiving]. Click this alert to take it."
+	icon_state = "template"
+	cut_overlays()
+	add_overlay(receiving)
+	src.receiving = receiving
+	src.giver = giver
+	RegisterSignal(taker, COMSIG_MOVABLE_MOVED, .proc/check_in_range, taker)
+
+/obj/screen/alert/give/proc/check_in_range(atom/taker)
+	if (!giver.CanReach(taker))
+		to_chat(owner, "<span class='warning'>You moved out of range of [giver]!</span>")
+		owner.clear_alert("[giver]")
+
+/obj/screen/alert/give/Click(location, control, params)
+	. = ..()
+	var/mob/living/carbon/C = owner
+	C.take(giver, receiving)
 
 //ALIENS
 
@@ -556,17 +590,17 @@ so as to remain in compliance with the most up-to-date laws."
 //OBJECT-BASED
 
 /obj/screen/alert/restrained/buckled
-	name = "Buckled"
-	desc = "You've been buckled to something. Click the alert to unbuckle unless you're handcuffed."
+	name = "Пристегнут"
+	desc = "Я пристегнут к чему-то или сижу. Клик, чтобы встать."
 	icon_state = "buckled"
 
 /obj/screen/alert/restrained/handcuffed
-	name = "Handcuffed"
-	desc = "You're handcuffed and can't act. If anyone drags you, you won't be able to move. Click the alert to free yourself."
+	name = "Закован"
+	desc = "На мне наручники и я ничего не могу делать. Не смогу двигаться если меня схватят. Клик, чтобы попробовать освободиться."
 
 /obj/screen/alert/restrained/legcuffed
-	name = "Legcuffed"
-	desc = "You're legcuffed, which slows you down considerably. Click the alert to free yourself."
+	name = "Ноги связаны"
+	desc = "Мои ноги связаны и это меня замедляет. Клик, чтобы попробовать освободиться."
 
 /obj/screen/alert/restrained/Click()
 	var/mob/living/L = usr
@@ -585,13 +619,13 @@ so as to remain in compliance with the most up-to-date laws."
 		return L.resist_buckle()
 
 /obj/screen/alert/shoes/untied
-	name = "Untied Shoes"
-	desc = "Your shoes are untied! Click the alert or your shoes to tie them."
+	name = "Шнурки развязаны"
+	desc = "Мои шнурки развязаны! Клик, чтобы завязать."
 	icon_state = "shoealert"
 
 /obj/screen/alert/shoes/knotted
-	name = "Knotted Shoes"
-	desc = "Someone tied your shoelaces together! Click the alert or your shoes to undo the knot."
+	name = "Шнурки перевязаны"
+	desc = "Кто-то связал шнурки моих ботинок друг с другом! Клик, чтобы развязать."
 	icon_state = "shoealert"
 
 /obj/screen/alert/shoes/Click()

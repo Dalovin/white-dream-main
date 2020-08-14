@@ -8,8 +8,8 @@
 
 /obj/item/disk/tech_disk/Initialize()
 	. = ..()
-	pixel_x = rand(-5, 5)
-	pixel_y = rand(-5, 5)
+	if(loc)
+		forceMove(loc, rand(-5, 5), rand(-5, 5))
 	stored_research = new /datum/techweb
 
 /obj/item/disk/tech_disk/debug
@@ -36,7 +36,7 @@
 	desc = "Valuable scientific data. Use it in a research console to scan it."
 	icon = 'icons/obj/bureaucracy.dmi'
 	icon_state = "paper"
-	item_state = "paper"
+	inhand_icon_state = "paper"
 	w_class = WEIGHT_CLASS_SMALL
 	///research points it holds
 	var/value = 69

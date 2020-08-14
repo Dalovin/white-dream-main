@@ -6,13 +6,9 @@
 	size = 8
 	requires_ntnet = 1
 	requires_ntnet_feature = NTNET_COMMUNICATION
-	network_destination = "NTNRC server"
 	ui_header = "ntnrc_idle.gif"
 	available_on_ntnet = 1
-	tgui_id = "ntos_net_chat"
-	ui_x = 900
-	ui_y = 675
-
+	tgui_id = "NtosNetChat"
 	var/last_message				// Used to generate the toolbar icon
 	var/username
 	var/active_channel
@@ -21,7 +17,7 @@
 	var/netadmin_mode = FALSE		// Administrator mode (invisible to other users + bypasses passwords)
 
 /datum/computer_file/program/chatclient/New()
-	username = "DefaultUser[rand(100, 999)]"
+	username = "Пользователь #[rand(100, 999)]"
 
 /datum/computer_file/program/chatclient/ui_act(action, params)
 	if(..())
@@ -35,7 +31,7 @@
 		if("PRG_speak")
 			if(!channel || isnull(active_channel))
 				return
-			var/message = reject_bad_text(params["message"])
+			var/message = reject_bad_text(params["message"], ascii_only = FALSE)
 			if(!message)
 				return
 			if(channel.password && !(src in channel.clients))
@@ -96,7 +92,7 @@
 			for(var/C in SSnetworks.station_network.chat_channels)
 				var/datum/ntnet_conversation/chan = C
 				if(src in chan.clients)
-					chan.add_status_message("[username] is now known as [newname].")
+					chan.add_status_message("[username] теперь известен как [newname].")
 			username = newname
 			return TRUE
 		if("PRG_savelog")
@@ -129,7 +125,7 @@
 			var/newname = reject_bad_text(params["new_name"])
 			if(!newname || !channel)
 				return
-			channel.add_status_message("Channel renamed from [channel.title] to [newname] by operator.")
+			channel.add_status_message("Канал переименован с [channel.title] на [newname] оператором.")
 			channel.title = newname
 			return TRUE
 		if("PRG_deletechannel")

@@ -1,5 +1,5 @@
 /obj/item/melee/transforming
-	sharpness = IS_SHARP
+	sharpness = SHARP_EDGED
 	var/active = FALSE
 	var/force_on = 30 //force when active
 	var/faction_bonus_force = 0 //Bonus force dealt against certain factions
@@ -13,6 +13,8 @@
 	var/list/nemesis_factions //Any mob with a faction that exists in this list will take bonus damage/effects
 	var/w_class_on = WEIGHT_CLASS_BULKY
 	var/clumsy_check = TRUE
+	wound_bonus = -30
+	bare_wound_bonus = 40
 
 /obj/item/melee/transforming/Initialize()
 	. = ..()
@@ -23,7 +25,7 @@
 		if(attack_verb_off.len)
 			attack_verb = attack_verb_off
 		if(embedding)
-			RemoveElement(/datum/element/embed, embedding)
+			updateEmbedding()
 	if(sharpness)
 		AddComponent(/datum/component/butchering, 50, 100, 0, hitsound)
 
@@ -56,7 +58,7 @@
 		icon_state = icon_state_on
 		w_class = w_class_on
 		if(embedding)
-			AddElement(/datum/element/embed, embedding)
+			updateEmbedding()
 	else
 		force = initial(force)
 		throwforce = initial(throwforce)
@@ -67,7 +69,7 @@
 		icon_state = initial(icon_state)
 		w_class = initial(w_class)
 		if(embedding)
-			RemoveElement(/datum/element/embed, embedding)
+			disableEmbedding()
 
 	transform_messages(user, supress_message_text)
 	add_fingerprint(user)

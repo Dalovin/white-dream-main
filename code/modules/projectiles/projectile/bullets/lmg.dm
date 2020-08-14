@@ -25,8 +25,10 @@
 
 /obj/projectile/bullet/mm712x82
 	name = "7.12x82mm пуля"
-	damage = 45
+	damage = 40
 	armour_penetration = 5
+	wound_bonus = -50
+	wound_falloff_tile = 0
 
 /obj/projectile/bullet/mm712x82_ap
 	name = "7.12x82mm ББ пуля"
@@ -34,11 +36,24 @@
 	armour_penetration = 75
 
 /obj/projectile/bullet/mm712x82_hp
-	name = "7.12x82mm трассирующая пуля"
-	damage = 60
+	name = "7.12x82mm экспансивная пуля"
+	damage = 50
 	armour_penetration = -60
+	sharpness = SHARP_EDGED
+	wound_bonus = -40
+	bare_wound_bonus = 30
+	wound_falloff_tile = -8
 
 /obj/projectile/bullet/incendiary/mm712x82
 	name = "7.12x82mm поджигающая пуля"
 	damage = 20
 	fire_stacks = 3
+
+/obj/projectile/bullet/mm712x82_match
+	name = "7.12x82mm match bullet"
+	damage = 40
+	ricochets_max = 2
+	ricochet_chance = 60
+	ricochet_auto_aim_range = 4
+	ricochet_incidence_leeway = 35
+	wound_bonus = -50

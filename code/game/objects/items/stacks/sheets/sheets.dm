@@ -1,5 +1,5 @@
 /obj/item/stack/sheet
-	name = "sheet"
+	name = "лист"
 	lefthand_file = 'icons/mob/inhands/misc/sheets_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/misc/sheets_righthand.dmi'
 	full_w_class = WEIGHT_CLASS_NORMAL
@@ -17,5 +17,5 @@
 
 /obj/item/stack/sheet/Initialize(mapload, new_amount, merge)
 	. = ..()
-	pixel_x = rand(-4, 4)
-	pixel_y = rand(-4, 4)
+	if(loc)
+		forceMove(loc, rand(-4, 4), rand(-4, 4))

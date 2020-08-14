@@ -25,11 +25,11 @@ GLOBAL_LIST_INIT(science_positions, list(
 	"Research Director",
 	"Scientist",
 	"Geneticist",
-	"Roboticist"))
+	"Roboticist",
+	"Hacker"))
 
 
 GLOBAL_LIST_INIT(supply_positions, list(
-	"Head of Personnel",
 	"Quartermaster",
 	"Cargo Technician",
 	"Shaft Miner"))
@@ -37,6 +37,7 @@ GLOBAL_LIST_INIT(supply_positions, list(
 
 GLOBAL_LIST_INIT(service_positions, list(
 	"Trader",
+	"Head of Personnel",
 	"Bartender",
 	"Botanist",
 	"Cook",
@@ -57,7 +58,7 @@ GLOBAL_LIST_INIT(security_positions, list(
 	"Detective",
 	"International Officer",
 	"Russian Officer",
-	"Kazakhstan Officer"))
+	"Veteran"))
 
 GLOBAL_LIST_INIT(nonhuman_positions, list(
 	"AI",
@@ -97,14 +98,9 @@ GLOBAL_LIST_INIT(exp_specialmap, list(
 GLOBAL_PROTECT(exp_jobsmap)
 GLOBAL_PROTECT(exp_specialmap)
 
-/proc/guest_jobbans(job)
-	return ((job in GLOB.command_positions) || (job in GLOB.nonhuman_positions) || (job in GLOB.security_positions))
-
-
-
 //this is necessary because antags happen before job datums are handed out, but NOT before they come into existence
 //so I can't simply use job datum.department_head straight from the mind datum, laaaaame.
-/proc/get_department_heads(var/job_title)
+/proc/get_department_heads(job_title)
 	if(!job_title)
 		return list()
 
@@ -122,7 +118,7 @@ GLOBAL_PROTECT(exp_specialmap)
 	var/static/regex/qm_expand = new("qm")
 	var/static/regex/int_expand = new("(?<!international )officer")
 	var/static/regex/rus_expand = new("(?<!russian )officer")
-	var/static/regex/kaz_expand = new("(?<!kazakhstan )officer")
+	var/static/regex/vet_expand = new("veteran")
 	var/static/regex/engi_expand = new("(?<!station )engineer")
 	var/static/regex/atmos_expand = new("atmos tech")
 	var/static/regex/doc_expand = new("(?<!medical )doctor|medic(?!al)")
@@ -140,7 +136,7 @@ GLOBAL_PROTECT(exp_specialmap)
 	job = qm_expand.Replace(job, "quartermaster")
 	job = int_expand.Replace(job, "international officer")
 	job = rus_expand.Replace(job, "russian officer")
-	job = kaz_expand.Replace(job, "kazakhstan officer")
+	job = vet_expand.Replace(job, "veteran")
 	job = engi_expand.Replace(job, "station engineer")
 	job = atmos_expand.Replace(job, "atmospheric technician")
 	job = doc_expand.Replace(job, "medical doctor")

@@ -19,9 +19,9 @@
 /datum/wires/airalarm/get_status()
 	var/obj/machinery/airalarm/A = holder
 	var/list/status = list()
-	status += "The interface light is [A.locked ? "red" : "green"]."
-	status += "The short indicator is [A.shorted ? "lit" : "off"]."
-	status += "The AI connection light is [!A.aidisabled ? "on" : "off"]."
+	status += "Индикатор блокировки [A.locked ? "красный" : "зелёный"]."
+	status += "Индикатор питания [A.shorted ? "горит" : "не горит"]."
+	status += "Индикатор соединения с ИИ [!A.aidisabled ? "горит" : "не горит"]."
 	return status
 
 /datum/wires/airalarm/on_pulse(wire)
@@ -47,7 +47,7 @@
 				A.apply_mode(usr)
 		if(WIRE_ALARM) // Clear alarms.
 			var/area/AA = get_area(A)
-			if(AA.atmosalert(0, holder))
+			if(AA.atmosalert(FALSE, holder))
 				A.post_alert(0)
 			A.update_icon()
 
@@ -69,6 +69,6 @@
 				A.apply_mode(usr)
 		if(WIRE_ALARM) // Post alarm.
 			var/area/AA = get_area(A)
-			if(AA.atmosalert(2, holder))
+			if(AA.atmosalert(TRUE, holder))
 				A.post_alert(2)
 			A.update_icon()

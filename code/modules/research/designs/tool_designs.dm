@@ -73,6 +73,16 @@
 	category = list("Tool Designs")
 	departmental_flags = DEPARTMENTAL_FLAG_ENGINEERING
 
+/datum/design/rcd_upgrade/furnishing
+	name = "RCD furnishing upgrade"
+	desc = "Adds the ability to furnish areas using the RCD."
+	id = "rcd_upgrade_furnishing"
+	build_type = PROTOLATHE
+	materials = list(/datum/material/iron = 5000, /datum/material/glass = 2500, /datum/material/silver = 1500, /datum/material/titanium = 2000)
+	build_path = /obj/item/rcd_upgrade/furnishing
+	category = list("Tool Designs")
+	departmental_flags = DEPARTMENTAL_FLAG_ENGINEERING
+
 /datum/design/rcd_upgrade/silo_link
 	name = "Advanced RCD silo link upgrade"
 	desc = "Upgrades the RCD to be able to pull materials from the ore silo. The RCD must be linked to the silo using a multitool before it will function."
@@ -92,6 +102,16 @@
 	build_path = /obj/item/construction/rld/mini
 	category = list("Tool Designs")
 	departmental_flags =  DEPARTMENTAL_FLAG_ENGINEERING | DEPARTMENTAL_FLAG_CARGO
+
+/datum/design/geneshears
+	name = "Botanogenetic Plant Shears"
+	desc = "A high tech, high fidelity pair of plant shears, capable of cutting genetic traits out of a plant."
+	id = "gene_shears"
+	build_path = /obj/item/geneshears
+	build_type = PROTOLATHE
+	materials = list(/datum/material/iron=4000, /datum/material/uranium=1500, /datum/material/silver=500)
+	category = list("Tool Designs")
+	departmental_flags = DEPARTMENTAL_FLAG_SERVICE
 
 /////////////////////////////////////////
 //////////////Alien Tools////////////////
@@ -220,3 +240,13 @@
 	materials = list(/datum/material/iron = 2000, /datum/material/silver = 1500, /datum/material/plasma = 500, /datum/material/titanium = 1500)
 	category = list("Tool Designs")
 	departmental_flags = DEPARTMENTAL_FLAG_MEDICAL
+
+/datum/design/tricorder
+	name = "Tricorder"
+	desc = "A multifunction handheld device useful for data sensing, analysis, and recording."
+	id = "tricorder"
+	build_type = PROTOLATHE
+	materials = list(/datum/material/iron = 500, /datum/material/silver = 300, /datum/material/gold = 300)
+	build_path = /obj/item/multitool/tricorder
+	category = list("Tool Designs")
+	departmental_flags = DEPARTMENTAL_FLAG_SCIENCE | DEPARTMENTAL_FLAG_ENGINEERING

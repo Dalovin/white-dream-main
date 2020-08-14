@@ -3,7 +3,7 @@
 
 /obj/structure/votebox
 	name = "voting box"
-	desc = "A automatic voting box."
+	desc = "An automatic voting box."
 
 	icon = 'icons/obj/votebox.dmi'
 	icon_state = "votebox_maint"
@@ -35,7 +35,7 @@
 	..()
 	ui_interact(user)
 
-/obj/structure/votebox/ui_interact(mob/user, ui_key, datum/tgui/ui, force_open, datum/tgui/master_ui, datum/ui_state/state)
+/obj/structure/votebox/ui_interact(mob/user)
 	. = ..()
 
 	var/list/dat = list()
@@ -138,7 +138,7 @@
 	return TRUE
 
 /obj/structure/votebox/dump_contents()
-	var/atom/droppoint = drop_location()
+	var/atom/droppoint = drop_location()[1]
 	for(var/atom/movable/AM in contents)
 		AM.forceMove(droppoint)
 
@@ -172,30 +172,32 @@
 			results[text] += 1
 	sortTim(results, cmp=/proc/cmp_numeric_dsc, associative = TRUE)
 
-	var/obj/item/paper/P = new(drop_location())
+	var/obj/item/paper/P = new(drop_location()[1])
 	var/list/tally = list()
+	tally += {"
+		<style>
+			.vote_box_content{
+				max-width:250px;
+				display:inline-block;
+				overflow:hidden;
+				text-overflow:ellipsis;
+				white-space:nowrap;
+				vertical-align:bottom
+			}
+			.vote_box_content br {
+				display: none;
+			}
+			.vote_box_content hr {
+				display: none;
+			}
+		</style>
+		"}
+
 	tally += "<h1>Voting Results:</h1><hr><ol>"
 	for(var/option in results)
-		tally += "<li>\"<div class='content'>[option]</div>\" - [results[option]] Vote[results[option] > 1 ? "s" : ""].</li>"
+		tally += "<li>\"<div class='vote_box_content'>[option]</div>\" - [results[option]] Vote[results[option] > 1 ? "s" : ""].</li>"
 	tally += "</ol>"
-	P.extra_headers = {"
-	<meta http-equiv='X-UA-Compatible' content='IE=edge'/>
-	<style>
-		.content{
-			max-width:250px;
-			display:inline-block;
-			overflow:hidden;
-			text-overflow:ellipsis;
-			white-space:nowrap;
-			vertical-align:bottom
-		}
-		.content br {
-			display: none;
-		}
-		.content hr {
-			display: none;
-		}
-	</style>"}
+
 	P.info = tally.Join()
 	P.name = "Voting Results"
 	P.update_icon()

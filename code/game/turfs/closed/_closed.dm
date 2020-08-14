@@ -3,12 +3,17 @@
 	opacity = 1
 	density = TRUE
 	blocks_air = TRUE
-	rad_flags = RAD_PROTECT_CONTENTS | RAD_NO_CONTAMINATE
+	flags_1 = RAD_PROTECT_CONTENTS_1 | RAD_NO_CONTAMINATE_1
 	rad_insulation = RAD_MEDIUM_INSULATION
+
+/turf/closed/Initialize()
+	. = ..()
+	update_air_ref()
 
 /turf/closed/AfterChange()
 	. = ..()
 	SSair.high_pressure_delta -= src
+	update_air_ref()
 
 /turf/closed/get_smooth_underlay_icon(mutable_appearance/underlay_appearance, turf/asking_turf, adjacency_dir)
 	return FALSE
@@ -22,6 +27,9 @@
 	name = "стена"
 	icon = 'icons/turf/walls.dmi'
 	explosion_block = 50
+
+/turf/closed/indestructible/rust_heretic_act()
+	return
 
 /turf/closed/indestructible/TerraformTurf(path, new_baseturf, flags, defer_change = FALSE, ignore_air = FALSE)
 	return
@@ -47,43 +55,52 @@
 	icon = 'icons/turf/walls/sandstone_wall.dmi'
 	icon_state = "sandstone"
 	baseturfs = /turf/closed/indestructible/sandstone
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 
 /turf/closed/indestructible/oldshuttle/corner
 	icon_state = "corner"
 
 /turf/closed/indestructible/splashscreen
 	name = "White Dream"
+	desc = "Истерическая утопия."
 	icon = 'icons/protocol_c.dmi'
 	icon_state = "blank"
 	layer = SPLASHSCREEN_LAYER
 	plane = SPLASHSCREEN_PLANE
 	bullet_bounce_sound = null
+	maptext_height = 480
+	maptext_width = 608
+	maptext_x = 4
+	maptext_y = 8
+	pixel_y = -8
+
+/turf/closed/indestructible/splashscreen/proc/do_cring()
+	filters += filter(type = "displace", icon = 'white/valtos/icons/cfas.png', size = 0)
+	animate(filters[1], size = 4, time = 300, loop = -1, easing = SINE_EASING)
+	animate(size = 0, y = -4, time = 300)
 
 /turf/closed/indestructible/splashscreen/New()
 	SStitle.splash_turf = src
-	//if(SStitle.icon)
-	//	icon = SStitle.icon
 	..()
 
 /turf/closed/indestructible/splashscreen/vv_edit_var(var_name, var_value)
 	. = ..()
 	if(.)
 		switch(var_name)
-			if("icon")
+			if(NAMEOF(src, icon))
 				SStitle.icon = icon
 
 /turf/closed/indestructible/riveted
 	icon = 'icons/turf/walls/riveted.dmi'
 	icon_state = "riveted"
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 
 /turf/closed/indestructible/syndicate
 	name = "пластитановая стена"
 	desc = "Зловещая стена со пластитановым покрытием."
 	icon = 'icons/turf/walls/plastitanium_wall.dmi'
 	icon_state = "map-shuttle"
-	smooth = SMOOTH_MORE
+	smoothing_flags = SMOOTH_MORE
 	canSmoothWith = list(/turf/closed/indestructible/syndicate, /turf/closed/wall/mineral/plastitanium/interior)
 
 /turf/closed/indestructible/riveted/uranium
@@ -96,6 +113,11 @@
 	icon = 'icons/turf/walls/plastinum_wall.dmi'
 	icon_state = "shuttle"
 
+/turf/closed/indestructible/wood
+	icon = 'icons/turf/walls/wood_wall.dmi'
+	icon_state = "wood"
+	smoothing_flags = SMOOTH_TRUE
+
 /turf/closed/indestructible/abductor
 	icon_state = "alien1"
 
@@ -106,8 +128,8 @@
 	name = "окно"
 	icon_state = "fake_window"
 	opacity = 0
-	smooth = SMOOTH_TRUE
-	icon = 'icons/obj/smooth_structures/reinforced_window.dmi'
+	smoothing_flags = SMOOTH_TRUE
+	icon = 'white/valtos/icons/window_rglass.dmi'
 
 /turf/closed/indestructible/fakeglass/Initialize()
 	. = ..()
@@ -119,7 +141,7 @@
 	name = "окно"
 	icon_state = "plastitanium_window"
 	opacity = 0
-	smooth = SMOOTH_TRUE
+	smoothing_flags = SMOOTH_TRUE
 	icon = 'icons/obj/smooth_structures/plastitanium_window.dmi'
 
 /turf/closed/indestructible/opsglass/Initialize()
@@ -152,6 +174,15 @@
 	desc = "Чрезвычайно плотно заполненные ледяные и скальные покровы, выкованные за годы сильного холода."
 	icon = 'icons/turf/walls.dmi'
 	icon_state = "icerock"
+
+/turf/closed/indestructible/rock/snow/ice/ore
+	icon = 'icons/turf/walls/icerock_wall.dmi'
+	icon_state = "icerock"
+	smoothing_flags = SMOOTH_MORE|SMOOTH_BORDER
+	canSmoothWith = list (/turf/closed)
+	pixel_x = -4
+	pixel_y = -4
+
 
 /turf/closed/indestructible/paper
 	name = "толстая бумажная стена"

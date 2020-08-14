@@ -13,10 +13,6 @@
  * SQL sanitization
  */
 
-// Run all strings to be used in an SQL query through this proc first to properly escape out injection attempts.
-/proc/sanitizeSQL(t)
-	return SSdbcore.Quote("[t]")
-
 /proc/format_table_name(table as text)
 	return CONFIG_GET(string/feedback_tableprefix) + table
 
@@ -48,14 +44,15 @@
 	return sanitize_simple(t, list("\n"="", "\t"="", "/"="", "\\"="", "?"="", "%"="", "*"="", ":"="", "|"="", "\""="", "<"="", ">"=""))
 
 ///returns nothing with an alert instead of the message if it contains something in the ic filter, and sanitizes normally if the name is fine. It returns nothing so it backs out of the input the same way as if you had entered nothing.
-/proc/sanitize_name(t,list/repl_chars = null)
+/proc/sanitize_name(t,allow_numbers=FALSE)
 	if(CHAT_FILTER_CHECK(t))
 		alert("You cannot set a name that contains a word prohibited in IC chat!")
 		return ""
-	if(t == "space" || t == "floor" || t == "wall" || t == "r-wall" || t == "monkey" || t == "unknown" || t == "inactive ai")	//prevents these common metagamey names
+	var/r = reject_bad_name(t,allow_numbers=allow_numbers,strict=TRUE)
+	if(!r)
 		alert("Invalid name.")
 		return ""
-	return sanitize(t)
+	return sanitize(r)
 
 //Runs byond's sanitization proc along-side sanitize_simple
 /proc/sanitize(t,list/repl_chars = null)
@@ -71,9 +68,32 @@
 /proc/adminscrub(t,limit=MAX_MESSAGE_LEN)
 	return copytext((html_encode(strip_html_simple(t))),1,limit)
 
+/**
+  * Perform a whitespace cleanup on the text, similar to what HTML renderers do
+  *
+  * This is useful if you want to better predict how text is going to look like when displaying it to a user
+  * HTML renderers collapse multiple whitespaces into one, trims prepending and appending spaces, among other things. This proc attempts to do the same thing.
+  * HTML5 defines whitespace pretty much exactly like regex defines the \s group, [ \t\r\n\f].
+  * Arguments:
+  * * t - The text to "render"
+  */
+/proc/htmlrendertext(t)
+	// Trim "whitespace" by lazily capturing word characters in the middle
+	var/static/regex/matchMiddle = new(@"^\s*([\W\w]*?)\s*$")
+	if(matchMiddle.Find(t) == 0)
+		return t
+	t = matchMiddle.group[1]
+
+	// Replace any non-space whitespace characters with spaces, and also multiple occurences with just one space
+	var/static/regex/matchSpacing = new(@"\s+", "g")
+	t = replacetext(t, matchSpacing, " ")
+
+	return t
 
 //Returns null if there is any bad text in the string
-/proc/reject_bad_text(text, max_length = 512, ascii_only = TRUE)
+/proc/reject_bad_text(text, max_length = 512, ascii_only = FALSE)
+	return text
+	/*
 	var/char_count = 0
 	var/non_whitespace = FALSE
 	var/lenbytes = length(text)
@@ -91,19 +111,19 @@
 			if(32)
 				continue
 			if(127 to INFINITY)
-				if(ascii_only)
-					return
+				continue
 			else
 				non_whitespace = TRUE
 	if(non_whitespace)
 		return text		//only accepts the text if it has some non-spaces
+	*/
 
 // Used to get a properly sanitized input, of max_length
 // no_trim is self explanatory but it prevents the input from being trimed if you intend to parse newlines or whitespace.
 /proc/stripped_input(mob/user, message = "", title = "", default = "", max_length=MAX_MESSAGE_LEN, no_trim=FALSE)
 	var/name = input(user, message, title, default) as text|null
 	if(no_trim)
-		return copytext(html_encode(name), 1, max_length)
+		return copytext_char(html_encode(name), 1, max_length)
 	else
 		return trim(html_encode(name), max_length) //trim is "outside" because html_encode can expand single symbols into multiple symbols (such as turning < into &lt;)
 
@@ -121,8 +141,13 @@
 #define NUMBERS_DETECTED 3
 #define LETTERS_DETECTED 4
 
-//Filters out undesirable characters from names
-/proc/reject_bad_name(t_in, allow_numbers = FALSE, max_length = MAX_NAME_LEN, ascii_only = FALSE)
+/**
+  * Filters out undesirable characters from names.
+  *
+  * * strict - return null immidiately instead of filtering out
+  * * allow_numbers - allows numbers and common special characters - used for silicon/other weird things names
+  */
+/proc/reject_bad_name(t_in, allow_numbers = FALSE, max_length = MAX_NAME_LEN, ascii_only = FALSE, strict = FALSE)
 	if(!t_in)
 		return //Rejects the input if it is null
 
@@ -133,13 +158,14 @@
 	var/charcount = 0
 	var/char = ""
 
-
+	// This is a sanity short circuit, if the users name is three times the maximum allowable length of name
+	// We bail out on trying to process the name at all, as it could be a bug or malicious input and we dont
+	// Want to iterate all of it.
+	if(t_len > 3 * MAX_NAME_LEN)
+		return
 	for(var/i = 1, i <= t_len, i += length(char))
 		char = t_in[i]
-
 		switch(text2ascii(char))
-			if(1105 to 1e31)
-				continue
 			// A  .. Z
 			if(65 to 90)			//Uppercase Letters
 				number_of_alphanumeric++
@@ -165,6 +191,8 @@
 			// 0  .. 9
 			if(48 to 57)			//Numbers
 				if(last_char_group == NO_CHARS_DETECTED || !allow_numbers) //suppress at start of string
+					if(strict)
+						return
 					continue
 				number_of_alphanumeric++
 				last_char_group = NUMBERS_DETECTED
@@ -172,29 +200,36 @@
 			// '  -  .
 			if(39,45,46)			//Common name punctuation
 				if(last_char_group == NO_CHARS_DETECTED)
+					if(strict)
+						return
 					continue
 				last_char_group = SYMBOLS_DETECTED
 
 			// ~   |   @  :  #  $  %  &  *  +
 			if(126,124,64,58,35,36,37,38,42,43)			//Other symbols that we'll allow (mainly for AI)
 				if(last_char_group == NO_CHARS_DETECTED || !allow_numbers) //suppress at start of string
+					if(strict)
+						return
 					continue
 				last_char_group = SYMBOLS_DETECTED
 
 			//Space
 			if(32)
 				if(last_char_group == NO_CHARS_DETECTED || last_char_group == SPACES_DETECTED) //suppress double-spaces and spaces at start of string
+					if(strict)
+						return
 					continue
 				last_char_group = SPACES_DETECTED
 
 			if(127 to INFINITY)
 				if(ascii_only)
+					if(strict)
+						return
 					continue
 				last_char_group = SYMBOLS_DETECTED //for now, we'll treat all non-ascii characters like symbols even though most are letters
 
 			else
 				continue
-
 		t_out += char
 		charcount++
 		if(charcount >= max_length)
@@ -805,17 +840,17 @@ GLOBAL_LIST_INIT(binary, list("0","1"))
 	var/regex/word_boundaries = regex(@"\b[\S]+\b", "g")
 	var/prefix = message[1]
 	if(prefix == ";")
-		message = copytext(message, 1 + length(prefix))
+		message = copytext_char(message, 1 + length_char(prefix))
 	else if(prefix in list(":", "#"))
-		prefix += message[1 + length(prefix)]
-		message = copytext(message, length(prefix))
+		prefix += message[1 + length_char(prefix)]
+		message = copytext_char(message, length_char(prefix))
 	else
 		prefix = ""
 
 	var/list/rearranged = list()
 	while(word_boundaries.Find(message))
 		var/cword = word_boundaries.match
-		if(length(cword))
+		if(length_char(cword))
 			rearranged += cword
 	shuffle_inplace(rearranged)
 	return "[prefix][jointext(rearranged, " ")]"
@@ -825,11 +860,11 @@ GLOBAL_LIST_INIT(binary, list("0","1"))
 	var/list/corruption_options = list("..", "£%", "~~\"", "!!", "*", "^", "$!", "-", "}", "?")
 	var/corrupted_text = ""
 
-	var/lentext = length(text)
+	var/lentext = length_char(text)
 	var/letter = ""
 	// Have every letter have a chance of creating corruption on either side
 	// Small chance of letters being removed in place of corruption - still overall readable
-	for(var/letter_index = 1, letter_index <= lentext, letter_index += length(letter))
+	for(var/letter_index = 1, letter_index <= lentext, letter_index += length_char(letter))
 		letter = text[letter_index]
 
 		if (prob(15))
@@ -854,3 +889,46 @@ GLOBAL_LIST_INIT(binary, list("0","1"))
 		return r_json_decode(data)
 	catch
 		return
+
+/proc/num2loadingbar(percent as num, numSquares = 20, reverse = FALSE)
+	var/loadstring = ""
+	for (var/i in 1 to numSquares)
+		var/limit = reverse ? numSquares - percent*numSquares : percent*numSquares
+		loadstring += i <= limit ? "█" : "░"
+	return "\[[loadstring]\]"
+
+/**
+  * Formats a number to human readable form with the appropriate SI unit.
+  *
+  * Supports SI exponents between 1e-15 to 1e15, but properly handles numbers outside that range as well.
+  * Examples:
+  * * `siunit(1234, "Pa", 1)` -> `"1.2 kPa"`
+  * * `siunit(0.5345, "A", 0)` -> `"535 mA"`
+  * * `siunit(1000, "Pa", 4)` -> `"1 kPa"`
+  * Arguments:
+  * * value - The number to convert to text. Can be positive or negative.
+  * * unit - The base unit of the number, such as "Pa" or "W".
+  * * maxdecimals - Maximum amount of decimals to display for the final number. Defaults to 1.
+  */
+/proc/siunit(value, unit, maxdecimals=1)
+	var/static/list/prefixes = list("f","p","n","μ","m","","k","M","G","T","P")
+
+	// We don't have prefixes beyond this point
+	// and this also captures value = 0 which you can't compute the logarithm for
+	// and also byond numbers are floats and doesn't have much precision beyond this point anyway
+	if(abs(value) <= 1e-18)
+		return "0 [unit]"
+
+	var/exponent = clamp(log(10, abs(value)), -15, 15) // Calculate the exponent and clamp it so we don't go outside the prefix list bounds
+	var/divider = 10 ** (round(exponent / 3) * 3) // Rounds the exponent to nearest SI unit and power it back to the full form
+	var/coefficient = round(value / divider, 10 ** -maxdecimals) // Calculate the coefficient and round it to desired decimals
+	var/prefix_index = round(exponent / 3) + 6 // Calculate the index in the prefixes list for this exponent
+
+	// An edge case which happens if we round 999.9 to 0 decimals for example, which gets rounded to 1000
+	// In that case, we manually swap up to the next prefix if there is one available
+	if(coefficient >= 1000 && prefix_index < 11)
+		coefficient /= 1e3
+		prefix_index++
+
+	var/prefix = prefixes[prefix_index]
+	return "[coefficient] [prefix][unit]"

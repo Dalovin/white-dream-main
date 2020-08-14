@@ -157,11 +157,18 @@ GLOBAL_LIST_INIT(nonreactive_gases, typecacheof(list(/datum/gas/oxygen, /datum/g
 /datum/gas/freon
 	id = "freon"
 	specific_heat = 600
-	name = "Freon"
+	name = "Фреон"
 	gas_overlay = "freon"
 	moles_visible = MOLES_GAS_VISIBLE *30
 	fusion_power = -5
 	rarity = 10
+
+/datum/gas/hydrogen
+	id = "hydrogen"
+	specific_heat = 15
+	name = "Водород"
+	dangerous = TRUE
+	rarity = 700
 
 /obj/effect/overlay/gas
 	icon = 'icons/effects/atmospherics.dmi'

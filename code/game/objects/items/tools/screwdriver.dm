@@ -3,7 +3,8 @@
 	desc = "Ею можно откручивать и закручивать различные штуки."
 	icon = 'icons/obj/tools.dmi'
 	icon_state = "screwdriver_map"
-	item_state = "screwdriver"
+	inhand_icon_state = "screwdriver"
+	worn_icon_state = "screwdriver"
 	lefthand_file = 'icons/mob/inhands/equipment/tools_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/tools_righthand.dmi'
 	flags_1 = CONDUCT_1
@@ -22,6 +23,8 @@
 	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 30)
 	drop_sound = 'sound/items/handling/screwdriver_drop.ogg'
 	pickup_sound =  'sound/items/handling/screwdriver_pickup.ogg'
+	item_flags = EYE_STAB
+	sharpness = SHARP_POINTY
 	var/random_color = TRUE //if the screwdriver uses random coloring
 	var/static/list/screwdriver_colors = list(
 		"blue" = rgb(24, 97, 213),
@@ -72,24 +75,12 @@
 	else
 		return mutable_appearance('icons/obj/clothing/belt_overlays.dmi', icon_state)
 
-/obj/item/screwdriver/attack(mob/living/carbon/M, mob/living/carbon/user)
-	if(!istype(M))
-		return ..()
-	if(user.zone_selected != BODY_ZONE_PRECISE_EYES && user.zone_selected != BODY_ZONE_HEAD)
-		return ..()
-	if(HAS_TRAIT(user, TRAIT_PACIFISM))
-		to_chat(user, "<span class='warning'>You don't want to harm [M]!</span>")
-		return
-	if(HAS_TRAIT(user, TRAIT_CLUMSY) && prob(50))
-		M = user
-	return eyestab(M,user)
-
 /obj/item/screwdriver/abductor
 	name = "чужеродная отвёртка"
 	desc = "Сверхзвуковая, сука."
 	icon = 'icons/obj/abductor.dmi'
 	icon_state = "screwdriver_a"
-	item_state = "screwdriver_nuke"
+	inhand_icon_state = "screwdriver_nuke"
 	usesound = 'sound/items/pshoom.ogg'
 	toolspeed = 0.1
 	random_color = FALSE
@@ -101,9 +92,11 @@
 	name = "дрель"
 	desc = "Простая ручная дрель с электроприводом."
 	icon_state = "drill_screw"
-	item_state = "drill"
-	lefthand_file = 'icons/mob/inhands/equipment/tools_lefthand.dmi'
-	righthand_file = 'icons/mob/inhands/equipment/tools_righthand.dmi'
+	inhand_icon_state = "drill"
+	worn_icon_state = "drill"
+	icon = 'white/valtos/icons/items.dmi'
+	lefthand_file = 'white/valtos/icons/lefthand.dmi'
+	righthand_file = 'white/valtos/icons/righthand.dmi'
 	custom_materials = list(/datum/material/iron=150,/datum/material/silver=50,/datum/material/titanium=25) //done for balance reasons, making them high value for research, but harder to get
 	force = 8 //might or might not be too high, subject to change
 	w_class = WEIGHT_CLASS_SMALL
@@ -115,6 +108,9 @@
 	usesound = 'sound/items/drill_use.ogg'
 	toolspeed = 0.7
 	random_color = FALSE
+
+/obj/item/screwdriver/power/get_belt_overlay()
+	return mutable_appearance('white/valtos/icons/belt_overlays.dmi', icon_state)
 
 /obj/item/screwdriver/power/examine()
 	. = ..()

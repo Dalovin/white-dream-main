@@ -44,10 +44,10 @@
 	faction = list("spiders")
 	var/busy = SPIDER_IDLE
 	pass_flags = PASSTABLE
-	move_to_delay = 6
+	move_to_delay = 0.6
 	ventcrawler = VENTCRAWLER_ALWAYS
-	attack_verb_continuous = "bites"
-	attack_verb_simple = "bite"
+	attack_verb_continuous = "кусает"
+	attack_verb_simple = "кусает"
 	attack_sound = 'sound/weapons/bite.ogg'
 	unique_name = 1
 	gold_core_spawnable = HOSTILE_SPAWN
@@ -69,11 +69,13 @@
 /mob/living/simple_animal/hostile/poison/giant_spider/Topic(href, href_list)
 	if(href_list["activate"])
 		var/mob/dead/observer/ghost = usr
-		if(istype(ghost) && playable_spider)
+		if(istype(ghost) && playable_spider && !(GLOB.ghost_role_flags & GHOSTROLE_SPAWNER))
 			humanize_spider(ghost)
 
 /mob/living/simple_animal/hostile/poison/giant_spider/Login()
-	..()
+	. = ..()
+	if(!. || !client)
+		return FALSE
 	if(directive)
 		to_chat(src, "<span class='spider'>Your mother left you a directive! Follow it at all costs.</span>")
 		to_chat(src, "<span class='spider'><b>[directive]</b></span>")
@@ -167,7 +169,7 @@
 	melee_damage_lower = 10
 	melee_damage_upper = 20
 	poison_per_bite = 10
-	move_to_delay = 5
+	move_to_delay = 0.5
 	gold_core_spawnable = NO_SPAWN
 
 //vipers are the rare variant of the hunter, no IMMEDIATE damage but so much poison medical care will be needed fast.
@@ -182,7 +184,7 @@
 	melee_damage_lower = 1
 	melee_damage_upper = 1
 	poison_per_bite = 12
-	move_to_delay = 4
+	move_to_delay = 0.4
 	poison_type = /datum/reagent/toxin/venom //all in venom, glass cannon. you bite 5 times and they are DEFINITELY dead, but 40 health and you are extremely obvious. Ambush, maybe?
 	speed = 1
 
@@ -198,7 +200,7 @@
 	melee_damage_lower = 35
 	melee_damage_upper = 40
 	poison_per_bite = 0
-	move_to_delay = 8
+	move_to_delay = 0.8
 	speed = 7
 	status_flags = NONE
 	mob_size = MOB_SIZE_LARGE
@@ -511,6 +513,8 @@
 
 /mob/living/simple_animal/hostile/poison/giant_spider/Login()
 	. = ..()
+	if(!. || !client)
+		return FALSE
 	GLOB.spidermobs[src] = TRUE
 
 /mob/living/simple_animal/hostile/poison/giant_spider/Destroy()

@@ -2,8 +2,8 @@
 	name = "шлем"
 	desc = "Стандартное снаряжение безопасности. Защищает голову от ударов."
 	icon_state = "helmet"
-	item_state = "helmet"
-	armor = list("melee" = 35, "bullet" = 30, "laser" = 30,"energy" = 40, "bomb" = 25, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 50)
+	inhand_icon_state = "helmet"
+	armor = list("melee" = 35, "bullet" = 30, "laser" = 30,"energy" = 40, "bomb" = 25, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 50, "wound" = 10)
 	cold_protection = HEAD
 	min_cold_protection_temperature = HELMET_MIN_TEMP_PROTECT
 	heat_protection = HEAD
@@ -68,8 +68,8 @@
 	name = "пуленепробиваемый шлем"
 	desc = "Боевой пуленепробиваемый шлем, который в незначительной степени защищает владельца от традиционного стрелкового оружия и взрывчатых веществ."
 	icon_state = "helmetalt"
-	item_state = "helmetalt"
-	armor = list("melee" = 15, "bullet" = 60, "laser" = 10, "energy" = 10, "bomb" = 40, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 50)
+	inhand_icon_state = "helmetalt"
+	armor = list("melee" = 15, "bullet" = 60, "laser" = 10, "energy" = 10, "bomb" = 40, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 50, "wound" = 5)
 	can_flashlight = TRUE
 	dog_fashion = null
 
@@ -82,18 +82,18 @@
 	name = "синий шлем"
 	desc = "Надежный шлем синего цвета, напоминающий вам, что вы все еще должны инженеру пиво."
 	icon_state = "blueshift"
-	item_state = "blueshift"
+	inhand_icon_state = "blueshift"
 	custom_premium_price = 750
 
 /obj/item/clothing/head/helmet/riot
 	name = "анти-мятежный шлем"
 	desc = "Это шлем, специально разработанный для защиты от атак с близкого расстояния."
 	icon_state = "riot"
-	item_state = "helmet"
+	inhand_icon_state = "helmet"
 	toggle_message = "Опускаю козырёк вниз"
 	alt_toggle_message = "Поднимаю козырёк вверх"
 	can_toggle = 1
-	armor = list("melee" = 50, "bullet" = 10, "laser" = 10, "energy" = 10, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 80, "acid" = 80)
+	armor = list("melee" = 50, "bullet" = 10, "laser" = 10, "energy" = 10, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 80, "acid" = 80, "wound" = 15)
 	flags_inv = HIDEEARS|HIDEFACE
 	strip_delay = 80
 	actions_types = list(/datum/action/item_action/toggle)
@@ -147,8 +147,8 @@
 	name = "шлем спецназа"
 	desc = "Чрезвычайно прочный, компактный шлем в мерзкой красной и черной полосе."
 	icon_state = "swatsyndie"
-	item_state = "swatsyndie"
-	armor = list("melee" = 40, "bullet" = 30, "laser" = 30,"energy" = 40, "bomb" = 50, "bio" = 90, "rad" = 20, "fire" = 100, "acid" = 100)
+	inhand_icon_state = "swatsyndie"
+	armor = list("melee" = 40, "bullet" = 30, "laser" = 30,"energy" = 40, "bomb" = 50, "bio" = 90, "rad" = 20, "fire" = 100, "acid" = 100, "wound" = 15)
 	cold_protection = HEAD
 	min_cold_protection_temperature = SPACE_HELM_MIN_TEMP_PROTECT
 	heat_protection = HEAD
@@ -167,9 +167,9 @@
 /obj/item/clothing/head/helmet/constable
 	name = "constable helmet"
 	desc = "A british looking helmet."
-	mob_overlay_icon = 'icons/mob/large-worn-icons/64x64/head.dmi'
+	worn_icon = 'icons/mob/large-worn-icons/64x64/head.dmi'
 	icon_state = "constable"
-	item_state = "constable"
+	inhand_icon_state = "constable"
 	worn_x_dimension = 64
 	worn_y_dimension = 64
 	custom_price = 350
@@ -178,14 +178,14 @@
 	name = "шлем спецназа"
 	desc = "Чрезвычайно прочный, космический шлем с логотипом Нанотрейзен, украшенный сверху."
 	icon_state = "swat"
-	item_state = "swat"
+	inhand_icon_state = "swat"
 
 /obj/item/clothing/head/helmet/thunderdome
 	name = "Thunderdome шлем"
 	desc = "<i>'Let the battle commence!'</i>"
 	flags_inv = HIDEEARS|HIDEHAIR
 	icon_state = "thunderdome"
-	item_state = "thunderdome"
+	inhand_icon_state = "thunderdome"
 	armor = list("melee" = 80, "bullet" = 80, "laser" = 50, "energy" = 50, "bomb" = 100, "bio" = 100, "rad" = 100, "fire" = 90, "acid" = 90)
 	cold_protection = HEAD
 	min_cold_protection_temperature = SPACE_HELM_MIN_TEMP_PROTECT
@@ -199,10 +199,10 @@
 	desc = "Древний шлем из бронзы и кожи."
 	flags_inv = HIDEEARS|HIDEHAIR
 	flags_cover = HEADCOVERSEYES
-	armor = list("melee" = 25, "bullet" = 0, "laser" = 25, "energy" = 10, "bomb" = 10, "bio" = 0, "rad" = 0, "fire" = 100, "acid" = 50)
+	armor = list("melee" = 25, "bullet" = 0, "laser" = 25, "energy" = 10, "bomb" = 10, "bio" = 0, "rad" = 0, "fire" = 100, "acid" = 50, "wound" = 5)
 	resistance_flags = FIRE_PROOF
 	icon_state = "roman"
-	item_state = "roman"
+	inhand_icon_state = "roman"
 	strip_delay = 100
 	dog_fashion = null
 
@@ -214,7 +214,7 @@
 	name = "шлем римского легионера"
 	desc = "Древний шлем из бронзы и кожи. На нем красный гребень."
 	icon_state = "roman_c"
-	item_state = "roman_c"
+	inhand_icon_state = "roman_c"
 
 /obj/item/clothing/head/helmet/roman/legionnaire/fake
 	desc = "Древний шлем из бронзы и кожи. На нем красный гребень."
@@ -224,7 +224,7 @@
 	name = "шлем гладиатора"
 	desc = "Ave, Imperator, morituri te salutant."
 	icon_state = "gladiator"
-	item_state = "gladiator"
+	inhand_icon_state = "gladiator"
 	flags_inv = HIDEMASK|HIDEEARS|HIDEEYES|HIDEHAIR
 	flags_cover = HEADCOVERSEYES
 	dog_fashion = null
@@ -234,7 +234,7 @@
 	desc = "Они выбрали свою цель."
 	icon_state = "redtaghelm"
 	flags_cover = HEADCOVERSEYES
-	item_state = "redtaghelm"
+	inhand_icon_state = "redtaghelm"
 	armor = list("melee" = 15, "bullet" = 10, "laser" = 20,"energy" = 10, "bomb" = 20, "bio" = 0, "rad" = 0, "fire" = 0, "acid" = 50)
 	// Offer about the same protection as a hardhat.
 	dog_fashion = null
@@ -244,7 +244,7 @@
 	desc = "Им понадобится больше людей."
 	icon_state = "bluetaghelm"
 	flags_cover = HEADCOVERSEYES
-	item_state = "bluetaghelm"
+	inhand_icon_state = "bluetaghelm"
 	armor = list("melee" = 15, "bullet" = 10, "laser" = 20,"energy" = 10, "bomb" = 20, "bio" = 0, "rad" = 0, "fire" = 0, "acid" = 50)
 	// Offer about the same protection as a hardhat.
 	dog_fashion = null
@@ -253,8 +253,8 @@
 	name = "средневековый шлем"
 	desc = "Классический металлический шлем."
 	icon_state = "knight_green"
-	item_state = "knight_green"
-	armor = list("melee" = 50, "bullet" = 10, "laser" = 10, "energy" = 10, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 80, "acid" = 80)
+	inhand_icon_state = "knight_green"
+	armor = list("melee" = 50, "bullet" = 10, "laser" = 10, "energy" = 10, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 80, "acid" = 80) // no wound armor cause getting domed in a bucket head sounds like concussion city
 	flags_inv = HIDEMASK|HIDEEARS|HIDEEYES|HIDEFACE|HIDEHAIR
 	flags_cover = HEADCOVERSEYES | HEADCOVERSMOUTH
 	strip_delay = 80
@@ -268,21 +268,21 @@
 
 /obj/item/clothing/head/helmet/knight/blue
 	icon_state = "knight_blue"
-	item_state = "knight_blue"
+	inhand_icon_state = "knight_blue"
 
 /obj/item/clothing/head/helmet/knight/yellow
 	icon_state = "knight_yellow"
-	item_state = "knight_yellow"
+	inhand_icon_state = "knight_yellow"
 
 /obj/item/clothing/head/helmet/knight/red
 	icon_state = "knight_red"
-	item_state = "knight_red"
+	inhand_icon_state = "knight_red"
 
 /obj/item/clothing/head/helmet/knight/greyscale
 	name = "рыцарский шлем"
 	desc = "Классический средневековый шлем, если держать его вверх ногами, то можно увидеть, что на самом деле это ведро."
 	icon_state = "knight_greyscale"
-	item_state = "knight_greyscale"
+	inhand_icon_state = "knight_greyscale"
 	armor = list("melee" = 35, "bullet" = 10, "laser" = 10, "energy" = 10, "bomb" = 10, "bio" = 10, "rad" = 10, "fire" = 40, "acid" = 40)
 	material_flags = MATERIAL_ADD_PREFIX | MATERIAL_COLOR | MATERIAL_AFFECT_STATISTICS //Can change color and add prefix
 
@@ -293,47 +293,142 @@
 	flags_cover = HEADCOVERSEYES
 	armor = list("melee" = 35, "bullet" = 25, "laser" = 25, "energy" = 35, "bomb" = 25, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 50)
 	icon_state = "skull"
-	item_state = "skull"
+	inhand_icon_state = "skull"
 	strip_delay = 100
 
 /obj/item/clothing/head/helmet/durathread
 	name = "дюратканевый шлем"
 	desc = "Шлем из черного хлеба и кожи."
 	icon_state = "durathread"
-	item_state = "durathread"
+	inhand_icon_state = "durathread"
 	resistance_flags = FLAMMABLE
-	armor = list("melee" = 20, "bullet" = 10, "laser" = 30, "energy" = 40, "bomb" = 15, "bio" = 0, "rad" = 0, "fire" = 40, "acid" = 50)
+	armor = list("melee" = 20, "bullet" = 10, "laser" = 30, "energy" = 40, "bomb" = 15, "bio" = 0, "rad" = 0, "fire" = 40, "acid" = 50, "wound" = 5)
 	strip_delay = 60
 
 /obj/item/clothing/head/helmet/rus_helmet
 	name = "русский шлем"
 	desc = "Он может вместить бутылку водки."
 	icon_state = "rus_helmet"
-	item_state = "rus_helmet"
-	armor = list("melee" = 25, "bullet" = 30, "laser" = 0, "energy" = 10, "bomb" = 10, "bio" = 0, "rad" = 20, "fire" = 20, "acid" = 50)
+	inhand_icon_state = "rus_helmet"
+	armor = list("melee" = 25, "bullet" = 30, "laser" = 0, "energy" = 10, "bomb" = 10, "bio" = 0, "rad" = 20, "fire" = 20, "acid" = 50, "wound" = 5)
 	pocket_storage_component_path = /datum/component/storage/concrete/pockets/helmet
 
 /obj/item/clothing/head/helmet/rus_ushanka
 	name = "боевая ушанка"
 	desc = "100% медвежья."
 	icon_state = "rus_ushanka"
-	item_state = "rus_ushanka"
+	inhand_icon_state = "rus_ushanka"
 	body_parts_covered = HEAD
 	cold_protection = HEAD
 	min_cold_protection_temperature = SPACE_HELM_MIN_TEMP_PROTECT
-	armor = list("melee" = 25, "bullet" = 20, "laser" = 20, "energy" = 30, "bomb" = 20, "bio" = 50, "rad" = 20, "fire" = -10, "acid" = 50)
+	armor = list("melee" = 25, "bullet" = 20, "laser" = 20, "energy" = 30, "bomb" = 20, "bio" = 50, "rad" = 20, "fire" = -10, "acid" = 50, "wound" = 5)
 
 /obj/item/clothing/head/helmet/infiltrator
 	name = "infiltrator helmet"
 	desc = "The galaxy isn't big enough for the two of us."
 	icon_state = "infiltrator"
-	item_state = "infiltrator"
+	inhand_icon_state = "infiltrator"
 	armor = list("melee" = 40, "bullet" = 40, "laser" = 30, "energy" = 40, "bomb" = 70, "bio" = 0, "rad" = 0, "fire" = 100, "acid" = 100)
 	resistance_flags = FIRE_PROOF | ACID_PROOF
 	flash_protect = FLASH_PROTECTION_WELDER
 	flags_inv = HIDEHAIR|HIDEFACIALHAIR|HIDEMASK|HIDEEARS|HIDEEYES|HIDEFACE
 	flags_cover = HEADCOVERSEYES | HEADCOVERSMOUTH | PEPPERPROOF
 	strip_delay = 80
+
+//monkey sentience caps
+
+/obj/item/clothing/head/helmet/monkey_sentience
+	name = "monkey mind magnification helmet"
+	desc = "A fragile, circuitry embedded helmet for boosting the intelligence of a monkey to a higher level. You see several warning labels..."
+
+	icon_state = "monkeymind"
+	inhand_icon_state = "monkeymind"
+	strip_delay = 100
+	var/mob/living/carbon/monkey/magnification = null ///if the helmet is on a valid target (just works like a normal helmet if not (cargo please stop))
+	var/polling = FALSE///if the helmet is currently polling for targets (special code for removal)
+	var/light_colors = 1 ///which icon state color this is (red, blue, yellow)
+
+/obj/item/clothing/head/helmet/monkey_sentience/Initialize()
+	. = ..()
+	light_colors = rand(1,3)
+	update_icon()
+
+/obj/item/clothing/head/helmet/monkey_sentience/examine(mob/user)
+	. = ..()
+	. += "<span class='boldwarning'>---WARNING: REMOVAL OF HELMET ON SUBJECT MAY LEAD TO:---</span>"
+	. += "<span class='warning'>BLOOD RAGE</span>"
+	. += "<span class='warning'>BRAIN DEATH</span>"
+	. += "<span class='warning'>PRIMAL GENE ACTIVATION</span>"
+	. += "<span class='warning'>GENETIC MAKEUP MASS SUSCEPTIBILITY</span>"
+	. += "<span class='boldnotice'>Ask your CMO if mind magnification is right for you.</span>"
+
+/obj/item/clothing/head/helmet/monkey_sentience/update_icon_state()
+	icon_state = "[initial(icon_state)][light_colors][magnification ? "up" : ""]"
+
+/obj/item/clothing/head/helmet/monkey_sentience/equipped(mob/user, slot)
+	. = ..()
+	if(slot != ITEM_SLOT_HEAD)
+		return
+	if(!ismonkey(user) || user.ckey)
+		var/mob/living/something = user
+		to_chat(something, "<span class='boldnotice'>You feel a stabbing pain in the back of your head for a moment.</span>")
+		something.apply_damage(5,BRUTE,BODY_ZONE_HEAD,FALSE,FALSE,FALSE) //notably: no damage resist (it's in your helmet), no damage spread (it's in your helmet)
+		playsound(src, 'sound/machines/buzz-sigh.ogg', 30, TRUE)
+		return
+	if(!(GLOB.ghost_role_flags & GHOSTROLE_STATION_SENTIENCE))
+		say("ERROR: Central Command has temporarily outlawed monkey sentience helmets in this sector. NEAREST LAWFUL SECTOR: 2.537 million light years away.")
+	magnification = user //this polls ghosts
+	visible_message("<span class='warning'>[src] powers up!</span>")
+	playsound(src, 'sound/machines/ping.ogg', 30, TRUE)
+	polling = TRUE
+	var/list/candidates = pollCandidatesForMob("Do you want to play as a mind magnified monkey?", ROLE_SENTIENCE, null, ROLE_SENTIENCE, 50, magnification, POLL_IGNORE_SENTIENCE_POTION)
+	polling = FALSE
+	if(!candidates.len)
+		magnification = null
+		visible_message("<span class='notice'>[src] falls silent and drops on the floor. Maybe you should try again later?</span>")
+		playsound(src, 'sound/machines/buzz-sigh.ogg', 30, TRUE)
+		user.dropItemToGround(src)
+	var/mob/picked = pick(candidates)
+	magnification.key = picked.key
+	playsound(src, 'sound/machines/microwave/microwave-end.ogg', 100, FALSE)
+	to_chat(magnification, "<span class='notice'>You're a mind magnified monkey! Protect your helmet with your life- if you lose it, your sentience goes with it!</span>")
+	var/policy = get_policy(ROLE_MONKEY_HELMET)
+	if(policy)
+		to_chat(magnification, policy)
+	icon_state = "[icon_state]up"
+
+/obj/item/clothing/head/helmet/monkey_sentience/Destroy()
+	disconnect()
+	return ..()
+
+/obj/item/clothing/head/helmet/monkey_sentience/proc/disconnect()
+	if(!magnification) //not put on a viable head
+		return
+	if(!polling)//put on a viable head, but taken off after polling finished.
+		if(magnification.client)
+			to_chat(magnification, "<span class='userdanger'>You feel your flicker of sentience ripped away from you, as everything becomes dim...</span>")
+			magnification.ghostize(FALSE)
+		if(prob(10))
+			switch(rand(1,4))
+				if(1) //blood rage
+					magnification.aggressive = TRUE
+				if(2) //brain death
+					magnification.apply_damage(500,BRAIN,BODY_ZONE_HEAD,FALSE,FALSE,FALSE)
+				if(3) //primal gene (gorilla)
+					magnification.gorillize()
+				if(4) //genetic mass susceptibility (gib)
+					magnification.gib()
+	//either used up correctly or taken off before polling finished (punish this by destroying the helmet)
+	playsound(src, 'sound/machines/buzz-sigh.ogg', 30, TRUE)
+	playsound(src, "sparks", 100, TRUE)
+	visible_message("<span class='warning'>[src] fizzles and breaks apart!</span>")
+	magnification = null
+	new /obj/effect/decal/cleanable/ash/crematorium(drop_location()[1]) //just in case they're in a locker or other containers it needs to use crematorium ash, see the path itself for an explanation
+
+/obj/item/clothing/head/helmet/monkey_sentience/dropped(mob/user)
+	. = ..()
+	if(magnification || polling)
+		qdel(src)//runs disconnect code
 
 
 //LightToggle
@@ -396,7 +491,7 @@
 
 /obj/item/clothing/head/helmet/proc/toggle_helmlight()
 	set name = "Toggle Helmetlight"
-	set category = "ОБЪЕКТ"
+	set category = "Объект"
 	set desc = "Click to toggle your helmet's attached flashlight."
 
 	if(!attached_light)

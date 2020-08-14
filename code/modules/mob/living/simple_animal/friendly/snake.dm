@@ -19,8 +19,8 @@
         speak_emote = list("hisses")
         health = 20
         maxHealth = 20
-        attack_verb_continuous = "bites"
-        attack_verb_simple = "bite"
+        attack_verb_continuous = "кусает"
+        attack_verb_simple = "кусает"
         melee_damage_lower = 5
         melee_damage_upper = 6
         response_help_continuous = "pets"
@@ -41,7 +41,7 @@
 
 
 /mob/living/simple_animal/hostile/retaliate/poison/snake/ListTargets(atom/the_target)
-	. = oview(vision_range, targets_from) //get list of things in vision range
+	. = oview((vision_range / PIXEL_TILE_SIZE), targets_from) //get list of things in vision range
 	var/list/living_mobs = list()
 	var/list/mice = list()
 	for (var/HM in .)

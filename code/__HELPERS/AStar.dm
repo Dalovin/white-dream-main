@@ -26,23 +26,31 @@ Actual Adjacent procs :
 #define PF_TIEBREAKER 0.005
 //tiebreker weight.To help to choose between equal paths
 //////////////////////
-//datum/PathNode object
+//datum/pathnode object
 //////////////////////
 #define MASK_ODD 85
 #define MASK_EVEN 170
 
 
+/obj/effect/pixelpoint // pixel at the very center of a turf
+	invisibility = INVISIBILITY_LIGHTING
+	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
+	bound_width = 1
+	bound_height = 1
+	bound_x = 15 // center of turf
+	bound_y = 15 // center of turf
+
 //A* nodes variables
-/datum/PathNode
+/datum/pathnode
 	var/turf/source //turf associated with the PathNode
-	var/datum/PathNode/prevNode //link to the parent PathNode
+	var/datum/pathnode/prevNode //link to the parent PathNode
 	var/f		//A* Node weight (f = g + h)
 	var/g		//A* movement cost variable
 	var/h		//A* heuristic variable
 	var/nt		//count the number of Nodes traversed
 	var/bf		//bitflag for dir to expand.Some sufficiently advanced motherfuckery
 
-/datum/PathNode/New(s,p,pg,ph,pnt,_bf)
+/datum/pathnode/New(s,p,pg,ph,pnt,_bf)
 	source = s
 	prevNode = p
 	g = pg
@@ -51,14 +59,14 @@ Actual Adjacent procs :
 	nt = pnt
 	bf = _bf
 
-/datum/PathNode/proc/setp(p,pg,ph,pnt)
+/datum/pathnode/proc/setp(p,pg,ph,pnt)
 	prevNode = p
 	g = pg
 	h = ph
 	f = g + h*(1+ PF_TIEBREAKER)
 	nt = pnt
 
-/datum/PathNode/proc/calc_f()
+/datum/pathnode/proc/calc_f()
 	f = g + h
 
 //////////////////////
@@ -66,11 +74,11 @@ Actual Adjacent procs :
 //////////////////////
 
 //the weighting function, used in the A* algorithm
-/proc/PathWeightCompare(datum/PathNode/a, datum/PathNode/b)
+/proc/PathWeightCompare(datum/pathnode/a, datum/pathnode/b)
 	return a.f - b.f
 
 //reversed so that the Heap is a MinHeap rather than a MaxHeap
-/proc/HeapPathWeightCompare(datum/PathNode/a, datum/PathNode/b)
+/proc/HeapPathWeightCompare(datum/pathnode/a, datum/pathnode/b)
 	return b.f - a.f
 
 //wrapper that returns an empty list if A* failed to find a path
@@ -111,11 +119,11 @@ Actual Adjacent procs :
 		if(call(start, dist)(end) > maxnodes)
 			return FALSE
 		maxnodedepth = maxnodes //no need to consider path longer than maxnodes
-	var/datum/Heap/open = new /datum/Heap(/proc/HeapPathWeightCompare) //the open list
+	var/datum/heap/open = new /datum/heap(/proc/HeapPathWeightCompare) //the open list
 	var/list/openc = new() //open list for node check
 	var/list/path = null //the returned path, if any
 	//initialization
-	var/datum/PathNode/cur = new /datum/PathNode(start,null,0,call(start,dist)(end),0,15,1)//current processed turf
+	var/datum/pathnode/cur = new /datum/pathnode(start,null,0,call(start,dist)(end),0,15,1)//current processed turf
 	open.Insert(cur)
 	openc[start] = cur
 	//then run the main loop
@@ -131,10 +139,10 @@ Actual Adjacent procs :
 		//found the target turf (or close enough), let's create the path to it
 		if(cur.source == end || closeenough)
 			path = new()
-			path.Add(cur.source)
+			path.Add(new /obj/effect/pixelpoint(cur.source))
 			while(cur.prevNode)
 				cur = cur.prevNode
-				path.Add(cur.source)
+				path.Add(new /obj/effect/pixelpoint(cur.source))
 			break
 		//get adjacents turfs using the adjacent proc, checking for access with id
 		if((!maxnodedepth)||(cur.nt <= maxnodedepth))//if too many steps, don't process that path
@@ -143,7 +151,7 @@ Actual Adjacent procs :
 				if(cur.bf & f)
 					var/T = get_step(cur.source,f)
 					if(T != exclude)
-						var/datum/PathNode/CN = openc[T]  //current checking turf
+						var/datum/pathnode/CN = openc[T]  //current checking turf
 						var/r=((f & MASK_ODD)<<1)|((f & MASK_EVEN)>>1) //getting reverse direction throught swapping even and odd bits.((f & 01010101)<<1)|((f & 10101010)>>1)
 						var/newg = cur.g + call(cur.source,dist)(T)
 						if(CN)

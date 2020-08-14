@@ -16,7 +16,7 @@ GLOBAL_LIST_EMPTY(blob_nodes)
 	see_in_dark = 8
 	invisibility = INVISIBILITY_OBSERVER
 	layer = FLY_LAYER
-
+	see_invisible = SEE_INVISIBLE_LIVING
 	pass_flags = PASSBLOB
 	faction = list(ROLE_BLOB)
 	lighting_alpha = LIGHTING_PLANE_ALPHA_MOSTLY_INVISIBLE
@@ -93,7 +93,7 @@ GLOBAL_LIST_EMPTY(blob_nodes)
 
 /mob/camera/blob/proc/is_valid_turf(turf/T)
 	var/area/A = get_area(T)
-	if((A && !A.blob_allowed) || !T || !is_station_level(T.z) || isspaceturf(T))
+	if((A && !(A.area_flags & BLOBS_ALLOWED)) || !T || !is_station_level(T.z) || isspaceturf(T))
 		return FALSE
 	return TRUE
 
@@ -121,9 +121,9 @@ GLOBAL_LIST_EMPTY(blob_nodes)
 
 	if(!victory_in_progress && max_count < blobs_legit.len)
 		max_count = blobs_legit.len
-		
+
 	if((world.time >= announcement_time || blobs_legit.len >= announcement_size) && !has_announced)
-		priority_announce("Confirmed outbreak of level 5 biohazard aboard [station_name()]. All personnel must contain the outbreak.", "Biohazard Alert", 'sound/ai/outbreak5.ogg')
+		priority_announce("Confirmed outbreak of level 5 biohazard aboard [station_name()]. All personnel must contain the outbreak.", "Biohazard Alert", 'sound/ai/announcer/biology.ogg')
 		has_announced = TRUE
 
 /mob/camera/blob/proc/victory()
@@ -140,7 +140,7 @@ GLOBAL_LIST_EMPTY(blob_nodes)
 
 		var/area/Ablob = get_area(T)
 
-		if(!Ablob.blob_allowed)
+		if(!(Ablob.area_flags & BLOBS_ALLOWED))
 			continue
 
 		if(!(ROLE_BLOB in L.faction))
@@ -153,7 +153,7 @@ GLOBAL_LIST_EMPTY(blob_nodes)
 		for(var/area/A in GLOB.sortedAreas)
 			if(!(A.type in GLOB.the_station_areas))
 				continue
-			if(!A.blob_allowed)
+			if(!(A.area_flags & BLOBS_ALLOWED))
 				continue
 			A.color = blobstrain.color
 			A.name = "blob"
@@ -190,7 +190,9 @@ GLOBAL_LIST_EMPTY(blob_nodes)
 	return ..()
 
 /mob/camera/blob/Login()
-	..()
+	. = ..()
+	if(!. || !client)
+		return FALSE
 	to_chat(src, "<span class='notice'>You are the overmind!</span>")
 	blob_help()
 	update_health_hud()
@@ -252,7 +254,7 @@ GLOBAL_LIST_EMPTY(blob_nodes)
 
 /mob/camera/blob/Stat()
 	..()
-	if(statpanel("ИГРА"))
+	if(statpanel("Игра"))
 		if(blob_core)
 			stat(null, "Core Health: [blob_core.obj_integrity]")
 			stat(null, "Power Stored: [blob_points]/[max_blob_points]")
@@ -264,18 +266,18 @@ GLOBAL_LIST_EMPTY(blob_nodes)
 				stat(null, "Time Before Manual Placement: [max(round((manualplace_min_time - world.time)*0.1, 0.1), 0)]")
 			stat(null, "Time Before Automatic Placement: [max(round((autoplace_max_time - world.time)*0.1, 0.1), 0)]")
 
-/mob/camera/blob/Move(NewLoc, Dir = 0)
+/mob/camera/blob/Move(NewLoc, Dir = 0, _step_x, _step_y)
 	if(placed)
-		var/obj/structure/blob/B = locate() in range("3x3", NewLoc)
+		var/obj/structure/blob/B = locate() in bounds(src, 96) // 3 tiles every direction
 		if(B)
-			forceMove(NewLoc)
+			forceMove(NewLoc, _step_x, _step_y)
 		else
 			return 0
 	else
 		var/area/A = get_area(NewLoc)
 		if(isspaceturf(NewLoc) || istype(A, /area/shuttle)) //if unplaced, can't go on shuttles or space tiles
 			return 0
-		forceMove(NewLoc)
+		forceMove(NewLoc, _step_x, _step_y)
 		return 1
 
 /mob/camera/blob/mind_initialize()

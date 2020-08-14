@@ -63,6 +63,10 @@
 	desc = "A tank full of industrial welding fuel. Do not consume."
 	icon_state = "fuel"
 	reagent_id = /datum/reagent/fuel
+	bound_width = 26
+	bound_height = 26
+	bound_x = 3
+	brotation = NONE
 
 /obj/structure/reagent_dispensers/fueltank/boom()
 	explosion(get_turf(src), 0, 1, 5, flame_range = 5)
@@ -110,6 +114,15 @@
 		return
 	return ..()
 
+/obj/structure/reagent_dispensers/fueltank/large
+	name = "high capacity fuel tank"
+	desc = "A tank full of a high quantity of welding fuel. Keep away from open flames."
+	icon_state = "fuel_high"
+	tank_volume = 5000
+
+/obj/structure/reagent_dispensers/fueltank/large/boom()
+	explosion(get_turf(src), 1, 2, 7, flame_range = 12)
+	qdel(src)
 
 /obj/structure/reagent_dispensers/peppertank
 	name = "pepper spray refiller"

@@ -2,21 +2,23 @@
 
 /mob/living/simple_animal/pet/dog
 	mob_biotypes = MOB_ORGANIC|MOB_BEAST
-	response_help_continuous = "pets"
-	response_help_simple = "pet"
-	response_disarm_continuous = "bops"
-	response_disarm_simple = "bop"
-	response_harm_continuous = "kicks"
-	response_harm_simple = "kick"
-	speak = list("YAP", "Woof!", "Bark!", "AUUUUUU")
-	speak_emote = list("barks", "woofs")
-	emote_hear = list("barks!", "woofs!", "yaps.","pants.")
-	emote_see = list("shakes its head.", "chases its tail.","shivers.")
+	response_help_continuous = "гладит"
+	response_help_simple = "гладит"
+	response_disarm_continuous = "отталкивает"
+	response_disarm_simple = "отталкивает"
+	response_harm_continuous = "пинает"
+	response_harm_simple = "пинает"
+	speak = list("ТЯФ", "Вуф!", "Гав!", "АУУУУУУ!!!")
+	speak_emote = list("гавкает", "вуфает")
+	emote_hear = list("гавкает!", "вуфает!", "тявкает.","ластится.")
+	emote_see = list("качает головой.", "гоняется за своим хвостом.","дрожит.")
 	faction = list("neutral")
 	see_in_dark = 5
 	speak_chance = 1
 	turns_per_move = 10
 	can_be_held = TRUE
+	pet_bonus = TRUE
+	pet_bonus_emote = "woofs happily!"
 	var/turns_since_scan = 0
 	var/obj/movement_target
 
@@ -70,18 +72,18 @@
 						movement_target.attack_animal(src)
 					else if(ishuman(movement_target.loc) )
 						if(prob(20))
-							emote("me", 1, "stares at [movement_target.loc]'s [movement_target] with a sad puppy-face")
+							manual_emote("stares at [movement_target.loc]'s [movement_target] with a sad puppy-face")
 
 		if(prob(1))
-			emote("me", 1, pick("dances around.","chases its tail!"))
+			manual_emote(pick("dances around.","chases its tail!"))
 			INVOKE_ASYNC(GLOBAL_PROC, .proc/dance_rotate, src)
 
 //Corgis and pugs are now under one dog subtype
 
 /mob/living/simple_animal/pet/dog/corgi
-	name = "\improper corgi"
-	real_name = "corgi"
-	desc = "It's a corgi."
+	name = "Корги"
+	real_name = "Корги"
+	desc = "Это же корги."
 	icon_state = "corgi"
 	icon_living = "corgi"
 	icon_dead = "corgi_dead"
@@ -114,9 +116,9 @@
 
 
 /mob/living/simple_animal/pet/dog/pug
-	name = "\improper pug"
-	real_name = "pug"
-	desc = "It's a pug."
+	name = "Мопс"
+	real_name = "Мопс"
+	desc = "А это мопс."
 	icon = 'icons/mob/pets.dmi'
 	icon_state = "pug"
 	icon_living = "pug"
@@ -126,9 +128,13 @@
 	collar_type = "pug"
 	held_state = "pug"
 
+/mob/living/simple_animal/pet/dog/pug/mcgriff
+	name = "McGriff"
+	desc = "This dog can tell someting smells around here, and that something is CRIME!"
+
 /mob/living/simple_animal/pet/dog/corgi/exoticcorgi
-	name = "Exotic Corgi"
-	desc = "As cute as it is colorful!"
+	name = "Экзотический корги"
+	desc = "Как мило, так и красочно!"
 	icon = 'icons/mob/pets.dmi'
 	icon_state = "corgigrey"
 	icon_living = "corgigrey"
@@ -163,10 +169,10 @@
 	user.set_machine(src)
 
 
-	var/dat = 	"<div align='center'><b>Inventory of [name]</b></div><p>"
-	dat += "<br><B>Head:</B> <A href='?src=[REF(src)];[inventory_head ? "remove_inv=head'>[inventory_head]" : "add_inv=head'>Nothing"]</A>"
-	dat += "<br><B>Back:</B> <A href='?src=[REF(src)];[inventory_back ? "remove_inv=back'>[inventory_back]" : "add_inv=back'>Nothing"]</A>"
-	dat += "<br><B>Collar:</B> <A href='?src=[REF(src)];[pcollar ? "remove_inv=collar'>[pcollar]" : "add_inv=collar'>Nothing"]</A>"
+	var/dat = 	"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><div align='center'><b>Инвентарь [name]</b></div><p>"
+	dat += "<br><B>Голова:</B> <A href='?src=[REF(src)];[inventory_head ? "remove_inv=head'>[inventory_head]" : "add_inv=head'>Ничего"]</A>"
+	dat += "<br><B>Спина:</B> <A href='?src=[REF(src)];[inventory_back ? "remove_inv=back'>[inventory_back]" : "add_inv=back'>Ничего"]</A>"
+	dat += "<br><B>Ошейник:</B> <A href='?src=[REF(src)];[pcollar ? "remove_inv=collar'>[pcollar]" : "add_inv=collar'>Ничего"]</A>"
 
 	user << browse(dat, "window=mob[REF(src)];size=325x500")
 	onclose(user, "mob[REF(src)]")
@@ -192,14 +198,14 @@
 /mob/living/simple_animal/pet/dog/corgi/attackby(obj/item/O, mob/user, params)
 	if (istype(O, /obj/item/razor))
 		if (shaved)
-			to_chat(user, "<span class='warning'>You can't shave this corgi, it's already been shaved!</span>")
+			to_chat(user, "<span class='warning'>Этот корги уже побрит!</span>")
 			return
 		if (nofur)
-			to_chat(user, "<span class='warning'>You can't shave this corgi, it doesn't have a fur coat!</span>")
+			to_chat(user, "<span class='warning'>У этого корги нет шерсти!</span>")
 			return
-		user.visible_message("<span class='notice'>[user] starts to shave [src] using \the [O].</span>", "<span class='notice'>You start to shave [src] using \the [O]...</span>")
+		user.visible_message("<span class='notice'>[user] начинает брить [src] используя [O].</span>", "<span class='notice'>Начинаю брить [src] используя [O]...</span>")
 		if(do_after(user, 50, target = src))
-			user.visible_message("<span class='notice'>[user] shaves [src]'s hair using \the [O].</span>")
+			user.visible_message("<span class='notice'>[user] бреет [src] используя [O].</span>")
 			playsound(loc, 'sound/items/welder2.ogg', 20, TRUE)
 			shaved = TRUE
 			icon_living = "[initial(icon_living)]_shaved"
@@ -229,7 +235,7 @@
 					update_corgi_fluff()
 					regenerate_icons()
 				else
-					to_chat(usr, "<span class='warning'>There is nothing to remove from its [remove_from]!</span>")
+					to_chat(usr, "<span class='warning'>Снимать нечего с головы!</span>")
 					return
 			if("back")
 				if(inventory_back)
@@ -238,7 +244,7 @@
 					update_corgi_fluff()
 					regenerate_icons()
 				else
-					to_chat(usr, "<span class='warning'>There is nothing to remove from its [remove_from]!</span>")
+					to_chat(usr, "<span class='warning'>Снимать нечего с спины!</span>")
 					return
 			if("collar")
 				if(pcollar)
@@ -257,7 +263,7 @@
 			if("collar")
 				var/obj/item/clothing/neck/petcollar/P = usr.get_active_held_item()
 				if(!istype(P))
-					to_chat(usr,"<span class='warning'>That's not a collar.</span>")
+					to_chat(usr,"<span class='warning'>Это не ошейник.</span>")
 					return
 				add_collar(P, usr)
 				update_corgi_fluff()
@@ -267,17 +273,17 @@
 
 			if("back")
 				if(inventory_back)
-					to_chat(usr, "<span class='warning'>It's already wearing something!</span>")
+					to_chat(usr, "<span class='warning'>На нём уже что-то есть!</span>")
 					return
 				else
 					var/obj/item/item_to_add = usr.get_active_held_item()
 
 					if(!item_to_add)
-						usr.visible_message("<span class='notice'>[usr] pets [src].</span>", "<span class='notice'>You rest your hand on [src]'s back for a moment.</span>")
+						usr.visible_message("<span class='notice'>[usr] гладит [src].</span>", "<span class='notice'>Держу свою руку на спине [src]. Да?</span>")
 						return
 
 					if(!usr.temporarilyRemoveItemFromInventory(item_to_add))
-						to_chat(usr, "<span class='warning'>\The [item_to_add] is stuck to your hand, you cannot put it on [src]'s back!</span>")
+						to_chat(usr, "<span class='warning'>[capitalize(item_to_add)] застрял в моей руке, у меня не получится повесить его на спину [src]!</span>")
 						return
 
 					if(istype(item_to_add, /obj/item/grenade/c4)) // last thing he ever wears, I guess
@@ -290,7 +296,7 @@
 						allowed = TRUE
 
 					if(!allowed)
-						to_chat(usr, "<span class='warning'>You set [item_to_add] on [src]'s back, but it falls off!</span>")
+						to_chat(usr, "<span class='warning'>Вешаю [item_to_add] на спину [src], но оно спадает!</span>")
 						item_to_add.forceMove(drop_location())
 						if(prob(25))
 							step_rand(item_to_add)
@@ -319,17 +325,17 @@
 
 	if(inventory_head)
 		if(user)
-			to_chat(user, "<span class='warning'>You can't put more than one hat on [src]!</span>")
+			to_chat(user, "<span class='warning'>Не могу посадить больше одной на [src]!</span>")
 		return
 	if(!item_to_add)
-		user.visible_message("<span class='notice'>[user] pets [src].</span>", "<span class='notice'>You rest your hand on [src]'s head for a moment.</span>")
+		user.visible_message("<span class='notice'>[user] гладит [src].</span>", "<span class='notice'>Держу свою руку на голове [src]. Да?</span>")
 		if(flags_1 & HOLOGRAM_1)
 			return
 		SEND_SIGNAL(user, COMSIG_ADD_MOOD_EVENT, src, /datum/mood_event/pet_animal, src)
 		return
 
 	if(user && !user.temporarilyRemoveItemFromInventory(item_to_add))
-		to_chat(user, "<span class='warning'>\The [item_to_add] is stuck to your hand, you cannot put it on [src]'s head!</span>")
+		to_chat(user, "<span class='warning'>[capitalize(item_to_add)] застрял в моей руке, у меня не получится положить его на голову [src]!</span>")
 		return 0
 
 	var/valid = FALSE
@@ -340,17 +346,17 @@
 
 	if(valid)
 		if(health <= 0)
-			to_chat(user, "<span class='notice'>There is merely a dull, lifeless look in [real_name]'s eyes as you put the [item_to_add] on [p_them()].</span>")
+			to_chat(user, "<span class='notice'>Просто скучный, безжизненный взгляд виден в глазах [real_name] пока я пытаюсь напялить [item_to_add] на н[ru_ego()].</span>")
 		else if(user)
-			user.visible_message("<span class='notice'>[user] puts [item_to_add] on [real_name]'s head. [src] looks at [user] and barks once.</span>",
-				"<span class='notice'>You put [item_to_add] on [real_name]'s head. [src] gives you a peculiar look, then wags [p_their()] tail once and barks.</span>",
-				"<span class='hear'>You hear a friendly-sounding bark.</span>")
+			user.visible_message("<span class='notice'>[user] надевает [item_to_add] на голову [real_name]. [src] смотрит на [user] и гавкает радостно.</span>",
+				"<span class='notice'>Надеваю [item_to_add] на голову [real_name]. [src] смотрит на меня своеобразно, затем [ru_who()] подвиливает хвостиком и гавкает радостно.</span>",
+				"<span class='hear'>Слышу дружественно звучащий лай.</span>")
 		item_to_add.forceMove(src)
 		src.inventory_head = item_to_add
 		update_corgi_fluff()
 		regenerate_icons()
 	else
-		to_chat(user, "<span class='warning'>You set [item_to_add] on [src]'s head, but it falls off!</span>")
+		to_chat(user, "<span class='warning'>Надеваю [item_to_add] на голову [src], но оно спадает!</span>")
 		item_to_add.forceMove(drop_location())
 		if(prob(25))
 			step_rand(item_to_add)
@@ -363,10 +369,10 @@
 	name = real_name
 	desc = initial(desc)
 	// BYOND/DM doesn't support the use of initial on lists.
-	speak = list("YAP", "Woof!", "Bark!", "AUUUUUU")
-	speak_emote = list("barks", "woofs")
-	emote_hear = list("barks!", "woofs!", "yaps.","pants.")
-	emote_see = list("shakes its head.", "chases its tail.","shivers.")
+	speak = list("ЯП", "Вуф!", "Гав!", "АУУУУУУ")
+	speak_emote = list("гавкает", "вуфает")
+	emote_hear = list("гавкает!", "вуфает!", "тявкает.","ластится.")
+	emote_see = list("мотает головой.", "бегает за своим хвостом.","дрожит.")
 	desc = initial(desc)
 	set_light(0)
 
@@ -379,17 +385,17 @@
 		DF.apply(src)
 
 //IAN! SQUEEEEEEEEE~
-/mob/living/simple_animal/pet/dog/corgi/Ian
-	name = "Ian"
-	real_name = "Ian"	//Intended to hold the name without altering it.
+/mob/living/simple_animal/pet/dog/corgi/ian
+	name = "Ян"
+	real_name = "Ян"	//Intended to hold the name without altering it.
 	gender = MALE
-	desc = "It's the HoP's beloved corgi."
-	response_help_continuous = "pets"
-	response_help_simple = "pet"
-	response_disarm_continuous = "bops"
-	response_disarm_simple = "bop"
-	response_harm_continuous = "kicks"
-	response_harm_simple = "kick"
+	desc = "Это любимый корги главы персонала."
+	response_help_continuous = "гладит"
+	response_help_simple = "гладит"
+	response_disarm_continuous = "толкает"
+	response_disarm_simple = "толкает"
+	response_harm_continuous = "пинает"
+	response_harm_simple = "пинает"
 	gold_core_spawnable = NO_SPAWN
 	unique_pet = TRUE
 	var/age = 0
@@ -397,7 +403,7 @@
 	var/memory_saved = FALSE
 	var/saved_head //path
 
-/mob/living/simple_animal/pet/dog/corgi/Ian/Initialize()
+/mob/living/simple_animal/pet/dog/corgi/ian/Initialize()
 	. = ..()
 	//parent call must happen first to ensure IAN
 	//is not in nullspace when child puppies spawn
@@ -406,10 +412,10 @@
 		var/turf/target = get_turf(loc)
 		if(target)
 			var/mob/living/simple_animal/pet/dog/corgi/puppy/P = new /mob/living/simple_animal/pet/dog/corgi/puppy(target)
-			P.name = "Ian"
-			P.real_name = "Ian"
+			P.name = "Ян"
+			P.real_name = "Ян"
 			P.gender = MALE
-			P.desc = "It's the HoP's beloved corgi puppy."
+			P.desc = "Это любимый щенок корги главы персонала."
 			Write_Memory(FALSE)
 			return INITIALIZE_HINT_QDEL
 	else if(age == record_age)
@@ -417,21 +423,21 @@
 		icon_living = "old_corgi"
 		held_state = "old_corgi"
 		icon_dead = "old_corgi_dead"
-		desc = "At a ripe old age of [record_age], Ian's not as spry as he used to be, but he'll always be the HoP's beloved corgi." //RIP
+		desc = "В зрелом возрасте [record_age], Ян не такой бодрый, как раньше, но он всегда будет любимым корги главы персонала." //RIP
 		turns_per_move = 20
 
-/mob/living/simple_animal/pet/dog/corgi/Ian/Life()
+/mob/living/simple_animal/pet/dog/corgi/ian/Life()
 	if(!stat && SSticker.current_state == GAME_STATE_FINISHED && !memory_saved)
 		Write_Memory(FALSE)
 		memory_saved = TRUE
 	..()
 
-/mob/living/simple_animal/pet/dog/corgi/Ian/death()
+/mob/living/simple_animal/pet/dog/corgi/ian/death()
 	if(!memory_saved)
 		Write_Memory(TRUE)
 	..()
 
-/mob/living/simple_animal/pet/dog/corgi/Ian/proc/Read_Memory()
+/mob/living/simple_animal/pet/dog/corgi/ian/proc/Read_Memory()
 	if(fexists("data/npc_saves/Ian.sav")) //legacy compatability to convert old format to new
 		var/savefile/S = new /savefile("data/npc_saves/Ian.sav")
 		S["age"] 		>> age
@@ -453,7 +459,7 @@
 	if(saved_head)
 		place_on_head(new saved_head)
 
-/mob/living/simple_animal/pet/dog/corgi/Ian/proc/Write_Memory(dead)
+/mob/living/simple_animal/pet/dog/corgi/ian/proc/Write_Memory(dead)
 	var/json_file = file("data/npc_saves/Ian.json")
 	var/list/file_data = list()
 	if(!dead)
@@ -473,15 +479,15 @@
 	fdel(json_file)
 	WRITE_FILE(json_file, json_encode(file_data))
 
-/mob/living/simple_animal/pet/dog/corgi/Ian/narsie_act()
+/mob/living/simple_animal/pet/dog/corgi/ian/narsie_act()
 	playsound(src, 'sound/magic/demon_dies.ogg', 75, TRUE)
 	var/mob/living/simple_animal/pet/dog/corgi/narsie/N = new(loc)
 	N.setDir(dir)
 	gib()
 
 /mob/living/simple_animal/pet/dog/corgi/narsie
-	name = "Nars-Ian"
-	desc = "Ia! Ia!"
+	name = "Нарс-Ян"
+	desc = "Ия! Ия!"
 	icon_state = "narsian"
 	icon_living = "narsian"
 	icon_dead = "narsian_dead"
@@ -495,23 +501,23 @@
 	..()
 	for(var/mob/living/simple_animal/pet/P in range(1, src))
 		if(P != src && !istype(P,/mob/living/simple_animal/pet/dog/corgi/narsie))
-			visible_message("<span class='warning'>[src] devours [P]!</span>", \
-			"<span class='cult big bold'>DELICIOUS SOULS</span>")
+			visible_message("<span class='warning'>[src] пожирает [P]!</span>", \
+			"<span class='cult big bold'>ВКУСНЫЕ ДУШИ</span>")
 			playsound(src, 'sound/magic/demon_attack1.ogg', 75, TRUE)
 			narsie_act()
 			if(P.mind)
 				if(P.mind.hasSoul)
 					P.mind.hasSoul = FALSE //Nars-Ian ate your soul; you don't have one anymore
 				else
-					visible_message("<span class='cult big bold'>... Aw, someone beat me to this one.</span>")
+					visible_message("<span class='cult big bold'>... Оу, кто-то съел меня до этого.</span>")
 			P.gib()
 
 /mob/living/simple_animal/pet/dog/corgi/narsie/update_corgi_fluff()
 	..()
-	speak = list("Tari'karat-pasnar!", "IA! IA!", "BRRUUURGHGHRHR")
-	speak_emote = list("growls", "barks ominously")
-	emote_hear = list("barks echoingly!", "woofs hauntingly!", "yaps in an eldritch manner.", "mutters something unspeakable.")
-	emote_see = list("communes with the unnameable.", "ponders devouring some souls.", "shakes.")
+	speak = list("Тари'карат-паснар!", "Ия! Ия!", "БРУБУХБУБХУХ")
+	speak_emote = list("воет", "зловеще лает")
+	emote_hear = list("лает эхом!", "вуфает навязчиво!", "тявкает сверхъестественный образом.", "бормочет что-то невыразимое.")
+	emote_see = list("общается с неназванным.", "обдумывает пожирание некоторых душ.", "шатается.")
 
 /mob/living/simple_animal/pet/dog/corgi/narsie/narsie_act()
 	adjustBruteLoss(-maxHealth)
@@ -563,9 +569,9 @@
 
 
 /mob/living/simple_animal/pet/dog/corgi/puppy
-	name = "\improper corgi puppy"
-	real_name = "corgi"
-	desc = "It's a corgi puppy!"
+	name = "Щенок корги"
+	real_name = "Корги"
+	desc = "Это же щеночек корги!"
 	icon_state = "puppy"
 	icon_living = "puppy"
 	icon_dead = "puppy_dead"
@@ -577,15 +583,15 @@
 //puppies cannot wear anything.
 /mob/living/simple_animal/pet/dog/corgi/puppy/Topic(href, href_list)
 	if(href_list["remove_inv"] || href_list["add_inv"])
-		to_chat(usr, "<span class='warning'>You can't fit this on [src]!</span>")
+		to_chat(usr, "<span class='warning'>Не могу надеть это на [src]!</span>")
 		return
 	..()
 
 
 /mob/living/simple_animal/pet/dog/corgi/puppy/void		//Tribute to the corgis born in nullspace
-	name = "\improper void puppy"
-	real_name = "voidy"
-	desc = "A corgi puppy that has been infused with deep space energy. It's staring back..."
+	name = "Пустотный щеник"
+	real_name = "Пустота"
+	desc = "Щенок корги, наполненный энергией дальнего космоса..."
 	icon_state = "void_puppy"
 	icon_living = "void_puppy"
 	icon_dead = "void_puppy_dead"
@@ -600,52 +606,33 @@
 
 
 //LISA! SQUEEEEEEEEE~
-/mob/living/simple_animal/pet/dog/corgi/Lisa
-	name = "Lisa"
-	real_name = "Lisa"
+/mob/living/simple_animal/pet/dog/corgi/lisa
+	name = "Лиза"
+	real_name = "Лиза"
 	gender = FEMALE
-	desc = "She's tearing you apart."
+	desc = "Она разорвёт тебя на части."
 	gold_core_spawnable = NO_SPAWN
 	unique_pet = TRUE
 	icon_state = "lisa"
 	icon_living = "lisa"
 	icon_dead = "lisa_dead"
-	response_help_continuous = "pets"
-	response_help_simple = "pet"
-	response_disarm_continuous = "bops"
-	response_disarm_simple = "bop"
-	response_harm_continuous = "kicks"
-	response_harm_simple = "kick"
+	response_help_continuous = "гладит"
+	response_help_simple = "гладит"
+	response_disarm_continuous = "толкает"
+	response_disarm_simple = "толкает"
+	response_harm_continuous = "пинает"
+	response_harm_simple = "пинает"
 	held_state = "lisa"
 	var/puppies = 0
 
 //Lisa already has a cute bow!
-/mob/living/simple_animal/pet/dog/corgi/Lisa/Topic(href, href_list)
+/mob/living/simple_animal/pet/dog/corgi/lisa/Topic(href, href_list)
 	if(href_list["remove_inv"] || href_list["add_inv"])
-		to_chat(usr, "<span class='warning'>[src] already has a cute bow!</span>")
+		to_chat(usr, "<span class='warning'>[src] уже имеет милый вид!</span>")
 		return
 	..()
 
-/mob/living/simple_animal/pet/dog/corgi/Lisa/Life()
+/mob/living/simple_animal/pet/dog/corgi/lisa/Life()
 	..()
 
 	make_babies()
-
-/mob/living/simple_animal/pet/dog/attack_hand(mob/living/carbon/human/M)
-	. = ..()
-	switch(M.a_intent)
-		if("help")
-			wuv(1,M)
-		if("harm")
-			wuv(-1,M)
-
-/mob/living/simple_animal/pet/dog/proc/wuv(change, mob/M)
-	if(change)
-		if(change > 0)
-			if(M && stat != DEAD) // Added check to see if this mob (the dog) is dead to fix issue 2454
-				new /obj/effect/temp_visual/heart(loc)
-				emote("me", 1, "yaps happily!")
-				SEND_SIGNAL(M, COMSIG_ADD_MOOD_EVENT, src, /datum/mood_event/pet_animal, src)
-		else
-			if(M && stat != DEAD) // Same check here, even though emote checks it as well (poor form to check it only in the help case)
-				emote("me", 1, "growls!")

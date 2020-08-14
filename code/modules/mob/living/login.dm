@@ -1,5 +1,8 @@
 /mob/living/Login()
-	..()
+	. = ..()
+	if(!. || !client)
+		return FALSE
+
 	//Mind updates
 	sync_mind()
 	mind.show_memory(src, 0)
@@ -31,3 +34,4 @@
 	var/datum/component/battletension/BT = GetComponent(/datum/component/battletension)
 	if(BT)
 		BT.pick_sound()
+	med_hud_set_status()

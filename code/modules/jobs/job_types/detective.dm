@@ -1,9 +1,7 @@
 /datum/job/detective
 	title = "Detective"
-	flag = DETECTIVE
 	auto_deadmin_role_flags = DEADMIN_POSITION_SECURITY
 	department_head = list("Head of Security")
-	department_flag = ENGSEC
 	faction = "Station"
 	total_positions = 1
 	spawn_positions = 1
@@ -38,6 +36,7 @@
 	l_pocket = /obj/item/toy/crayon/white
 	r_pocket = /obj/item/lighter
 	backpack_contents = list(/obj/item/storage/box/evidence=1,\
+		/obj/item/modular_computer/tablet/preset/cheap=1,\
 		/obj/item/detective_scanner=1,\
 		/obj/item/melee/classic_baton=1)
 	mask = /obj/item/clothing/mask/cigarette

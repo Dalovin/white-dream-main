@@ -1,6 +1,6 @@
 /obj/item/ammo_casing
-	name = "bullet casing"
-	desc = "A bullet casing."
+	name = "патрон"
+	desc = "Патрон или гильза от патрона? Узнаем!"
 	icon = 'icons/obj/ammo.dmi'
 	icon_state = "s-casing"
 	flags_1 = CONDUCT_1
@@ -22,15 +22,15 @@
 	var/harmful = TRUE //pacifism check for boolet, set to FALSE if bullet is non-lethal
 
 /obj/item/ammo_casing/spent
-	name = "spent bullet casing"
+	name = "гильза"
 	BB = null
 
 /obj/item/ammo_casing/Initialize()
 	. = ..()
 	if(projectile_type)
 		BB = new projectile_type(src)
-	pixel_x = rand(-10, 10)
-	pixel_y = rand(-10, 10)
+	if(loc)
+		forceMove(loc, rand(-2,2), rand(-2,2))
 	setDir(pick(GLOB.alldirs))
 	update_icon()
 
@@ -44,7 +44,26 @@
 /obj/item/ammo_casing/update_icon()
 	..()
 	icon_state = "[initial(icon_state)][BB ? "-live" : ""]"
-	desc = "[initial(desc)][BB ? "" : " This one is spent."]"
+	desc = "[initial(desc)][BB ? "" : " Этот уже стрелян."]"
+
+/*
+ * On accidental consumption, 'spend' the ammo, and add in some gunpowder
+ */
+/obj/item/ammo_casing/on_accidental_consumption(mob/living/carbon/M, mob/living/carbon/user, obj/item/source_item,  discover_after = TRUE)
+	if(BB)
+		BB = null
+		update_icon()
+		var/obj/item/reagent_containers/food/snacks/S = source_item
+		if(istype(S))
+			if(S.reagents)
+				S.reagents.add_reagent(/datum/reagent/gunpowder, S.reagents.total_volume*(2/3))
+			if(S.tastes?.len)
+				S.tastes += "salt"
+				S.tastes["salt"] = 3
+
+		M.reagents?.add_reagent(/datum/reagent/gunpowder, 3)
+
+	return ..()
 
 //proc to magically refill a casing with a new projectile
 /obj/item/ammo_casing/proc/newshot() //For energy weapons, syringe gun, shotgun shells and wands (!).
@@ -66,9 +85,9 @@
 					continue
 			if (boolets > 0)
 				box.update_icon()
-				to_chat(user, "<span class='notice'>You collect [boolets] shell\s. [box] now contains [box.stored_ammo.len] shell\s.</span>")
+				to_chat(user, "<span class='notice'>Собираю [boolets] в [box], который теперь содержит [box.stored_ammo.len] патронов.</span>")
 			else
-				to_chat(user, "<span class='warning'>You fail to collect anything!</span>")
+				to_chat(user, "<span class='warning'>БЛЯТЬ!</span>")
 	else
 		return ..()
 

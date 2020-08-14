@@ -1,4 +1,4 @@
-#define MAX_EMAG_ROCKETS 8
+#define MAX_EMAG_ROCKETS 5
 #define BEACON_COST 500
 #define SP_LINKED 1
 #define SP_READY 2
@@ -7,15 +7,14 @@
 #define SP_UNREADY 5
 
 /obj/machinery/computer/cargo/express
-	name = "express supply console"
-	desc = "This console allows the user to purchase a package \
-		with 1/40th of the delivery time: made possible by NanoTrasen's new \"1500mm Orbital Railgun\".\
-		All sales are near instantaneous - please choose carefully"
+	name = "эксперсс консоль"
+	desc = "Эта консоль позволяет пользователю приобрести пакет \
+		с 1/40 от времени доставки: стало возможным благодаря новой \
+		орбитальной пушки НТ \
+		Все продажи практически мгновенные - пожалуйста, выбирайте внимательно"
 	icon_screen = "supply_express"
 	circuit = /obj/item/circuitboard/computer/cargo/express
-	ui_x = 600
-	ui_y = 700
-	blockade_warning = "Bluespace instability detected. Delivery impossible."
+	blockade_warning = "Замечена блюспейс нестабильность. Доставка невозможна."
 	req_access = list(ACCESS_QM)
 
 	var/message
@@ -40,11 +39,11 @@
 /obj/machinery/computer/cargo/express/attackby(obj/item/W, mob/living/user, params)
 	if((istype(W, /obj/item/card/id) || istype(W, /obj/item/pda)) && allowed(user))
 		locked = !locked
-		to_chat(user, "<span class='notice'>You [locked ? "lock" : "unlock"] the interface.</span>")
+		to_chat(user, "<span class='notice'>Вы [locked ? "lock" : "unlock"] интерфейс.</span>")
 		return
 	else if(istype(W, /obj/item/disk/cargo/bluespace_pod))
 		podType = /obj/structure/closet/supplypod/bluespacepod//doesnt effect circuit board, making reversal possible
-		to_chat(user, "<span class='notice'>You insert the disk into [src], allowing for advanced supply delivery vehicles.</span>")
+		to_chat(user, "<span class='notice'>Вы вставляете диск в [src], разрешая более продвинутую доставку припасов.</span>")
 		qdel(W)
 		return TRUE
 	else if(istype(W, /obj/item/supplypod_beacon))
@@ -53,15 +52,15 @@
 			sb.link_console(src, user)
 			return TRUE
 		else
-			to_chat(user, "<span class='alert'>[src] is already linked to [sb].</span>")
+			to_chat(user, "<span class='alert'>[src] подключен к [sb].</span>")
 	..()
 
 /obj/machinery/computer/cargo/express/emag_act(mob/living/user)
 	if(obj_flags & EMAGGED)
 		return
 	if(user)
-		user.visible_message("<span class='warning'>[user] swipes a suspicious card through [src]!</span>",
-		"<span class='notice'>You change the routing protocols, allowing the Supply Pod to land anywhere on the station.</span>")
+		user.visible_message("<span class='warning'>[user] проводит подохрительной картой по [src]!</span>",
+		"<span class='notice'>Вы изменяете протоколы маршрутизации, позволяя консоли снабжения приземлиться в любом месте на станции.</span>")
 	obj_flags |= EMAGGED
 	// This also sets this on the circuit board
 	var/obj/item/circuitboard/computer/cargo/board = circuit
@@ -88,10 +87,10 @@
 			"desc" = P.desc || P.name // If there is a description, use it. Otherwise use the pack's name.
 		))
 
-/obj/machinery/computer/cargo/express/ui_interact(mob/living/user, ui_key = "main", datum/tgui/ui = null, force_open = 0, datum/tgui/master_ui = null, datum/ui_state/state = GLOB.default_state) // Remember to use the appropriate state.
-	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+/obj/machinery/computer/cargo/express/ui_interact(mob/living/user, datum/tgui/ui)
+	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
-		ui = new(user, src, ui_key, "cargo_express", name, ui_x, ui_y, master_ui, state)
+		ui = new(user, src, "CargoExpress", name)
 		ui.open()
 
 /obj/machinery/computer/cargo/express/ui_data(mob/user)
@@ -108,22 +107,22 @@
 	data["canBuyBeacon"] = cooldown <= 0 && D.account_balance >= BEACON_COST
 	data["beaconError"] = usingBeacon && !canBeacon ? "(BEACON ERROR)" : ""//changes button text to include an error alert if necessary
 	data["hasBeacon"] = beacon != null//is there a linked beacon?
-	data["beaconName"] = beacon ? beacon.name : "No Beacon Found"
-	data["printMsg"] = cooldown > 0 ? "Print Beacon for [BEACON_COST] credits ([cooldown])" : "Print Beacon for [BEACON_COST] credits"//buttontext for printing beacons
+	data["beaconName"] = beacon ? beacon.name : "Маячок не найден"
+	data["printMsg"] = cooldown > 0 ? "Напечать маяк за [BEACON_COST] кредитов ([cooldown])" : "Напечатать маяк за [BEACON_COST] кредитов"//buttontext for printing beacons
 	data["supplies"] = list()
-	message = "Sales are near-instantaneous - please choose carefully."
+	message = "Продажи практически мгновенные - пожалуйста, выбирайте внимательно."
 	if(SSshuttle.supplyBlocked)
 		message = blockade_warning
 	if(usingBeacon && !beacon)
-		message = "BEACON ERROR: BEACON MISSING"//beacon was destroyed
+		message = "ОШИБКА МАЯКА: МАЯК ОТСУТСВУЕТ"//beacon was destroyed
 	else if (usingBeacon && !canBeacon)
-		message = "BEACON ERROR: MUST BE EXPOSED"//beacon's loc/user's loc must be a turf
+		message = "ОШИБКА МАЯКА: ДОЛЖЕН БЫТЬ РАСКРЫТ"//beacon's loc/user's loc must be a turf
 	if(obj_flags & EMAGGED)
-		message = "(&!#@ERROR: ROUTING_#PROTOCOL MALF(*CT#ON. $UG%ESTE@ ACT#0N: !^/PULS3-%E)ET CIR*)ITB%ARD."
+		message = "(&!#@Ошибка: Маршрутный#Протокол неисправен(*ей#ие. $р%бует@ де#ие: !^/ПУЛЬС3-%E)ET СЛУЧ*)КОН%НДА."
 	data["message"] = message
 	if(!meme_pack_data)
 		packin_up()
-		stack_trace("You didn't give the cargo tech good advice, and he ripped the manifest. As a result, there was no pack data for [src]")
+		stack_trace("Вы не дали хороший совет грузовой технике, и он разорвал манифест. В результате не было данных пакета для [src]")
 	data["supplies"] = meme_pack_data
 	if (cooldown > 0)//cooldown used for printing beacons
 		cooldown--
@@ -147,10 +146,13 @@
 					var/obj/item/supplypod_beacon/C = new /obj/item/supplypod_beacon(drop_location())
 					C.link_console(src, usr)//rather than in beacon's Initialize(), we can assign the computer to the beacon by reusing this proc)
 					printed_beacons++//printed_beacons starts at 0, so the first one out will be called beacon # 1
-					beacon.name = "Supply Pod Beacon #[printed_beacons]"
+					beacon.name = "Маяк поставки припасов #[printed_beacons]"
 
 
 		if("add")//Generate Supply Order first
+			if(TIMER_COOLDOWN_CHECK(src, COOLDOWN_EXPRESSPOD_CONSOLE))
+				say("Railgun recalibrating. Stand by.")
+				return
 			var/id = text2path(params["id"])
 			var/datum/supply_pack/pack = SSshuttle.supply_packs[id]
 			if(!istype(pack))
@@ -181,36 +183,38 @@
 					else if (!usingBeacon)//find a suitable supplypod landing zone in cargobay
 						landingzone = GLOB.areas_by_type[/area/quartermaster/storage]
 						if (!landingzone)
-							WARNING("[src] couldnt find a Quartermaster/Storage (aka cargobay) area on the station, and as such it has set the supplypod landingzone to the area it resides in.")
+							WARNING("[src] не удалось найти на станции комнату КМа / Склада (он же Карго), и поэтому он установил зону посадки снабжения для области, в которой он находится.")
 							landingzone = get_area(src)
 						for(var/turf/open/floor/T in landingzone.contents)//uses default landing zone
-							if(is_blocked_turf(T))
+							if(T.is_blocked_turf())
 								continue
 							LAZYADD(empty_turfs, T)
 							CHECK_TICK
 						if(empty_turfs && empty_turfs.len)
 							LZ = pick(empty_turfs)
 					if (SO.pack.cost <= points_to_check && LZ)//we need to call the cost check again because of the CHECK_TICK call
+						TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 5 SECONDS)
 						D.adjust_money(-SO.pack.cost)
-						new /obj/effect/DPtarget(LZ, podType, SO)
+						new /obj/effect/pod_landingzone(LZ, podType, SO)
 						. = TRUE
 						update_icon()
 			else
 				if(SO.pack.cost * (0.72*MAX_EMAG_ROCKETS) <= points_to_check) // bulk discount :^)
 					landingzone = GLOB.areas_by_type[pick(GLOB.the_station_areas)]  //override default landing zone
 					for(var/turf/open/floor/T in landingzone.contents)
-						if(is_blocked_turf(T))
+						if(T.is_blocked_turf())
 							continue
 						LAZYADD(empty_turfs, T)
 						CHECK_TICK
 					if(empty_turfs && empty_turfs.len)
+						TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 10 SECONDS)
 						D.adjust_money(-(SO.pack.cost * (0.72*MAX_EMAG_ROCKETS)))
 
 						SO.generateRequisition(get_turf(src))
 						for(var/i in 1 to MAX_EMAG_ROCKETS)
 							var/LZ = pick(empty_turfs)
 							LAZYREMOVE(empty_turfs, LZ)
-							new /obj/effect/DPtarget(LZ, podType, SO)
+							new /obj/effect/pod_landingzone(LZ, podType, SO)
 							. = TRUE
 							update_icon()
 							CHECK_TICK

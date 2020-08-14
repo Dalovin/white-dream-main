@@ -11,9 +11,10 @@ GENE SCANNER
 
 */
 
-// Describes the two modes of scanning available for health analyzers
+// Describes the three modes of scanning available for health analyzers
 #define SCANMODE_HEALTH		0
 #define SCANMODE_CHEMICAL 	1
+#define SCANMODE_WOUND	 	2
 #define SCANNER_CONDENSED 	0
 #define SCANNER_VERBOSE 	1
 
@@ -26,7 +27,8 @@ GENE SCANNER
 	var/on = FALSE
 	slot_flags = ITEM_SLOT_BELT
 	w_class = WEIGHT_CLASS_SMALL
-	item_state = "electronic"
+	inhand_icon_state = "electronic"
+	worn_icon_state = "electronic"
 	lefthand_file = 'icons/mob/inhands/misc/devices_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/misc/devices_righthand.dmi'
 	custom_materials = list(/datum/material/iron=150)
@@ -65,8 +67,7 @@ GENE SCANNER
 		return
 	var/list/t_ray_images = list()
 	for(var/obj/O in orange(distance, viewer) )
-
-		if(O.invisibility == INVISIBILITY_MAXIMUM || HAS_TRAIT(O, TRAIT_T_RAY_VISIBLE))
+		if(HAS_TRAIT(O, TRAIT_T_RAY_VISIBLE))
 			var/image/I = new(loc = get_turf(O))
 			var/mutable_appearance/MA = new(O)
 			MA.alpha = 128
@@ -80,7 +81,8 @@ GENE SCANNER
 	name = "анализатор здоровья"
 	icon = 'icons/obj/device.dmi'
 	icon_state = "health"
-	item_state = "healthanalyzer"
+	inhand_icon_state = "healthanalyzer"
+	worn_icon_state = "healthanalyzer"
 	lefthand_file = 'icons/mob/inhands/equipment/medical_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/medical_righthand.dmi'
 	desc = "Ручной медицинский сканнер для определения жизненных показателей пациента."
@@ -102,8 +104,14 @@ GENE SCANNER
 	return BRUTELOSS
 
 /obj/item/healthanalyzer/attack_self(mob/user)
-	scanmode = !scanmode
-	to_chat(user, "<span class='notice'>Переключаю анализатор в режим сканирования [scanmode ? "реагентов" : "жизненных показателей"].</span>")
+	scanmode = (scanmode + 1) % 3
+	switch(scanmode)
+		if(SCANMODE_HEALTH)
+			to_chat(user, "<span class='notice'>Переключаю анализатор в режим сканирования жизненных показателей.</span>")
+		if(SCANMODE_CHEMICAL)
+			to_chat(user, "<span class='notice'>Переключаю анализатор в режим сканирования химикатов в крови.</span>")
+		if(SCANMODE_WOUND)
+			to_chat(user, "<span class='notice'>Переключаю анализатор в режим сканирования травм.</span>")
 
 /obj/item/healthanalyzer/attack(mob/living/M, mob/living/carbon/human/user)
 	flick("[icon_state]-scan", src)	//makes it so that it plays the scan animation upon scanning, including clumsy scanning
@@ -118,13 +126,19 @@ GENE SCANNER
 					 \n<span class='info'>Температура тела: ???</span>")
 		return
 
-	user.visible_message("<span class='notice'>[user] анализирует жизненные показатели [M].</span>", \
-						"<span class='notice'>Анализирую жизненные показатели [M].</span>")
+	if(ispodperson(M) && !advanced)
+		to_chat(user, "<span class='info'>Биологическая структура <b>[M]</b> слишком сложная для анализа.")
+		return
+
+	user.visible_message("<span class='notice'><b>[user]</b> анализирует жизненные показатели <b>[M]</b>.</span>", \
+						"<span class='notice'>Анализирую жизненные показатели <b>[M]</b>.</span>")
 
 	if(scanmode == SCANMODE_HEALTH)
 		healthscan(user, M, mode, advanced)
-	else
+	else if(scanmode == SCANMODE_CHEMICAL)
 		chemscan(user, M)
+	else
+		woundscan(user, M, src)
 
 	add_fingerprint(user)
 
@@ -172,8 +186,20 @@ GENE SCANNER
 		render_list += "<span class='alert ml-1'>Пациент имеет [M.getCloneLoss() > 30 ? "серьёзный" : "небольшой"] клеточный урон.</span>\n"
 		if(advanced)
 			render_list += "<span class='info ml-1'>Уровень клеточного урона: [M.getCloneLoss()].</span>\n"
-	if (!M.getorgan(/obj/item/organ/brain))
+	if (!M.getorganslot(ORGAN_SLOT_BRAIN)) // brain not added to carbon/human check because it's funny to get to bully simple mobs
 		render_list += "<span class='alert ml-1'>У пациента отсутствует мозг.</span>\n"
+	if(ishuman(M))
+		var/mob/living/carbon/human/the_dude = M
+		var/datum/species/the_dudes_species = the_dude.dna.species
+		if (!(NOBLOOD in the_dudes_species.species_traits) && !the_dude.getorganslot(ORGAN_SLOT_HEART))
+			render_list += "<span class='alert ml-1'>Нет сердца.</span>\n"
+		if (!(TRAIT_NOBREATH in the_dudes_species.species_traits) && !the_dude.getorganslot(ORGAN_SLOT_LUNGS))
+			render_list += "<span class='alert ml-1'>Нет лёгких.</span>\n"
+		if (!(TRAIT_NOMETABOLISM in the_dudes_species.species_traits) && !the_dude.getorganslot(ORGAN_SLOT_LIVER))
+			render_list += "<span class='alert ml-1'>Нет печени.</span>\n"
+		if (!(NOSTOMACH in the_dudes_species.species_traits) && !the_dude.getorganslot(ORGAN_SLOT_STOMACH))
+			render_list += "<span class='alert ml-1'>Нет желудка.</span>\n"
+
 	if(iscarbon(M))
 		var/mob/living/carbon/C = M
 		if(LAZYLEN(C.get_traumas()))
@@ -185,13 +211,17 @@ GENE SCANNER
 						trauma_desc += "серьёзного "
 					if(TRAUMA_RESILIENCE_LOBOTOMY)
 						trauma_desc += "глубокого "
+					if(TRAUMA_RESILIENCE_WOUND)
+						trauma_desc += "переломов "
 					if(TRAUMA_RESILIENCE_MAGIC, TRAUMA_RESILIENCE_ABSOLUTE)
 						trauma_desc += "вечного "
 				trauma_desc += B.scan_desc
 				trauma_text += trauma_desc
 			render_list += "<span class='alert ml-1'>Церебральные травмы обнаружены: пациент страдает от [english_list(trauma_text)].</span>\n"
 		if(C.roundstart_quirks.len)
-			render_list += "<span class='info ml-1'>Пациент имеет данные психологические черты: [C.get_trait_string()].</span>\n"
+			render_list += "<span class='info ml-1'>Пациент имеет серьёзные отклонения в виде: [C.get_quirk_string(FALSE, CAT_QUIRK_MAJOR_DISABILITY)].</span>\n"
+			if(advanced)
+				render_list += "<span class='info ml-1'>Пациент имеет незначительные отклонения в виде: [C.get_quirk_string(FALSE, CAT_QUIRK_MINOR_DISABILITY)].</span>\n"
 	if(advanced)
 		render_list += "<span class='info ml-1'>Уровень активности мозга: [(200 - M.getOrganLoss(ORGAN_SLOT_BRAIN))/2]%.</span>\n"
 
@@ -214,7 +244,7 @@ GENE SCANNER
 							<td style='width:5em;'><font color='red'><b>Травмы</b></font></td>\
 							<td style='width:4em;'><font color='orange'><b>Ожоги</b></font></td>\
 							<td style='width:4em;'><font color='green'><b>Токсины</b></font></td>\
-							<td style='width:8em;'><font color='purple'><b>Удушье</b></font></td></tr>\
+							<td style='width:8em;'><font color='pink'><b>Удушье</b></font></td></tr>\
 							<tr><td><font color='#7777CC'>Общий:</font></td>\
 							<td><font color='red'>[CEILING(brute_loss,1)]</font></td>\
 							<td><font color='orange'>[CEILING(fire_loss,1)]</font></td>\
@@ -240,6 +270,8 @@ GENE SCANNER
 			message = ""
 			if(HAS_TRAIT_FROM(C, TRAIT_DEAF, GENETIC_MUTATION))
 				message = "\n<span class='alert ml-2'>Пациент генетически глухой.</span>"
+			else if(HAS_TRAIT_FROM(C, TRAIT_DEAF, EAR_DAMAGE))
+				message = "\n<span class='alert ml-2'>Пациент глухой из-за повреждений ушей.</span>"
 			else if(HAS_TRAIT(C, TRAIT_DEAF))
 				message = "\n<span class='alert ml-2'>Пациент глухой.</span>"
 			else
@@ -320,6 +352,18 @@ GENE SCANNER
 		var/tdelta = round(world.time - M.timeofdeath)
 		render_list += "<span class='alert ml-1'><b>Пациент умер [DisplayTimeText(tdelta)] назад.</b></span>\n"
 
+	// Wounds
+	if(iscarbon(M))
+		var/mob/living/carbon/C = M
+		var/list/wounded_parts = C.get_wounded_bodyparts()
+		for(var/i in wounded_parts)
+			var/obj/item/bodypart/wounded_part = i
+			render_list += "<span class='alert ml-1'><b>Warning: Physical trauma[LAZYLEN(wounded_part.wounds) > 1? "s" : ""] detected in [wounded_part.name]</b>"
+			for(var/k in wounded_part.wounds)
+				var/datum/wound/W = k
+				render_list += "<div class='ml-2'>Type: [W.name]\nSeverity: [W.severity_text()]\nRecommended Treatment: [W.treat_text]</div>\n" // less lines than in woundscan() so we don't overload people trying to get basic med info
+			render_list += "</span>"
+
 	for(var/thing in M.diseases)
 		var/datum/disease/D = thing
 		if(!(D.visibility_flags & HIDDEN_SCANNER))
@@ -334,7 +378,7 @@ GENE SCANNER
 		if(blood_id)
 			if(ishuman(C))
 				var/mob/living/carbon/human/H = C
-				if(H.bleed_rate)
+				if(H.is_bleeding())
 					render_list += "<span class='alert ml-1'><b>Пациент истекает кровью!</b></span>\n"
 			var/blood_percent =  round((C.blood_volume / BLOOD_VOLUME_NORMAL)*100)
 			var/blood_type = C.dna.blood_type
@@ -379,7 +423,7 @@ GENE SCANNER
 
 /obj/item/healthanalyzer/verb/toggle_mode()
 	set name = "Switch Verbosity"
-	set category = "ОБЪЕКТ"
+	set category = "Объект"
 
 	if(usr.incapacitated())
 		return
@@ -393,13 +437,74 @@ GENE SCANNER
 	desc = "Ручной медицинский сканнер для определения жизненных показателей пациента с более высокой точностью."
 	advanced = TRUE
 
+/// Displays wounds with extended information on their status vs medscanners
+/proc/woundscan(mob/user, mob/living/carbon/patient, obj/item/healthanalyzer/wound/scanner)
+	if(!istype(patient))
+		return
+
+	var/render_list = ""
+	for(var/i in patient.get_wounded_bodyparts())
+		var/obj/item/bodypart/wounded_part = i
+		render_list += "<span class='alert ml-1'><b>Warning: Physical trauma[LAZYLEN(wounded_part.wounds) > 1? "s" : ""] detected in [wounded_part.name]</b>"
+		for(var/k in wounded_part.wounds)
+			var/datum/wound/W = k
+			render_list += "<div class='ml-2'>[W.get_scanner_description()]</div>\n"
+		render_list += "</span>"
+
+	if(render_list == "")
+		if(istype(scanner))
+			// Only emit the cheerful scanner message if this scan came from a scanner
+			playsound(scanner, 'sound/machines/ping.ogg', 50, FALSE)
+			to_chat(user, "<span class='notice'>\The [scanner] makes a happy ping and briefly displays a smiley face with several exclamation points! It's really excited to report that [patient] has no wounds!</span>")
+		else
+			to_chat(user, "<span class='notice ml-1'>No wounds detected in subject.</span>")
+	else
+		to_chat(user, jointext(render_list, ""))
+
+/obj/item/healthanalyzer/wound
+	name = "first aid analyzer"
+	icon_state = "adv_spectrometer"
+	desc = "A prototype MeLo-Tech medical scanner used to diagnose injuries and recommend treatment for serious wounds, but offers no further insight into the patient's health. You hope the final version is less annoying to read!"
+	var/next_encouragement
+	var/greedy
+
+/obj/item/healthanalyzer/wound/attack_self(mob/user)
+	if(next_encouragement < world.time)
+		playsound(src, 'sound/machines/ping.ogg', 50, FALSE)
+		var/list/encouragements = list("briefly displays a happy face, gazing emptily at you", "briefly displays a spinning cartoon heart", "displays an encouraging message about eating healthy and exercising", \
+				"reminds you that everyone is doing their best", "displays a message wishing you well", "displays a sincere thank-you for your interest in first-aid", "formally absolves you of all your sins")
+		to_chat(user, "<span class='notice'>\The [src] makes a happy ping and [pick(encouragements)]!</span>")
+		next_encouragement = world.time + 10 SECONDS
+		greedy = FALSE
+	else if(!greedy)
+		to_chat(user, "<span class='warning'>\The [src] displays an eerily high-definition frowny face, chastizing you for asking it for too much encouragement.</span>")
+		greedy = TRUE
+	else
+		playsound(src, 'sound/machines/buzz-sigh.ogg', 50, FALSE)
+		if(isliving(user))
+			var/mob/living/L = user
+			to_chat(L, "<span class='warning'>\The [src] makes a disappointed buzz and pricks your finger for being greedy. Ow!</span>")
+			L.adjustBruteLoss(4)
+			L.dropItemToGround(src)
+
+/obj/item/healthanalyzer/wound/attack(mob/living/carbon/patient, mob/living/carbon/human/user)
+	add_fingerprint(user)
+	user.visible_message("<span class='notice'>[user] scans [patient] for serious injuries.</span>", "<span class='notice'>You scan [patient] for serious injuries.</span>")
+
+	if(!istype(patient))
+		playsound(src, 'sound/machines/buzz-sigh.ogg', 30, TRUE)
+		to_chat(user, "<span class='notice'>\The [src] makes a sad buzz and briefly displays a frowny face, indicating it can't scan [patient].</span>")
+		return
+
+	woundscan(user, patient, src)
+
 /obj/item/analyzer
 	desc = "Ручной анализатор, который сканирует состояние воздуха в помещении. Alt-клик, чтобы использовать барометр."
 	name = "анализатор"
 	custom_price = 100
 	icon = 'icons/obj/device.dmi'
 	icon_state = "analyzer"
-	item_state = "analyzer"
+	inhand_icon_state = "analyzer"
 	lefthand_file = 'icons/mob/inhands/equipment/tools_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/tools_righthand.dmi'
 	w_class = WEIGHT_CLASS_SMALL
@@ -426,6 +531,9 @@ GENE SCANNER
 
 /obj/item/analyzer/attack_self(mob/user)
 	add_fingerprint(user)
+	scangasses(user)
+
+/obj/item/proc/scangasses(mob/user)
 
 	if (user.stat || user.is_blind())
 		return
@@ -442,27 +550,22 @@ GENE SCANNER
 	render_list += "<span class='info'><B>Результат:</B></span>\
 				 \n<span class='[abs(pressure - ONE_ATMOSPHERE) < 10 ? "info" : "alert"]'>Давление: [round(pressure, 0.01)] кПа</span>\n"
 	if(total_moles)
-		var/list/env_gases = environment.gases
+		var/o2_concentration = environment.get_moles(/datum/gas/oxygen)/total_moles
+		var/n2_concentration = environment.get_moles(/datum/gas/nitrogen)/total_moles
+		var/co2_concentration = environment.get_moles(/datum/gas/carbon_dioxide)/total_moles
+		var/plasma_concentration = environment.get_moles(/datum/gas/plasma)/total_moles
 
-		environment.assert_gases(arglist(GLOB.hardcoded_gases))
-		var/o2_concentration = env_gases[/datum/gas/oxygen][MOLES]/total_moles
-		var/n2_concentration = env_gases[/datum/gas/nitrogen][MOLES]/total_moles
-		var/co2_concentration = env_gases[/datum/gas/carbon_dioxide][MOLES]/total_moles
-		var/plasma_concentration = env_gases[/datum/gas/plasma][MOLES]/total_moles
+		render_list += "<span class='[abs(n2_concentration - N2STANDARD) < 20 ? "info" : "alert"]'>Азот: [round(n2_concentration*100, 0.01)] % ([round(environment.get_moles(/datum/gas/nitrogen), 0.01)] mol)</span>\
+			\n<span class='[abs(o2_concentration - O2STANDARD) < 2 ? "info" : "alert"]'>Кислород: [round(o2_concentration*100, 0.01)] % ([round(environment.get_moles(/datum/gas/oxygen), 0.01)] mol)</span>\
+			\n<span class='[co2_concentration > 0.01 ? "alert" : "info"]'>CO2: [round(co2_concentration*100, 0.01)] % ([round(environment.get_moles(/datum/gas/carbon_dioxide), 0.01)] mol)</span>\
+			\n<span class='[plasma_concentration > 0.005 ? "alert" : "info"]'>Плазма: [round(plasma_concentration*100, 0.01)] % ([round(environment.get_moles(/datum/gas/plasma), 0.01)] mol)</span>\n"
 
-		render_list += "<span class='[abs(n2_concentration - N2STANDARD) < 20 ? "info" : "alert"]'>Азот: [round(n2_concentration*100, 0.01)] % ([round(env_gases[/datum/gas/nitrogen][MOLES], 0.01)] mol)</span>\
-			\n<span class='[abs(o2_concentration - O2STANDARD) < 2 ? "info" : "alert"]'>Кислород: [round(o2_concentration*100, 0.01)] % ([round(env_gases[/datum/gas/oxygen][MOLES], 0.01)] mol)</span>\
-			\n<span class='[co2_concentration > 0.01 ? "alert" : "info"]'>CO2: [round(co2_concentration*100, 0.01)] % ([round(env_gases[/datum/gas/carbon_dioxide][MOLES], 0.01)] mol)</span>\
-			\n<span class='[plasma_concentration > 0.005 ? "alert" : "info"]'>Плазма: [round(plasma_concentration*100, 0.01)] % ([round(env_gases[/datum/gas/plasma][MOLES], 0.01)] mol)</span>\n"
-
-		environment.garbage_collect()
-
-		for(var/id in env_gases)
+		for(var/id in environment.get_gases())
 			if(id in GLOB.hardcoded_gases)
 				continue
-			var/gas_concentration = env_gases[id][MOLES]/total_moles
-			render_list += "<span class='alert'>[env_gases[id][GAS_META][META_GAS_NAME]]: [round(gas_concentration*100, 0.01)] % ([round(env_gases[id][MOLES], 0.01)] mol)</span>\n"
-		render_list += "<span class='info'>Температура: [round(environment.temperature-T0C, 0.01)] &deg;C ([round(environment.temperature, 0.01)] K)</span>\n"
+			var/gas_concentration = environment.get_moles(id)/total_moles
+			render_list += "<span class='alert'>[GLOB.meta_gas_info[id][META_GAS_NAME]]: [round(gas_concentration*100, 0.01)] % ([round(environment.get_moles(id), 0.01)] mol)</span>\n"
+		render_list += "<span class='info'>Температура: [round(environment.return_temperature()-T0C, 0.01)] &deg;C ([round(environment.return_temperature(), 0.01)] K)</span>\n"
 	to_chat(user, jointext(render_list, ""), trailing_newline = FALSE) // we handled the last <br> so we don't need handholding
 
 /obj/item/analyzer/AltClick(mob/user) //Barometer output for measuring when the next storm happens
@@ -547,7 +650,7 @@ GENE SCANNER
 		var/total_moles = air_contents.total_moles()
 		var/pressure = air_contents.return_pressure()
 		var/volume = air_contents.return_volume() //could just do mixture.volume... but safety, I guess?
-		var/temperature = air_contents.temperature
+		var/temperature = air_contents.return_temperature()
 		var/cached_scan_results = air_contents.analyzer_results
 
 		if(total_moles > 0)
@@ -555,10 +658,9 @@ GENE SCANNER
 						 \n<span class='notice'>Объём: [volume] Л</span>\
 						 \n<span class='notice'>Давление: [round(pressure,0.01)] кПа</span>"
 
-			var/list/cached_gases = air_contents.gases
-			for(var/id in cached_gases)
-				var/gas_concentration = cached_gases[id][MOLES]/total_moles
-				render_list += "<span class='notice'>[cached_gases[id][GAS_META][META_GAS_NAME]]: [round(gas_concentration*100, 0.01)] % ([round(cached_gases[id][MOLES], 0.01)] mol)</span>"
+			for(var/id in air_contents.get_gases())
+				var/gas_concentration = air_contents.get_moles(id)/total_moles
+				render_list += "<span class='notice'>[GLOB.meta_gas_info[id][META_GAS_NAME]]: [round(gas_concentration*100, 0.01)] % ([round(air_contents.get_moles(id), 0.01)] моль)</span>"
 			render_list += "<span class='notice'>Температура: [round(temperature - T0C,0.01)] &deg;C ([round(temperature, 0.01)] K)</span>"
 		else
 			render_list += airs.len > 1 ? "<span class='notice'>Эта ячейка пуста!</span>" : "<span class='notice'>В [target] ничего нет!</span>"
@@ -577,7 +679,7 @@ GENE SCANNER
 	desc = "Устройство, которое определяет состав и общие показатели слаймов."
 	icon = 'icons/obj/device.dmi'
 	icon_state = "adv_spectrometer"
-	item_state = "analyzer"
+	inhand_icon_state = "analyzer"
 	lefthand_file = 'icons/mob/inhands/equipment/tools_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/tools_righthand.dmi'
 	w_class = WEIGHT_CLASS_SMALL
@@ -632,7 +734,8 @@ GENE SCANNER
 	name = "анализатор нанитов"
 	icon = 'icons/obj/device.dmi'
 	icon_state = "nanite_scanner"
-	item_state = "nanite_remote"
+	inhand_icon_state = "electronic"
+	worn_icon_state = "electronic"
 	lefthand_file = 'icons/mob/inhands/equipment/medical_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/medical_righthand.dmi'
 	desc = "Устройство для определения нанитов и их особенностей."
@@ -659,7 +762,8 @@ GENE SCANNER
 	name = "анализатор генетического кода"
 	icon = 'icons/obj/device.dmi'
 	icon_state = "gene"
-	item_state = "healthanalyzer"
+	inhand_icon_state = "healthanalyzer"
+	worn_icon_state = "healthanalyzer"
 	lefthand_file = 'icons/mob/inhands/equipment/medical_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/medical_righthand.dmi'
 	desc = "Позволяет проводить генетический анализ на лету. Если соединить это с консолью ДНК, то устройство будет получать новые данные о мутациях."
@@ -678,7 +782,7 @@ GENE SCANNER
 
 /obj/item/sequence_scanner/attack(mob/living/M, mob/living/carbon/human/user)
 	add_fingerprint(user)
-	if (!HAS_TRAIT(M, TRAIT_RADIMMUNE) && !HAS_TRAIT(M, TRAIT_BADDNA)) //no scanning if its a husk or DNA-less Species
+	if (!HAS_TRAIT(M, TRAIT_GENELESS) && !HAS_TRAIT(M, TRAIT_BADDNA)) //no scanning if its a husk or DNA-less Species
 		user.visible_message("<span class='notice'>[user] анализирует геном [M].</span>", \
 							"<span class='notice'>Анализирую геном [M].</span>")
 		gene_scan(M, user)
@@ -760,10 +864,10 @@ GENE SCANNER
 	name = "kiosk scanner wand"
 	icon = 'icons/obj/device.dmi'
 	icon_state = "scanner_wand"
-	item_state = "healthanalyzer"
+	inhand_icon_state = "healthanalyzer"
 	lefthand_file = 'icons/mob/inhands/equipment/medical_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/medical_righthand.dmi'
-	desc = "An wand for scanning someone else for a medical analysis. Insert into a kiosk is make the scanned patient the target of a health scan."
+	desc = "A wand for scanning someone else for a medical analysis. Insert into a kiosk is make the scanned patient the target of a health scan."
 	force = 0
 	throwforce = 0
 	w_class = WEIGHT_CLASS_TINY
@@ -798,5 +902,6 @@ GENE SCANNER
 
 #undef SCANMODE_HEALTH
 #undef SCANMODE_CHEMICAL
+#undef SCANMODE_WOUND
 #undef SCANNER_CONDENSED
 #undef SCANNER_VERBOSE

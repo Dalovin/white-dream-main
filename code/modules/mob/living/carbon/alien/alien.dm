@@ -50,7 +50,7 @@
 
 /mob/living/carbon/alien/handle_environment(datum/gas_mixture/environment)
 	// Run base mob body temperature proc before taking damage
-	// this balances body temp to the enviroment and natural stabilization
+	// this balances body temp to the environment and natural stabilization
 	. = ..()
 
 	if(bodytemperature > BODYTEMP_HEAT_DAMAGE_LIMIT)
@@ -78,7 +78,7 @@
 /mob/living/carbon/alien/Stat()
 	..()
 
-	if(statpanel("ИГРА"))
+	if(statpanel("Игра"))
 		stat(null, "Взаимодействие: [a_intent]")
 
 /mob/living/carbon/alien/getTrail()

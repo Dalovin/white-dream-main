@@ -1,6 +1,16 @@
-/client/proc/debug_variables(datum/D in world)
-	set category = "ДЕБАГ"
+/client/proc/debug_variables_wrapper()
+	set category = "Дбг"
 	set name = "View Variables"
+	var/list/L = list()
+	for(var/datum/D in world)
+		L += D
+	var/target = input(src, null, "View Variables") as null|anything in L
+	if(target)
+		debug_variables(target)
+
+/client/proc/debug_variables(datum/D in world)
+	set name = "View Variables"
+	set category = null
 	//set src in world
 	var/static/cookieoffset = rand(1, 9999) //to force cookies to reset after the round.
 
@@ -59,6 +69,7 @@
 			"Set len" = VV_HREF_TARGETREF_INTERNAL(refid, VV_HK_LIST_SET_LENGTH),
 			"Shuffle" = VV_HREF_TARGETREF_INTERNAL(refid, VV_HK_LIST_SHUFFLE),
 			"Show VV To Player" = VV_HREF_TARGETREF_INTERNAL(refid, VV_HK_EXPOSE),
+			"View References" = VV_HREF_TARGETREF_INTERNAL(refid, VV_HK_VIEW_REFERENCES),
 			"---"
 			)
 		for(var/i in 1 to length(dropdownoptions))
@@ -94,17 +105,7 @@
 	<head>
 		<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
 		<title>[title]</title>
-		<style>
-			body {
-				font-family: Verdana, sans-serif;
-				font-size: 9pt;
-			}
-			.value {
-				font-family: "Courier New", monospace;
-				font-size: 8pt;
-			}
-		</style>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="view_variables.css">
 	</head>
 	<body onload='selectTextField()' onkeydown='return handle_keydown()' onkeyup='handle_keyup()'>
 		<script type="text/javascript">
